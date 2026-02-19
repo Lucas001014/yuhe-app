@@ -489,25 +489,34 @@ export default function HomeScreen() {
     <Screen backgroundColor={theme.backgroundRoot} statusBarStyle="light">
       {/* 顶部类别导航 */}
       <View style={styles.categoryNav}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoryScroll}>
-          {categories.map((category) => (
-            <TouchableOpacity
-              key={category}
-              style={[
-                styles.categoryItem,
-                activeTab === category && styles.activeCategoryItem
-              ]}
-              onPress={() => setActiveTab(category)}
-            >
-              <ThemedText
-                variant="bodyMedium"
-                color={activeTab === category ? theme.buttonPrimaryText : theme.textSecondary}
+        <View style={styles.categoryScrollViewWrapper}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoryScroll}>
+            {categories.map((category) => (
+              <TouchableOpacity
+                key={category}
+                style={[
+                  styles.categoryItem,
+                  activeTab === category && styles.activeCategoryItem
+                ]}
+                onPress={() => setActiveTab(category)}
               >
-                {category}
-              </ThemedText>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
+                <ThemedText
+                  variant="bodyMedium"
+                  color={activeTab === category ? theme.buttonPrimaryText : theme.textSecondary}
+                >
+                  {category}
+                </ThemedText>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+        {/* 管理入口 */}
+        <TouchableOpacity
+          style={[styles.adminButton, { backgroundColor: theme.primary }]}
+          onPress={() => router.push('/admin')}
+        >
+          <FontAwesome6 name="gear" size={20} color="#fff" />
+        </TouchableOpacity>
       </View>
 
       {/* 瀑布流帖子列表 */}

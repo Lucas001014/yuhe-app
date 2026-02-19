@@ -19,6 +19,11 @@ export const createStyles = (theme: Theme, width: number = Dimensions.get('windo
       borderBottomWidth: 1,
       borderBottomColor: theme.borderLight,
       paddingBottom: Spacing.sm,
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    categoryScrollViewWrapper: {
+      flex: 1,
     },
     categoryScroll: {
       paddingHorizontal: Spacing.lg,
@@ -34,6 +39,14 @@ export const createStyles = (theme: Theme, width: number = Dimensions.get('windo
     },
     activeCategoryItem: {
       backgroundColor: theme.primary,
+    },
+    adminButton: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginRight: Spacing.lg,
     },
     // 瀑布流容器（2列布局）
     masonryContainer: {
