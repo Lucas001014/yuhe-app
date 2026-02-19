@@ -143,13 +143,13 @@ export default function CreateScreen() {
   const getPostTypeLabel = (type: string) => {
     switch (type) {
       case 'normal':
-        return '普通帖子';
+        return '推荐';
       case 'qa_paid':
-        return '付费问答';
+        return '知识库';
       case 'qa_bounty':
-        return '悬赏求助';
+        return '悬赏';
       case 'product':
-        return '产品推广';
+        return '热点讨论';
     }
   };
 

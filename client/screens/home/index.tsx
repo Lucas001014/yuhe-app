@@ -14,10 +14,10 @@ export default function HomeScreen() {
   const { theme } = useTheme();
   const [index, setIndex] = React.useState(0);
   const [routes] = React.useState([
-    { key: 'normal', title: '普通帖子' },
-    { key: 'paid_qa', title: '付费问答' },
-    { key: 'bounty', title: '悬赏求助' },
-    { key: 'product', title: '产品推广' },
+    { key: 'normal', title: '推荐' },
+    { key: 'paid_qa', title: '知识库' },
+    { key: 'bounty', title: '悬赏' },
+    { key: 'product', title: '热点讨论' },
   ]);
 
   const renderScene = SceneMap({

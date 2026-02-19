@@ -2,345 +2,449 @@ import express from 'express';
 
 const router = express.Router();
 
+// 生成随机数据
+function randomInt(min: number, max: number) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function randomDate(start: Date, end: Date) {
+  return new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
+}
+
+function randomItem<T>(array: T[]): T {
+  return array[Math.floor(Math.random() * array.length)];
+}
+
+// 随机生成评论
+function generateComments(postId: number, count: number) {
+  const commentTemplates = [
+    '非常赞同作者的观点，确实如此！',
+    '这个观点很有启发，受教了。',
+    '文章写得很详细，感谢分享。',
+    '请问可以详细说明一下吗？',
+    '我也遇到过类似的问题，这个方法很有用。',
+    '期待更多类似的内容。',
+    '这篇内容太实用了，已经收藏了。',
+    '希望能继续分享这类干货。',
+    '这是一个很棒的资源，感谢提供。',
+    '学习了，受益匪浅！',
+    '这个思路很新颖，值得借鉴。',
+    '希望能有机会和作者交流一下。',
+    '内容很丰富，需要慢慢消化。',
+    '解决了我的困惑，谢谢！',
+    '这个建议很中肯，会尝试一下。',
+  ];
+
+  const comments = [];
+  for (let i = 0; i < count; i++) {
+    comments.push({
+      id: postId * 100 + i + 1,
+      userId: randomInt(1, 20),
+      username: `用户${randomInt(1, 50)}`,
+      avatar: `https://i.pravatar.cc/150?img=${randomInt(1, 70)}`,
+      content: randomItem(commentTemplates),
+      createdAt: randomDate(new Date(2025, 0, 1), new Date()).toISOString(),
+      likeCount: randomInt(0, 50),
+      replyCount: randomInt(0, 10),
+    });
+  }
+  return comments;
+}
+
+// 生成推荐帖子数据
+function generateRecommendPosts(): any[] {
+  const titles = [
+    '创业初期需要注意的三个关键点',
+    '如何快速验证创业想法的可行性',
+    '创业者如何平衡工作和生活',
+    '从0到1的创业经验总结',
+    '创业者必备的时间管理技巧',
+    '如何找到合适的创业合伙人',
+    '初创企业如何快速获取第一批用户',
+    '创业者应该避免的五个常见误区',
+    '如何打造一个有凝聚力的创业团队',
+    '创业公司如何制定有效的营销策略',
+    '创业者如何保持持续的学习和成长',
+    '从失败中学习：创业路上的坑与避坑指南',
+    '如何建立良好的创业心态',
+    '创业者如何有效利用人脉资源',
+    '创业公司如何进行成本控制',
+    '如何制定创业公司的战略规划',
+    '创业者如何应对压力和焦虑',
+    '从产品到市场：创业公司的推广策略',
+    '如何培养创业公司的创新文化',
+    '创业者如何建立个人品牌',
+    '创业公司如何进行人才招聘',
+    '如何进行有效的市场调研',
+    '创业者如何与投资人沟通',
+    '从数据中洞察：创业公司的数据分析方法',
+    '如何提高创业公司的运营效率',
+    '创业者如何建立良好的客户关系',
+    '创业公司如何应对竞争',
+    '如何打造让用户喜欢的产品',
+    '创业者如何进行有效的财务管理',
+    '从失败到成功：创业者的韧性培养',
+    '如何保持创业公司的活力和创新力',
+  ];
+
+  const categories = ['创业', '产品', '营销', '团队', '管理', '融资', '技术', '运营'];
+  const tagsList = [
+    ['创业心得', '经验分享'],
+    ['产品开发', '用户增长'],
+    ['营销策略', '品牌建设'],
+    ['团队管理', '领导力'],
+    ['创业技巧', '方法论'],
+    ['商业模式', '创新'],
+    ['运营心得', '效率提升'],
+    ['财务规划', '成本控制'],
+    ['市场竞争', '差异化'],
+    ['产品思维', '用户洞察'],
+  ];
+
+  const posts = [];
+  for (let i = 1; i <= 30; i++) {
+    const hasImage = Math.random() > 0.3;
+    const hasMultipleImages = hasImage && Math.random() > 0.7;
+    const imageCount = hasMultipleImages ? randomInt(2, 5) : 1;
+
+    const images: string[] = [];
+    if (hasImage) {
+      for (let j = 0; j < imageCount; j++) {
+        images.push(`https://images.unsplash.com/photo-1556742049-${String(i).padStart(3, '0')}${j}?w=800`);
+      }
+    }
+
+    posts.push({
+      id: i,
+      title: titles[i - 1],
+      content: `这是一篇关于${categories[i % categories.length]}的深度分享，包含了我多年来的实践经验和思考。希望能对正在创业或准备创业的朋友有所帮助。内容涵盖策略制定、执行落地、团队协作等多个方面，既有理论也有实践案例。`,
+      authorId: randomInt(1, 20),
+      authorName: `创作者${randomInt(1, 50)}`,
+      authorAvatar: `https://i.pravatar.cc/150?img=${randomInt(1, 70)}`,
+      isMerchant: Math.random() > 0.7,
+      type: 'article',
+      contentType: hasImage ? 'image' : 'text',
+      category: categories[i % categories.length],
+      tags: tagsList[i % tagsList.length],
+      images,
+      videoUrl: '',
+      virtualResources: [],
+      price: 0,
+      status: 'published',
+      createdAt: randomDate(new Date(2025, 0, 1), new Date()).toISOString(),
+      viewCount: randomInt(100, 5000),
+      likeCount: randomInt(10, 500),
+      commentCount: randomInt(0, 100),
+      forwardCount: randomInt(0, 200),
+      collectCount: randomInt(0, 150),
+      isLiked: false,
+      isCollected: false,
+      aspectRatio: [0.8, 1.0, 1.2, 1.4][randomInt(0, 3)],
+      comments: generateComments(i, randomInt(0, 10)),
+    });
+  }
+  return posts;
+}
+
+// 生成知识库帖子数据
+function generateKnowledgePosts(): any[] {
+  const titles = [
+    '2024年创业环境分析报告',
+    '创业融资全流程指南（含PPT模板）',
+    'SaaS产品从0到1的开发手册',
+    '创业者必读的10本经典书籍清单',
+    '创业公司股权设计实战指南',
+    '企业税务筹划与合规指南',
+    '用户增长黑客实战案例集',
+    '内容营销策略与执行手册',
+    '初创企业法律风险防范指南',
+    '创业团队绩效考核体系设计',
+    '产品原型设计工具与流程指南',
+    '创业公司品牌建设完整方案',
+    '电商运营从入门到精通（含实战案例）',
+    '私域流量运营实战手册',
+    '短视频营销完整操作指南',
+    '直播带货创业实操指南',
+    '跨境电商平台选择与运营策略',
+    '创业公司HR招聘与管理手册',
+    '新媒体平台运营策略对比分析',
+    '创业项目商业计划书写作指南',
+    '创业公司财务报表分析与优化',
+    '用户调研方法论与工具使用指南',
+    '创业公司敏捷开发实践手册',
+    '企业数据安全与隐私保护指南',
+    '创业者个人IP打造完整方案',
+    '社交媒体营销策略与实战技巧',
+    '创业危机公关处理手册',
+    '创业公司办公效率提升工具集',
+    '创业项目路演技巧与注意事项',
+    '创业者心理健康维护指南',
+    '创业失败案例分析总结报告',
+  ];
+
+  const categories = ['报告', '模板', '手册', '指南', '清单', '案例', '方案'];
+  const tagsList = [
+    ['创业资料', '融资', 'PPT'],
+    ['SaaS', '产品开发', '技术'],
+    ['股权设计', '法律', '管理'],
+    ['用户增长', '营销', '运营'],
+    ['内容营销', '品牌', '策略'],
+    ['法律风险', '合规', '防范'],
+    ['私域流量', '运营', '实操'],
+    ['短视频', '直播', '营销'],
+    ['跨境电商', '电商', '平台'],
+    ['数据分析', '财务', '优化'],
+  ];
+
+  const posts = [];
+  for (let i = 1; i <= 30; i++) {
+    const hasImage = Math.random() > 0.5;
+    const images = hasImage
+      ? [`https://images.unsplash.com/photo-1556742049-${String(i + 100).padStart(3, '0')}?w=800`]
+      : [];
+
+    posts.push({
+      id: 100 + i,
+      title: titles[i - 1],
+      content: `这是一份精心整理的${categories[i % categories.length]}，包含了丰富的实战经验和专业指导。内容详实、条理清晰，适合创业者系统学习和参考。`,
+      authorId: randomInt(1, 20),
+      authorName: `知识官${randomInt(1, 50)}`,
+      authorAvatar: `https://i.pravatar.cc/150?img=${randomInt(1, 70)}`,
+      isMerchant: true,
+      type: 'qa',
+      contentType: hasImage ? 'image' : 'text',
+      category: categories[i % categories.length],
+      tags: tagsList[i % tagsList.length],
+      images,
+      videoUrl: '',
+      virtualResources: [
+        {
+          id: i,
+          name: `${titles[i - 1]}.pdf`,
+          size: `${randomInt(1, 50)}MB`,
+          description: '高清PDF版本，支持下载和打印',
+          downloadUrl: `https://example.com/download/resource_${i}.pdf`,
+          price: randomInt(9, 199),
+        },
+      ],
+      price: randomInt(9, 199),
+      status: 'published',
+      createdAt: randomDate(new Date(2025, 0, 1), new Date()).toISOString(),
+      viewCount: randomInt(200, 10000),
+      likeCount: randomInt(50, 1000),
+      commentCount: randomInt(0, 50),
+      forwardCount: randomInt(10, 300),
+      collectCount: randomInt(20, 500),
+      isLiked: false,
+      isCollected: false,
+      aspectRatio: [0.8, 1.0, 1.2, 1.4][randomInt(0, 3)],
+      comments: generateComments(100 + i, randomInt(0, 10)),
+    });
+  }
+  return posts;
+}
+
+// 生成悬赏帖子数据
+function generateBountyPosts(): any[] {
+  const titles = [
+    '悬赏500元：求推荐优质的CRM系统',
+    '悬赏800元：需要一位UI设计师合作完成项目',
+    '悬赏1000元：求大神提供SEO优化方案',
+    '悬赏2000元：急需开发一个小程序',
+    '悬赏1500元：需要撰写商业计划书',
+    '悬赏600元：求解答法律相关问题',
+    '悬赏1200元：需要一位产品经理协助梳理需求',
+    '悬赏1800元：求推荐靠谱的供应链资源',
+    '悬赏700元：需要制作企业宣传片',
+    '悬赏2500元：急需一个专业的融资顾问',
+    '悬赏900元：求解答财务税务问题',
+    '悬赏3000元：需要开发一个APP原型',
+    '悬赏1100元：求推荐优质的办公场地',
+    '悬赏1600元：需要一位营销顾问制定推广方案',
+    '悬赏1300元：求解答人力资源相关问题',
+    '悬赏2200元：需要一位技术合伙人',
+    '悬赏850元：求推荐优质的物流服务商',
+    '悬赏1750元：需要撰写产品文案',
+    '悬赏2100元：求解答品牌营销问题',
+    '悬赏950元：需要一位翻译协助',
+    '悬赏2800元：需要开发一个网站',
+    '悬赏1400元：求推荐优质的代账公司',
+    '悬赏1950元：需要一位运营顾问',
+    '悬赏2600元：急需一个数据分析专家',
+    '悬赏1050元：求解答知识产权问题',
+    '悬赏2300元：需要一位投资人对接',
+    '悬赏1650元：求推荐优质的招聘渠道',
+    '悬赏1900元：需要一位客服培训师',
+    '悬赏2400元：求解答合规相关问题',
+    '悬赏1550元：需要一位内容编辑',
+    '悬赏2700元：需要一位战略规划顾问',
+  ];
+
+  const categories = ['技术开发', '设计', '营销', '财务', '法务', '人力资源', '运营', '其他'];
+  const tagsList = [
+    ['需求悬赏', '合作'],
+    ['技术支持', '开发'],
+    ['设计需求', 'UI/UX'],
+    ['营销推广', '品牌'],
+    ['财务咨询', '税务'],
+    ['法律咨询', '合规'],
+    ['人力资源', '招聘'],
+    ['运营支持', '咨询'],
+  ];
+
+  const posts = [];
+  for (let i = 1; i <= 30; i++) {
+    const hasImage = Math.random() > 0.7;
+    const images = hasImage
+      ? [`https://images.unsplash.com/photo-1556742049-${String(i + 200).padStart(3, '0')}?w=800`]
+      : [];
+
+    posts.push({
+      id: 200 + i,
+      title: titles[i - 1],
+      content: `我正在寻找一位专业人士协助我解决${categories[i % categories.length]}方面的问题，预算已定，请有意者私信联系。要求：有相关经验，能按时交付质量可靠的工作成果。`,
+      authorId: randomInt(1, 20),
+      authorName: `求助者${randomInt(1, 50)}`,
+      authorAvatar: `https://i.pravatar.cc/150?img=${randomInt(1, 70)}`,
+      isMerchant: false,
+      type: 'bounty',
+      contentType: hasImage ? 'image' : 'text',
+      category: categories[i % categories.length],
+      tags: tagsList[i % tagsList.length],
+      images,
+      videoUrl: '',
+      virtualResources: [],
+      price: randomInt(500, 5000),
+      status: 'published',
+      createdAt: randomDate(new Date(2025, 0, 1), new Date()).toISOString(),
+      viewCount: randomInt(150, 5000),
+      likeCount: randomInt(20, 300),
+      commentCount: randomInt(5, 80),
+      forwardCount: randomInt(5, 100),
+      collectCount: randomInt(5, 50),
+      isLiked: false,
+      isCollected: false,
+      aspectRatio: [0.8, 1.0, 1.2, 1.4][randomInt(0, 3)],
+      comments: generateComments(200 + i, randomInt(5, 20)),
+    });
+  }
+  return posts;
+}
+
+// 生成热点讨论帖子数据
+function generateHotTopicPosts(): any[] {
+  const titles = [
+    '创业者如何应对2025年的市场变化？',
+    'ChatGPT等AI工具对创业的影响和机遇',
+    '创业公司应该优先选择哪条赛道？',
+    '如何判断一个创业项目是否值得投入？',
+    '创业者需要具备哪些核心能力？',
+    '初创企业如何快速建立品牌影响力？',
+    '创业过程中最难的是什么？',
+    '如何找到适合自己的创业方向？',
+    '创业公司如何应对资金短缺？',
+    '创业者如何平衡短期利益和长期发展？',
+    '2025年最值得关注的创业趋势',
+    '创业公司如何进行有效的人才培养？',
+    '如何提高创业成功率？',
+    '创业者如何建立良好的行业人脉？',
+    '创业公司如何进行有效的市场定位？',
+    '如何打造有竞争力的产品？',
+    '创业者如何应对激烈的竞争环境？',
+    '创业公司如何进行有效的成本管理？',
+    '如何进行创业项目的风险评估？',
+    '创业者如何建立可持续的商业模式？',
+    '2025年创业环境的新变化',
+    '创业公司如何进行创新管理？',
+    '如何选择合适的创业合伙人？',
+    '创业者如何保持持续的创新能力？',
+    '创业公司如何建立良好的企业文化？',
+    '如何进行创业项目的有效执行？',
+    '创业者如何应对市场的不确定性？',
+    '创业公司如何进行有效的资源整合？',
+    '如何进行创业项目的持续优化？',
+    '创业者如何建立个人影响力？',
+    '2025年创业者需要关注的关键问题',
+  ];
+
+  const categories = ['市场趋势', '创业策略', '产品创新', '团队管理', '资金管理', '品牌建设', '风险管理', '商业模式'];
+  const tagsList = [
+    ['创业讨论', '趋势'],
+    ['AI创业', '新技术'],
+    ['赛道选择', '方向'],
+    ['项目评估', '投资'],
+    ['创业能力', '素质'],
+    ['品牌建设', '营销'],
+    ['创业困难', '挑战'],
+    ['创业方向', '定位'],
+    ['资金问题', '融资'],
+    ['长期发展', '战略'],
+    ['2025趋势', '预测'],
+    ['人才培养', '团队'],
+    ['成功率', '方法'],
+    ['人脉建设', '社交'],
+    ['市场定位', '策略'],
+    ['产品竞争力', '创新'],
+    ['市场竞争', '应对'],
+    ['成本管理', '优化'],
+    ['风险评估', '控制'],
+    ['商业模式', '盈利'],
+  ];
+
+  const posts = [];
+  for (let i = 1; i <= 30; i++) {
+    const hasImage = Math.random() > 0.4;
+    const hasMultipleImages = hasImage && Math.random() > 0.6;
+    const imageCount = hasMultipleImages ? randomInt(2, 5) : 1;
+
+    const images: string[] = [];
+    if (hasImage) {
+      for (let j = 0; j < imageCount; j++) {
+        images.push(`https://images.unsplash.com/photo-1556742049-${String(i + 300).padStart(3, '0')}${j}?w=800`);
+      }
+    }
+
+    posts.push({
+      id: 300 + i,
+      title: titles[i - 1],
+      content: `这是一个关于${categories[i % categories.length]}的热门话题，希望能引发大家的讨论和思考。欢迎分享你的观点和经验！`,
+      authorId: randomInt(1, 20),
+      authorName: `话题发起者${randomInt(1, 50)}`,
+      authorAvatar: `https://i.pravatar.cc/150?img=${randomInt(1, 70)}`,
+      isMerchant: Math.random() > 0.6,
+      type: 'product',
+      contentType: hasImage ? 'image' : 'text',
+      category: categories[i % categories.length],
+      tags: tagsList[i % tagsList.length],
+      images,
+      videoUrl: '',
+      virtualResources: [],
+      price: 0,
+      status: 'published',
+      createdAt: randomDate(new Date(2025, 0, 1), new Date()).toISOString(),
+      viewCount: randomInt(500, 20000),
+      likeCount: randomInt(100, 2000),
+      commentCount: randomInt(20, 200),
+      forwardCount: randomInt(20, 500),
+      collectCount: randomInt(30, 400),
+      isLiked: false,
+      isCollected: false,
+      aspectRatio: [0.8, 1.0, 1.2, 1.4][randomInt(0, 3)],
+      comments: generateComments(300 + i, randomInt(10, 30)),
+    });
+  }
+  return posts;
+}
+
 // 模拟数据生成函数
 function generateMockData(type: string) {
-  const aspectRatios = [0.8, 1.0, 1.2, 1.4];
-  const baseData: Record<string, any> = {
-    normal: [
-      {
-        id: 1,
-        title: '普通帖子1：创业心得分享',
-        content: '分享我创业三年来的心得体会，希望能帮到大家。',
-        authorId: 1,
-        authorName: '用户1',
-        authorAvatar: 'https://i.pravatar.cc/150?img=1',
-        isMerchant: true,
-        type: 'article',
-        contentType: 'image',
-        category: '创业',
-        tags: ['创业', '心得'],
-        images: ['https://images.unsplash.com/photo-1556742049-0cfed4f7a07d?w=800'],
-        videoUrl: '',
-        virtualResources: [],
-        price: 0,
-        status: 'published',
-        createdAt: new Date().toISOString(),
-        viewCount: 100,
-        likeCount: 50,
-        commentCount: 20,
-        forwardCount: 10,
-        collectCount: 15,
-        isLiked: false,
-        isCollected: false,
-        aspectRatio: 1.0,
-      },
-      {
-        id: 2,
-        title: '普通帖子2：市场营销策略',
-        content: '如何低成本进行市场营销，这里有几个实用技巧。',
-        authorId: 2,
-        authorName: '用户2',
-        authorAvatar: 'https://i.pravatar.cc/150?img=2',
-        isMerchant: true,
-        type: 'article',
-        contentType: 'text',
-        category: '营销',
-        tags: ['营销', '技巧'],
-        images: [],
-        videoUrl: '',
-        virtualResources: [],
-        price: 0,
-        status: 'published',
-        createdAt: new Date(Date.now() - 3600000).toISOString(),
-        viewCount: 150,
-        likeCount: 80,
-        commentCount: 30,
-        forwardCount: 15,
-        collectCount: 25,
-        isLiked: false,
-        isCollected: false,
-        aspectRatio: 0.8,
-      },
-      {
-        id: 3,
-        title: '普通帖子3：团队管理经验',
-        content: '团队管理是一门艺术，分享我的管理经验。',
-        authorId: 3,
-        authorName: '用户3',
-        authorAvatar: 'https://i.pravatar.cc/150?img=3',
-        isMerchant: true,
-        type: 'article',
-        contentType: 'image',
-        category: '管理',
-        tags: ['管理', '团队'],
-        images: ['https://images.unsplash.com/photo-1552664730-d307ca884978?w=800'],
-        videoUrl: '',
-        virtualResources: [],
-        price: 0,
-        status: 'published',
-        createdAt: new Date(Date.now() - 7200000).toISOString(),
-        viewCount: 200,
-        likeCount: 100,
-        commentCount: 40,
-        forwardCount: 20,
-        collectCount: 30,
-        isLiked: false,
-        isCollected: false,
-        aspectRatio: 1.2,
-      },
-    ],
-    paid_qa: [
-      {
-        id: 4,
-        title: '付费问答1：如何快速提升用户增长？',
-        content: '我会详细解答关于用户增长的策略和技巧，包括获客、留存、变现等各个环节。',
-        authorId: 4,
-        authorName: '用户4',
-        authorAvatar: 'https://i.pravatar.cc/150?img=4',
-        isMerchant: true,
-        type: 'qa',
-        contentType: 'text',
-        category: '运营',
-        tags: ['用户增长', '运营'],
-        images: [],
-        videoUrl: '',
-        virtualResources: [],
-        price: 99.00,
-        status: 'published',
-        createdAt: new Date().toISOString(),
-        viewCount: 300,
-        likeCount: 150,
-        commentCount: 60,
-        forwardCount: 30,
-        collectCount: 45,
-        isLiked: false,
-        isCollected: false,
-        aspectRatio: 1.0,
-      },
-      {
-        id: 5,
-        title: '付费问答2：产品MVP如何快速验证？',
-        content: '快速验证产品需求，避免开发资源浪费，我会分享我的经验和案例。',
-        authorId: 5,
-        authorName: '用户5',
-        authorAvatar: 'https://i.pravatar.cc/150?img=5',
-        isMerchant: true,
-        type: 'qa',
-        contentType: 'text',
-        category: '产品',
-        tags: ['产品', 'MVP'],
-        images: [],
-        videoUrl: '',
-        virtualResources: [],
-        price: 149.00,
-        status: 'published',
-        createdAt: new Date(Date.now() - 3600000).toISOString(),
-        viewCount: 250,
-        likeCount: 120,
-        commentCount: 50,
-        forwardCount: 25,
-        collectCount: 35,
-        isLiked: false,
-        isCollected: false,
-        aspectRatio: 0.9,
-      },
-      {
-        id: 6,
-        title: '付费问答3：创业公司如何融资？',
-        content: '从种子轮到A轮，分享我的融资经验和避坑指南。',
-        authorId: 6,
-        authorName: '用户6',
-        authorAvatar: 'https://i.pravatar.cc/150?img=6',
-        isMerchant: true,
-        type: 'qa',
-        contentType: 'text',
-        category: '融资',
-        tags: ['融资', '创业'],
-        images: [],
-        videoUrl: '',
-        virtualResources: [],
-        price: 199.00,
-        status: 'published',
-        createdAt: new Date(Date.now() - 7200000).toISOString(),
-        viewCount: 400,
-        likeCount: 200,
-        commentCount: 80,
-        forwardCount: 40,
-        collectCount: 60,
-        isLiked: false,
-        isCollected: false,
-        aspectRatio: 1.1,
-      },
-    ],
-    bounty: [
-      {
-        id: 7,
-        title: '悬赏求助1：求推荐优质的CRM系统',
-        content: '我们需要一款功能完善的CRM系统，预算有限，求推荐。',
-        authorId: 7,
-        authorName: '用户7',
-        authorAvatar: 'https://i.pravatar.cc/150?img=7',
-        isMerchant: false,
-        type: 'bounty',
-        contentType: 'text',
-        category: 'CRM',
-        tags: ['CRM', '推荐'],
-        images: [],
-        videoUrl: '',
-        virtualResources: [],
-        price: 500.00,
-        status: 'published',
-        createdAt: new Date().toISOString(),
-        viewCount: 350,
-        likeCount: 100,
-        commentCount: 90,
-        forwardCount: 15,
-        collectCount: 20,
-        isLiked: false,
-        isCollected: false,
-        aspectRatio: 1.0,
-      },
-      {
-        id: 8,
-        title: '悬赏求助2：求UI设计师合作',
-        content: '项目急需UI设计师，有兴趣的请私聊，预算500-1000元。',
-        authorId: 8,
-        authorName: '用户8',
-        authorAvatar: 'https://i.pravatar.cc/150?img=8',
-        isMerchant: false,
-        type: 'bounty',
-        contentType: 'image',
-        category: 'UI设计',
-        tags: ['UI设计', '合作'],
-        images: ['https://images.unsplash.com/photo-1561070791-2526d30994b5?w=800'],
-        videoUrl: '',
-        virtualResources: [],
-        price: 1000.00,
-        status: 'published',
-        createdAt: new Date(Date.now() - 3600000).toISOString(),
-        viewCount: 280,
-        likeCount: 80,
-        commentCount: 70,
-        forwardCount: 12,
-        collectCount: 15,
-        isLiked: false,
-        isCollected: false,
-        aspectRatio: 1.3,
-      },
-      {
-        id: 9,
-        title: '悬赏求助3：求SEO优化方案',
-        content: '网站SEO排名一直上不去，求大神给点建议，预算800元。',
-        authorId: 9,
-        authorName: '用户9',
-        authorAvatar: 'https://i.pravatar.cc/150?img=9',
-        isMerchant: false,
-        type: 'bounty',
-        contentType: 'text',
-        category: 'SEO',
-        tags: ['SEO', '优化'],
-        images: [],
-        videoUrl: '',
-        virtualResources: [],
-        price: 800.00,
-        status: 'published',
-        createdAt: new Date(Date.now() - 7200000).toISOString(),
-        viewCount: 220,
-        likeCount: 60,
-        commentCount: 55,
-        forwardCount: 8,
-        collectCount: 10,
-        isLiked: false,
-        isCollected: false,
-        aspectRatio: 0.9,
-      },
-    ],
-    product: [
-      {
-        id: 10,
-        title: '产品推广1：智能客服系统',
-        content: '这是一款基于AI的智能客服系统，可以大幅提升客服效率，限时优惠价999元。',
-        authorId: 10,
-        authorName: '用户10',
-        authorAvatar: 'https://i.pravatar.cc/150?img=10',
-        isMerchant: true,
-        type: 'product',
-        contentType: 'image',
-        category: 'SaaS',
-        tags: ['AI', '客服', 'SaaS'],
-        images: ['https://images.unsplash.com/photo-1531746790731-6c087fecd65a?w=800'],
-        videoUrl: '',
-        virtualResources: [],
-        price: 999.00,
-        status: 'published',
-        createdAt: new Date().toISOString(),
-        viewCount: 500,
-        likeCount: 200,
-        commentCount: 100,
-        forwardCount: 50,
-        collectCount: 80,
-        isLiked: false,
-        isCollected: false,
-        aspectRatio: 1.2,
-      },
-      {
-        id: 11,
-        title: '产品推广2：数据分析平台',
-        content: '强大的数据分析平台，帮助企业快速洞察业务数据，试用价1999元。',
-        authorId: 11,
-        authorName: '用户11',
-        authorAvatar: 'https://i.pravatar.cc/150?img=11',
-        isMerchant: true,
-        type: 'product',
-        contentType: 'text',
-        category: 'BI',
-        tags: ['数据分析', 'BI'],
-        images: [],
-        videoUrl: '',
-        virtualResources: [],
-        price: 1999.00,
-        status: 'published',
-        createdAt: new Date(Date.now() - 3600000).toISOString(),
-        viewCount: 450,
-        likeCount: 180,
-        commentCount: 90,
-        forwardCount: 45,
-        collectCount: 70,
-        isLiked: false,
-        isCollected: false,
-        aspectRatio: 1.0,
-      },
-      {
-        id: 12,
-        title: '产品推广3：营销自动化工具',
-        content: '全渠道营销自动化，提升转化率，现在购买立减300元。',
-        authorId: 12,
-        authorName: '用户12',
-        authorAvatar: 'https://i.pravatar.cc/150?img=12',
-        isMerchant: true,
-        type: 'product',
-        contentType: 'image',
-        category: '营销',
-        tags: ['营销', '自动化'],
-        images: ['https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800'],
-        videoUrl: '',
-        virtualResources: [],
-        price: 2999.00,
-        status: 'published',
-        createdAt: new Date(Date.now() - 7200000).toISOString(),
-        viewCount: 400,
-        likeCount: 160,
-        commentCount: 80,
-        forwardCount: 35,
-        collectCount: 60,
-        isLiked: false,
-        isCollected: false,
-        aspectRatio: 1.1,
-      },
-    ],
+  const dataMap: Record<string, any> = {
+    normal: generateRecommendPosts(),
+    paid_qa: generateKnowledgePosts(),
+    bounty: generateBountyPosts(),
+    product: generateHotTopicPosts(),
   };
-
-  return baseData[type] || [];
+  return dataMap[type] || [];
 }
 
 /**
@@ -397,6 +501,66 @@ router.get('/', (req, res) => {
   } catch (error) {
     console.error('获取帖子列表失败:', error);
     res.status(500).json({ error: '获取帖子列表失败' });
+  }
+});
+
+/**
+ * 获取帖子详情
+ * GET /api/v1/posts/:id
+ */
+router.get('/:id', (req, res) => {
+  try {
+    const { id } = req.params;
+    const { userId } = req.query;
+
+    // 从所有类型中查找帖子
+    const allTypes = ['normal', 'paid_qa', 'bounty', 'product'];
+    let post: any = null;
+    
+    for (const type of allTypes) {
+      const posts = generateMockData(type);
+      post = posts.find((p: any) => p.id === Number(id));
+      if (post) break;
+    }
+
+    if (!post) {
+      return res.status(404).json({ error: '帖子不存在' });
+    }
+
+    res.json({
+      success: true,
+      post: {
+        ...post,
+        isLiked: false,
+        isCollected: false,
+        isFollowing: false,
+      }
+    });
+  } catch (error) {
+    console.error('获取帖子详情失败:', error);
+    res.status(500).json({ error: '获取帖子详情失败' });
+  }
+});
+
+/**
+ * 关注/取消关注用户
+ * POST /api/v1/users/:id/follow
+ * Body: { currentUserId: number }
+ */
+router.post('/:id/follow', (req, res) => {
+  try {
+    const { id } = req.params;
+    const { currentUserId } = req.body;
+
+    // 模拟关注操作
+    res.json({
+      success: true,
+      message: '关注成功',
+      isFollowing: true,
+    });
+  } catch (error) {
+    console.error('关注操作失败:', error);
+    res.status(500).json({ error: '关注操作失败' });
   }
 });
 

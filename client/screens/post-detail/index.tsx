@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { View, ScrollView, TouchableOpacity, TextInput, Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, ScrollView, TouchableOpacity, TextInput, Alert, KeyboardAvoidingView, Platform, Image } from 'react-native';
 import { FontAwesome6 } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
 import { ThemedText } from '@/components/ThemedText';
@@ -21,26 +21,28 @@ interface Comment {
 
 interface Post {
   id: number;
-  author_id: number;
+  authorId: number;
+  authorName: string;
+  authorAvatar: string;
+  isMerchant: boolean;
   type: string;
   title: string | null;
   content: string;
   images: string[];
-  video_url: string | null;
-  qa_price: number | null;
-  bounty_price: number | null;
+  videoUrl: string | null;
+  price: number | null;
   status: string;
-  view_count: number;
-  like_count: number;
-  comment_count: number;
+  viewCount: number;
+  likeCount: number;
+  commentCount: number;
   tags: string[];
-  created_at: string;
-  username: string;
-  avatar_url: string | null;
-  is_purchased: boolean;
-  is_liked: boolean;
-  is_bookmarked: boolean;
-  comments: Comment[];
+  createdAt: string;
+  isLiked: boolean;
+  isCollected: boolean;
+  isFollowing: boolean;
+  isPurchased: boolean;
+  comments: any[];
+  virtualResources?: any[];
 }
 
 export default function PostDetailScreen() {
@@ -100,7 +102,7 @@ export default function PostDetailScreen() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           userId: parseInt(userId),
-          action: post.is_liked ? 'unlike' : 'like'
+          action: post.isLiked ? 'unlike' : 'like'
         }),
       });
 
@@ -108,8 +110,8 @@ export default function PostDetailScreen() {
       if (data.success) {
         setPost({
           ...post,
-          is_liked: !post.is_liked,
-          like_count: post.is_liked ? post.like_count - 1 : post.like_count + 1
+          isLiked: !post.isLiked,
+          likeCount: post.isLiked ? post.likeCount - 1 : post.likeCount + 1
         });
       }
     } catch (error) {
@@ -117,7 +119,38 @@ export default function PostDetailScreen() {
     }
   };
 
-  // 购买付费问答
+  // 关注用户
+  const handleFollow = async () => {
+    if (!post) return;
+
+    try {
+      const userId = await AsyncStorage.getItem('userId');
+      if (!userId) {
+        Alert.alert('提示', '请先登录');
+        return;
+      }
+
+      const response = await fetch(`${API_BASE_URL}/api/v1/posts/${post.authorId}/follow`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          currentUserId: parseInt(userId),
+        }),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        setPost({
+          ...post,
+          isFollowing: !post.isFollowing,
+        });
+      }
+    } catch (error) {
+      Alert.alert('错误', '操作失败');
+    }
+  };
+
+  // 购买付费内容
   const handlePurchase = async () => {
     if (!post) return;
 
@@ -130,7 +163,7 @@ export default function PostDetailScreen() {
 
       Alert.alert(
         '确认购买',
-        `确定支付 ¥${post.qa_price?.toFixed(2)} 购买此付费问答吗？`,
+        `确定支付 ¥${post.price?.toFixed(2)} 购买此内容吗？`,
         [
           { text: '取消', style: 'cancel' },
           {
@@ -233,19 +266,37 @@ export default function PostDetailScreen() {
           <ScrollView contentContainerStyle={styles.scrollContent}>
             {/* 作者信息 */}
             <View style={styles.authorInfo}>
-              <View style={styles.avatar}>
-                <ThemedText variant="body" color={theme.buttonPrimaryText}>
-                  {post.username?.[0] || 'U'}
-                </ThemedText>
-              </View>
-              <View>
+              <Image
+                source={{ uri: post.authorAvatar }}
+                style={styles.authorAvatar}
+              />
+              <View style={styles.authorDetails}>
                 <ThemedText variant="bodyMedium" color={theme.textPrimary}>
-                  {post.username}
+                  {post.authorName}
+                  {post.isMerchant && (
+                    <ThemedText variant="caption" color={theme.primary}>
+                      {' '}商家
+                    </ThemedText>
+                  )}
                 </ThemedText>
                 <ThemedText variant="caption" color={theme.textMuted}>
-                  {new Date(post.created_at).toLocaleString()}
+                  {new Date(post.createdAt).toLocaleString()}
                 </ThemedText>
               </View>
+              <TouchableOpacity
+                style={[
+                  styles.followButton,
+                  post.isFollowing && styles.followButtonFollowing
+                ]}
+                onPress={handleFollow}
+              >
+                <ThemedText
+                  variant="small"
+                  color={post.isFollowing ? theme.textPrimary : theme.buttonPrimaryText}
+                >
+                  {post.isFollowing ? '已关注' : '+ 关注'}
+                </ThemedText>
+              </TouchableOpacity>
             </View>
 
             {/* 帖子标题和内容 */}
@@ -256,16 +307,16 @@ export default function PostDetailScreen() {
             )}
 
             <ThemedText variant="body" color={theme.textSecondary} style={styles.content}>
-              {post.type === 'qa_paid' && !post.is_purchased
+              {post.price && post.price > 0 && !post.isPurchased
                 ? '付费内容，购买后查看完整内容'
                 : post.content}
             </ThemedText>
 
             {/* 价格标签 */}
-            {post.type === 'qa_paid' && !post.is_purchased && (
+            {post.price && post.price > 0 && !post.isPurchased && (
               <TouchableOpacity style={styles.purchaseButton} onPress={handlePurchase}>
                 <ThemedText variant="bodyMedium" color={theme.buttonPrimaryText}>
-                  💰 购买查看 - ¥{post.qa_price?.toFixed(2)}
+                  💰 购买查看 - ¥{post.price.toFixed(2)}
                 </ThemedText>
               </TouchableOpacity>
             )}
@@ -274,11 +325,11 @@ export default function PostDetailScreen() {
             {post.images && post.images.length > 0 && (
               <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.imageScroll}>
                 {post.images.map((imageUrl, index) => (
-                  <View key={index} style={styles.imageContainer}>
-                    <View style={styles.imagePlaceholder}>
-                      <FontAwesome6 name="image" size={32} color={theme.textMuted} />
-                    </View>
-                  </View>
+                  <Image
+                    key={index}
+                    source={{ uri: imageUrl }}
+                    style={styles.postImage}
+                  />
                 ))}
               </ScrollView>
             )}
@@ -301,19 +352,19 @@ export default function PostDetailScreen() {
               <View style={styles.statItem}>
                 <FontAwesome6 name="eye" size={14} color={theme.textMuted} />
                 <ThemedText variant="caption" color={theme.textMuted}>
-                  {post.view_count}
+                  {post.viewCount}
                 </ThemedText>
               </View>
               <View style={styles.statItem}>
                 <FontAwesome6 name="heart" size={14} color={theme.textMuted} />
                 <ThemedText variant="caption" color={theme.textMuted}>
-                  {post.like_count}
+                  {post.likeCount}
                 </ThemedText>
               </View>
               <View style={styles.statItem}>
                 <FontAwesome6 name="comment" size={14} color={theme.textMuted} />
                 <ThemedText variant="caption" color={theme.textMuted}>
-                  {post.comment_count}
+                  {post.commentCount}
                 </ThemedText>
               </View>
             </View>
@@ -325,16 +376,16 @@ export default function PostDetailScreen() {
                 onPress={handleLike}
               >
                 <FontAwesome6
-                  name={post.is_liked ? 'heart' : 'heart'}
+                  name={post.isLiked ? 'heart' : 'heart'}
                   size={20}
-                  color={post.is_liked ? theme.primary : theme.textMuted}
-                  solid={post.is_liked}
+                  color={post.isLiked ? theme.primary : theme.textMuted}
+                  solid={post.isLiked}
                 />
                 <ThemedText
                   variant="small"
-                  color={post.is_liked ? theme.primary : theme.textMuted}
+                  color={post.isLiked ? theme.primary : theme.textMuted}
                 >
-                  点赞
+                  {post.likeCount}
                 </ThemedText>
               </TouchableOpacity>
 
@@ -344,18 +395,18 @@ export default function PostDetailScreen() {
               </TouchableOpacity>
 
               <TouchableOpacity style={styles.actionButton}>
-                <FontAwesome6 name="bookmark" size={20} color={theme.textMuted} />
-                <ThemedText variant="small" color={theme.textMuted}>收藏</ThemedText>
+                <FontAwesome6 name="bookmark" size={20} color={post.isCollected ? theme.primary : theme.textMuted} solid={post.isCollected} />
+                <ThemedText variant="small" color={post.isCollected ? theme.primary : theme.textMuted}>收藏</ThemedText>
               </TouchableOpacity>
             </View>
 
             {/* 评论区 */}
             <View style={styles.commentsSection}>
               <ThemedText variant="bodyMedium" color={theme.textPrimary} style={styles.sectionTitle}>
-                评论 ({post.comment_count})
+                评论 ({post.commentCount})
               </ThemedText>
 
-              {post.comments.length === 0 ? (
+              {!post.comments || post.comments.length === 0 ? (
                 <View style={styles.emptyComments}>
                   <ThemedText variant="body" color={theme.textMuted}>
                     暂无评论，快来抢沙发吧
@@ -364,11 +415,10 @@ export default function PostDetailScreen() {
               ) : (
                 post.comments.map((comment) => (
                   <View key={comment.id} style={styles.commentItem}>
-                    <View style={styles.commentAvatar}>
-                      <ThemedText variant="small" color={theme.buttonPrimaryText}>
-                        {comment.username?.[0] || 'U'}
-                      </ThemedText>
-                    </View>
+                    <Image
+                      source={{ uri: comment.avatar }}
+                      style={styles.commentAvatar}
+                    />
                     <View style={styles.commentContent}>
                       <ThemedText variant="bodyMedium" color={theme.textPrimary}>
                         {comment.username}
@@ -376,9 +426,19 @@ export default function PostDetailScreen() {
                       <ThemedText variant="body" color={theme.textSecondary}>
                         {comment.content}
                       </ThemedText>
-                      <ThemedText variant="caption" color={theme.textMuted}>
-                        {new Date(comment.created_at).toLocaleString()}
-                      </ThemedText>
+                      <View style={styles.commentMeta}>
+                        <ThemedText variant="caption" color={theme.textMuted}>
+                          {new Date(comment.createdAt).toLocaleString()}
+                        </ThemedText>
+                        {comment.likeCount > 0 && (
+                          <>
+                            <FontAwesome6 name="heart" size={12} color={theme.textMuted} />
+                            <ThemedText variant="caption" color={theme.textMuted}>
+                              {comment.likeCount}
+                            </ThemedText>
+                          </>
+                        )}
+                      </View>
                     </View>
                   </View>
                 ))

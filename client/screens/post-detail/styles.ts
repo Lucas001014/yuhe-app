@@ -33,6 +33,14 @@ export const createStyles = (theme: Theme) => {
       marginBottom: Spacing.md,
       gap: Spacing.md,
     },
+    authorAvatar: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+    },
+    authorDetails: {
+      flex: 1,
+    },
     avatar: {
       width: 40,
       height: 40,
@@ -40,6 +48,17 @@ export const createStyles = (theme: Theme) => {
       backgroundColor: theme.primary,
       justifyContent: 'center',
       alignItems: 'center',
+    },
+    followButton: {
+      paddingHorizontal: Spacing.lg,
+      paddingVertical: Spacing.sm,
+      backgroundColor: theme.primary,
+      borderRadius: BorderRadius.lg,
+    },
+    followButtonFollowing: {
+      backgroundColor: theme.backgroundTertiary,
+      borderWidth: 1,
+      borderColor: theme.borderLight,
     },
     title: {
       paddingHorizontal: Spacing.lg,
@@ -60,6 +79,12 @@ export const createStyles = (theme: Theme) => {
     },
     imageScroll: {
       marginBottom: Spacing.md,
+    },
+    postImage: {
+      width: 200,
+      height: 200,
+      borderRadius: BorderRadius.md,
+      marginRight: Spacing.sm,
     },
     imageContainer: {
       marginRight: Spacing.sm,
@@ -132,9 +157,12 @@ export const createStyles = (theme: Theme) => {
       width: 32,
       height: 32,
       borderRadius: 16,
-      backgroundColor: theme.primary,
-      justifyContent: 'center',
+    },
+    commentMeta: {
+      flexDirection: 'row',
       alignItems: 'center',
+      gap: Spacing.xs,
+      marginTop: Spacing.xs,
     },
     commentContent: {
       flex: 1,
