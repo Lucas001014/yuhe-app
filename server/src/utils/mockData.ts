@@ -52,7 +52,6 @@ interface Post {
   collectCount: number;
   isLiked: boolean;
   isCollected: boolean;
-  aspectRatio?: number; // 宽高比（用于瀑布流布局）
 }
 
 // 模拟用户
@@ -198,64 +197,6 @@ const categories = [
   '市场营销', '商业模式', '创业故事', '行业洞察', '工具推荐'
 ];
 
-// 类别数据存储（带ID和slug）
-let categoryData: { id: number; name: string; slug: string; createdAt: string }[] = [
-  { id: 1, name: '产品心得', slug: 'product', createdAt: '2025-01-01T00:00:00Z' },
-  { id: 2, name: '融资经验', slug: 'funding', createdAt: '2025-01-01T00:00:00Z' },
-  { id: 3, name: '运营推广', slug: 'marketing', createdAt: '2025-01-01T00:00:00Z' },
-  { id: 4, name: '团队管理', slug: 'team', createdAt: '2025-01-01T00:00:00Z' },
-  { id: 5, name: '技术分享', slug: 'tech', createdAt: '2025-01-01T00:00:00Z' },
-  { id: 6, name: '市场营销', slug: 'market', createdAt: '2025-01-01T00:00:00Z' },
-  { id: 7, name: '商业模式', slug: 'business', createdAt: '2025-01-01T00:00:00Z' },
-  { id: 8, name: '创业故事', slug: 'startup', createdAt: '2025-01-01T00:00:00Z' },
-  { id: 9, name: '行业洞察', slug: 'insight', createdAt: '2025-01-01T00:00:00Z' },
-  { id: 10, name: '工具推荐', slug: 'tools', createdAt: '2025-01-01T00:00:00Z' },
-];
-
-let nextCategoryId = 11;
-
-// 导出类别管理函数
-export function getCategories() {
-  return categoryData;
-}
-
-export function getCategoryById(id: number) {
-  return categoryData.find(c => c.id === id);
-}
-
-export function addCategory(name: string) {
-  const slug = name.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '');
-  const newCategory = {
-    id: nextCategoryId++,
-    name,
-    slug,
-    createdAt: new Date().toISOString(),
-  };
-  categoryData.push(newCategory);
-  return newCategory;
-}
-
-export function updateCategory(id: number, name: string) {
-  const index = categoryData.findIndex(c => c.id === id);
-  if (index === -1) return null;
-
-  const slug = name.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '');
-  categoryData[index] = {
-    ...categoryData[index],
-    name,
-    slug,
-  };
-  return categoryData[index];
-}
-
-export function deleteCategory(id: number) {
-  const index = categoryData.findIndex(c => c.id === id);
-  if (index === -1) return false;
-
-  categoryData.splice(index, 1);
-  return true;
-}
-
 // 标签
 const tagLists = [
   ['创业', '产品', '心得'],
@@ -389,8 +330,6 @@ export function generatePosts(count: number = 100): Post[] {
       collectCount: Math.floor(Math.random() * 150),
       isLiked: false,
       isCollected: false,
-      // 添加宽高比用于瀑布流布局
-      aspectRatio: 0.7 + Math.random() * 0.7, // 0.7 ~ 1.4
     };
 
     posts.push(post);

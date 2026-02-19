@@ -8,7 +8,7 @@ import { ThemedView } from '@/components/ThemedView';
 import { Screen } from '@/components/Screen';
 import { useTheme } from '@/hooks/useTheme';
 import { useSafeRouter } from '@/hooks/useSafeRouter';
-import { createStyles, getCardWidth } from './styles';
+import { createStyles } from './styles';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Image } from 'expo-image';
 
@@ -38,7 +38,6 @@ interface Post {
   isLiked: boolean;
   isCollected: boolean;
   isPurchased?: boolean; // 是否已购买
-  aspectRatio?: number; // 宽高比（用于瀑布流布局）
 }
 
 interface VirtualResource {
@@ -83,36 +82,6 @@ export default function HomeScreen() {
     '全部', '产品心得', '融资经验', '运营推广', '团队管理',
     '技术分享', '市场营销', '商业模式', '创业故事', '行业洞察', '工具推荐'
   ];
-
-  // 分配帖子到左右两列（瀑布流）
-  const masonryColumns = useMemo(() => {
-    if (posts.length === 0) return { left: [], right: [] };
-
-    const gap = 12;
-    const padding = 16;
-    const cardWidth = getCardWidth(width);
-
-    const leftColumn: Post[] = [];
-    const rightColumn: Post[] = [];
-    let leftHeight = 0;
-    let rightHeight = 0;
-
-    posts.forEach(post => {
-      const aspectRatio = post.aspectRatio || 1; // 默认 1:1
-      const imageHeight = cardWidth / aspectRatio;
-      const cardHeight = imageHeight + 72; // 72 = 内容区域高度
-
-      if (leftHeight <= rightHeight) {
-        leftColumn.push(post);
-        leftHeight += cardHeight + gap;
-      } else {
-        rightColumn.push(post);
-        rightHeight += cardHeight + gap;
-      }
-    });
-
-    return { left: leftColumn, right: rightColumn };
-  }, [posts, width]);
 
   const API_BASE_URL = process.env.EXPO_PUBLIC_BACKEND_BASE_URL;
 
@@ -394,132 +363,108 @@ export default function HomeScreen() {
     }
   };
 
-  // 渲染瀑布流帖子卡片
-  const renderMasonryCard = (post: Post, cardWidth: number) => {
-    const aspectRatio = post.aspectRatio || 1; // 默认 1:1
-    const imageHeight = cardWidth / aspectRatio;
+  // 渲染九宫格帖子卡片
+  const renderGridCard = (post: Post) => (
+    <TouchableOpacity
+      key={post.id}
+      style={styles.gridCard}
+      onPress={() => router.push('/post', { id: post.id })}
+    >
+      {/* 主图或视频封面 */}
+      <View style={styles.gridImageContainer}>
+        {post.images && post.images.length > 0 ? (
+          <Image
+            source={{ uri: post.images[0] }}
+            style={styles.gridImage}
+            contentFit="cover"
+          />
+        ) : (
+          <View style={[styles.gridImage, styles.gridImagePlaceholder]}>
+            <FontAwesome6 name="image" size={32} color={theme.textMuted} />
+          </View>
+        )}
 
-    return (
-      <TouchableOpacity
-        key={post.id}
-        style={styles.masonryCard}
-        onPress={() => router.push('/post', { id: post.id })}
-      >
-        {/* 图片区域 */}
-        <View style={[styles.masonryImageContainer, { height: imageHeight }]}>
-          {post.images && post.images.length > 0 ? (
-            <Image
-              source={{ uri: post.images[0] }}
-              style={styles.masonryImage}
-              contentFit="cover"
-            />
-          ) : (
-            <View style={[styles.masonryImage, styles.masonryImagePlaceholder]}>
-              <FontAwesome6 name="image" size={32} color={theme.textMuted} />
-            </View>
-          )}
+        {/* 类型标签 */}
+        <View style={[
+          styles.gridTypeBadge,
+          { backgroundColor: post.type === 'paid' || post.type === 'bounty'
+            ? `${theme.primary}CC`
+            : `${theme.success}CC` }
+        ]}>
+          <ThemedText variant="caption" color="#fff">
+            {getPostTypeLabel(post.type)}
+          </ThemedText>
+        </View>
 
-          {/* 视频标识 */}
-          {post.contentType === 'video' && (
-            <View style={styles.videoIcon}>
-              <FontAwesome6 name="play" size={16} color="#fff" />
-            </View>
-          )}
+        {/* 商家标识 */}
+        {post.isMerchant && (
+          <View style={styles.gridMerchantBadge}>
+            <FontAwesome6 name="store" size={10} color={theme.warning} />
+          </View>
+        )}
 
-          {/* 类型标签 */}
-          <View style={[
-            styles.masonryTypeBadge,
-            { backgroundColor: post.type === 'paid' || post.type === 'bounty'
-              ? `${theme.primary}CC`
-              : `${theme.success}CC` }
-          ]}>
-            <ThemedText variant="caption" color="#fff">
-              {getPostTypeLabel(post.type)}
+        {/* 有虚拟资料标识 */}
+        {post.virtualResources && post.virtualResources.length > 0 && (
+          <View style={styles.gridResourceBadge}>
+            <FontAwesome6 name="paperclip" size={10} color={theme.buttonPrimaryText} />
+          </View>
+        )}
+      </View>
+
+      {/* 卡片内容 */}
+      <View style={styles.gridCardContent}>
+        {/* 标题 */}
+        <ThemedText
+          variant="bodyMedium"
+          color={theme.textPrimary}
+          style={styles.gridTitle}
+          numberOfLines={2}
+        >
+          {post.title || '无标题'}
+        </ThemedText>
+
+        {/* 作者和互动 */}
+        <View style={styles.gridFooter}>
+          <View style={styles.gridAuthor}>
+            <Image source={{ uri: post.authorAvatar }} style={styles.gridAvatar} />
+            <ThemedText variant="caption" color={theme.textMuted} numberOfLines={1}>
+              {post.authorName}
             </ThemedText>
           </View>
-
-          {/* 商家标识 */}
-          {post.isMerchant && (
-            <View style={styles.masonryMerchantBadge}>
-              <FontAwesome6 name="store" size={10} color={theme.warning} />
-            </View>
-          )}
-
-          {/* 虚拟资料标识 */}
-          {post.virtualResources && post.virtualResources.length > 0 && (
-            <View style={styles.masonryResourceBadge}>
-              <FontAwesome6 name="paperclip" size={10} color="#fff" />
-            </View>
-          )}
-        </View>
-
-        {/* 内容区域 */}
-        <View style={styles.masonryContent}>
-          {/* 标题 */}
-          <ThemedText
-            variant="bodyMedium"
-            color={theme.textPrimary}
-            style={styles.masonryTitle}
-            numberOfLines={2}
-          >
-            {post.title || '无标题'}
+          <ThemedText variant="caption" color={theme.textMuted}>
+            ♥ {post.likeCount}
           </ThemedText>
-
-          {/* 作者信息 */}
-          <View style={styles.masonryFooter}>
-            <View style={styles.masonryAuthor}>
-              <Image source={{ uri: post.authorAvatar }} style={styles.masonryAvatar} />
-              <ThemedText variant="caption" color={theme.textMuted} numberOfLines={1}>
-                {post.authorName}
-              </ThemedText>
-            </View>
-            <View style={styles.masonryLikes}>
-              <FontAwesome6 name="heart" size={10} color={theme.textMuted} />
-              <ThemedText variant="caption" color={theme.textMuted} style={{ marginLeft: 2 }}>
-                {post.likeCount}
-              </ThemedText>
-            </View>
-          </View>
         </View>
-      </TouchableOpacity>
-    );
-  };
+      </View>
+    </TouchableOpacity>
+  );
 
   return (
     <Screen backgroundColor={theme.backgroundRoot} statusBarStyle="light">
       {/* 顶部类别导航 */}
       <View style={styles.categoryNav}>
-        <View style={styles.categoryScrollViewWrapper}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoryScroll}>
-            {categories.map((category) => (
-              <TouchableOpacity
-                key={category}
-                style={[
-                  styles.categoryItem,
-                  activeTab === category && styles.activeCategoryItem
-                ]}
-                onPress={() => setActiveTab(category)}
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoryScroll}>
+          {categories.map((category) => (
+            <TouchableOpacity
+              key={category}
+              style={[
+                styles.categoryItem,
+                activeTab === category && styles.activeCategoryItem
+              ]}
+              onPress={() => setActiveTab(category)}
+            >
+              <ThemedText
+                variant="bodyMedium"
+                color={activeTab === category ? theme.buttonPrimaryText : theme.textSecondary}
               >
-                <ThemedText
-                  variant="bodyMedium"
-                  color={activeTab === category ? theme.buttonPrimaryText : theme.textSecondary}
-                >
-                  {category}
-                </ThemedText>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </View>
-        {/* 管理入口 */}
-        <TouchableOpacity
-          style={[styles.adminButton, { backgroundColor: theme.primary }]}
-          onPress={() => router.push('/admin')}
-        >
-          <FontAwesome6 name="gear" size={20} color="#fff" />
-        </TouchableOpacity>
+                {category}
+              </ThemedText>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
       </View>
 
-      {/* 瀑布流帖子列表 */}
+      {/* 九宫格帖子列表 */}
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {posts.length === 0 ? (
           <View style={styles.emptyContainer}>
@@ -529,15 +474,8 @@ export default function HomeScreen() {
             </ThemedText>
           </View>
         ) : (
-          <View style={styles.masonryContainer}>
-            {/* 左列 */}
-            <View style={styles.masonryColumn}>
-              {masonryColumns.left.map(post => renderMasonryCard(post, getCardWidth(width)))}
-            </View>
-            {/* 右列 */}
-            <View style={styles.masonryColumn}>
-              {masonryColumns.right.map(post => renderMasonryCard(post, getCardWidth(width)))}
-            </View>
+          <View style={styles.gridContainer}>
+            {posts.map(renderGridCard)}
           </View>
         )}
       </ScrollView>
