@@ -275,6 +275,18 @@ export default function ProfileScreen() {
 
         {/* 功能列表 */}
         <View style={styles.menuSection}>
+          <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/wallet')}>
+            <FontAwesome6 name="wallet" size={20} color={theme.primary} />
+            <ThemedText variant="body" color={theme.textPrimary}>我的钱包</ThemedText>
+            <FontAwesome6 name="chevron-right" size={16} color={theme.textMuted} />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/orders')}>
+            <FontAwesome6 name="file-invoice-dollar" size={20} color={theme.textSecondary} />
+            <ThemedText variant="body" color={theme.textPrimary}>我的订单</ThemedText>
+            <FontAwesome6 name="chevron-right" size={16} color={theme.textMuted} />
+          </TouchableOpacity>
+
           <TouchableOpacity style={styles.menuItem}>
             <FontAwesome6 name="file-lines" size={20} color={theme.textSecondary} />
             <ThemedText variant="body" color={theme.textPrimary}>我的发布</ThemedText>

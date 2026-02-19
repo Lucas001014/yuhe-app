@@ -1,4 +1,5 @@
 import express from 'express';
+import { getDB } from '../utils/db';
 
 const router = express.Router();
 
@@ -414,6 +415,107 @@ router.put('/transactions/:id/refund', (req, res) => {
       success: false,
       error: '处理退款失败'
     });
+  }
+});
+
+// 审核帖子
+router.post('/post/audit', async (req, res) => {
+  try {
+    const { postId, status, auditUserId, reason } = req.body;
+    const db = getDB(req);
+
+    const post = await db.find('posts', { id: postId });
+    if (!post) {
+      return res.status(404).json({ success: false, error: '帖子不存在' });
+    }
+
+    await db.update('posts', { id: postId }, {
+      status,
+      audit_time: new Date(),
+      audit_user_id: auditUserId,
+      audit_reason: reason,
+    });
+
+    res.json({ success: true, message: status === 1 ? '帖子审核通过' : '帖子审核拒绝' });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: '服务器错误', details: error.message });
+  }
+});
+
+// 审核提现
+router.post('/withdraw/audit', async (req, res) => {
+  try {
+    const { withdrawId, status, auditUserId } = req.body;
+    const db = getDB(req);
+
+    const withdraw = await db.find('withdraw', { id: withdrawId });
+    if (!withdraw) {
+      return res.status(404).json({ success: false, error: '提现单不存在' });
+    }
+    if (withdraw.status !== 0) {
+      return res.status(400).json({ success: false, error: '提现单已审核' });
+    }
+
+    if (status === 1) {
+      // 同意提现：扣除冻结金额
+      await db.decrement('wallet', { user_id: withdraw.user_id }, 'freeze_balance', Number(withdraw.amount));
+      await db.increment('wallet', { user_id: withdraw.user_id }, 'total_withdraw', Number(withdraw.amount));
+    } else {
+      // 拒绝提现：解冻金额
+      await db.increment('wallet', { user_id: withdraw.user_id }, 'balance', Number(withdraw.amount));
+      await db.decrement('wallet', { user_id: withdraw.user_id }, 'freeze_balance', Number(withdraw.amount));
+    }
+
+    await db.update('withdraw', { id: withdrawId }, {
+      status,
+      audit_user_id: auditUserId,
+      audit_time: new Date(),
+    });
+
+    res.json({
+      success: true,
+      message: status === 1 ? '已同意提现（请手动打款）' : '已拒绝提现',
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: '服务器错误', details: error.message });
+  }
+});
+
+// 审核退款
+router.post('/refund/audit', async (req, res) => {
+  try {
+    const { refundId, status } = req.body;
+    const db = getDB(req);
+
+    const refund = await db.find('refunds', { id: refundId });
+    if (!refund) {
+      return res.status(404).json({ success: false, error: '退款单不存在' });
+    }
+    if (refund.status !== 0) {
+      return res.status(400).json({ success: false, error: '退款单已审核' });
+    }
+
+    const order = await db.find('orders', { id: refund.order_id });
+
+    if (status === 1) {
+      // 同意退款：给买家加余额
+      const wallet = await db.find('wallet', { user_id: refund.user_id });
+      if (wallet) {
+        await db.increment('wallet', { user_id: refund.user_id }, 'balance', Number(refund.refund_fee));
+      }
+      // 更新订单状态
+      await db.update('orders', { id: order.id }, { status: 3 }); // 已退款
+    }
+
+    // 更新退款单状态
+    await db.update('refunds', { id: refundId }, {
+      status,
+      audit_time: new Date(),
+    });
+
+    res.json({ success: true, message: status === 1 ? '退款成功' : '退款已拒绝' });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: '服务器错误', details: error.message });
   }
 });
 

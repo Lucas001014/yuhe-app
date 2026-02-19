@@ -5,6 +5,13 @@ import authRouter from './routes/auth';
 import postsRouter from './routes/posts';
 import transactionsRouter from './routes/transactions';
 import adminRouter from './routes/admin';
+import orderRouter from './routes/order';
+import walletRouter from './routes/wallet';
+import withdrawRouter from './routes/withdraw';
+import refundRouter from './routes/refund';
+import iapRouter from './routes/iap';
+import smsRouter from './routes/sms';
+import auditRouter from './routes/audit';
 
 const app = express();
 const port = process.env.PORT || 9091;
@@ -61,6 +68,13 @@ app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/posts', postsRouter);
 app.use('/api/v1/transactions', transactionsRouter);
 app.use('/api/v1/admin', adminRouter);
+app.use('/api/v1/order', orderRouter);
+app.use('/api/v1/wallet', walletRouter);
+app.use('/api/v1/withdraw', withdrawRouter);
+app.use('/api/v1/refund', refundRouter);
+app.use('/api/v1/iap', iapRouter);
+app.use('/api/v1/sms', smsRouter);
+app.use('/api/v1/audit', auditRouter);
 
 // 404 处理
 app.use((req, res) => {
