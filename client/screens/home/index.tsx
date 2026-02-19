@@ -510,13 +510,21 @@ export default function HomeScreen() {
             ))}
           </ScrollView>
         </View>
-        {/* 管理入口 */}
-        <TouchableOpacity
-          style={[styles.adminButton, { backgroundColor: theme.primary }]}
-          onPress={() => router.push('/admin-web')}
-        >
-          <FontAwesome6 name="gear" size={20} color="#fff" />
-        </TouchableOpacity>
+        {/* 管理入口和控制面板 */}
+        <View style={styles.controlButtons}>
+          <TouchableOpacity
+            style={[styles.controlButton, { backgroundColor: theme.primary }]}
+            onPress={() => router.push('/admin-web')}
+          >
+            <FontAwesome6 name="gear" size={18} color="#fff" />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.controlButton, { backgroundColor: theme.accent }]}
+            onPress={() => router.push('/control-panel')}
+          >
+            <FontAwesome6 name="sliders" size={18} color="#fff" />
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* 瀑布流帖子列表 */}

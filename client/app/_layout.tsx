@@ -27,6 +27,7 @@ export default function RootLayout() {
             <Stack.Screen name="admin/users" options={{ title: "用户管理" }} />
             <Stack.Screen name="admin/categories" options={{ title: "类别管理" }} />
             <Stack.Screen name="admin-web" options={{ title: "管理后台" }} />
+            <Stack.Screen name="control-panel" options={{ title: "控制面板" }} />
           </Stack>
           <Toast />
         </GestureHandlerRootView>
