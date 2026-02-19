@@ -15,16 +15,15 @@ function randomItem<T>(array: T[]): T {
   return array[Math.floor(Math.random() * array.length)];
 }
 
-// 生成图片URL
-function generateImageUrls(keyword: string, count: number = 1): string[] {
+// 生成图片URL（使用 picsum.photos 稳定服务）
+function generateImageUrls(count: number = 1): string[] {
   const urls: string[] = [];
-  const imageKeywords = ['business', 'startup', 'technology', 'office', 'team', 'meeting', 'innovation', 'strategy', 'marketing', 'finance', 'computer', 'work', 'design', 'data', 'analytics'];
   
   for (let i = 0; i < count; i++) {
-    const randomKeyword = keyword || imageKeywords[randomInt(0, imageKeywords.length - 1)];
     const width = randomInt(600, 900);
     const height = Math.floor(width * [0.7, 0.8, 1.0, 1.2, 1.3][randomInt(0, 4)]);
-    urls.push(`https://source.unsplash.com/${width}x${height}/?${encodeURIComponent(randomKeyword)}`);
+    const randomId = randomInt(1, 1000);
+    urls.push(`https://picsum.photos/${width}/${height}?random=${randomId}`);
   }
   return urls;
 }
@@ -123,8 +122,7 @@ function generateRecommendPosts(): any[] {
 
     const images: string[] = [];
     if (hasImage) {
-      const category = categories[i % categories.length];
-      images.push(...generateImageUrls(category, imageCount));
+      images.push(...generateImageUrls(imageCount));
     }
 
     posts.push({
@@ -211,9 +209,9 @@ function generateKnowledgePosts(): any[] {
 
   const posts = [];
   for (let i = 1; i <= 30; i++) {
-    const hasImage = Math.random() > 0.5;
+    const hasImage = Math.random() > 0.3; // 提高图片生成概率到70%
     const images = hasImage
-      ? generateImageUrls(categories[i % categories.length], 1)
+      ? generateImageUrls(1)
       : [];
 
     posts.push({
@@ -307,9 +305,9 @@ function generateBountyPosts(): any[] {
 
   const posts = [];
   for (let i = 1; i <= 30; i++) {
-    const hasImage = Math.random() > 0.7;
+    const hasImage = Math.random() > 0.4; // 提高图片生成概率到60%
     const images = hasImage
-      ? generateImageUrls(categories[i % categories.length], 1)
+      ? generateImageUrls(1)
       : [];
 
     posts.push({
@@ -412,8 +410,7 @@ function generateHotTopicPosts(): any[] {
 
     const images: string[] = [];
     if (hasImage) {
-      const category = categories[i % categories.length];
-      images.push(...generateImageUrls(category, imageCount));
+      images.push(...generateImageUrls(imageCount));
     }
 
     posts.push({
