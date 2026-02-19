@@ -19,6 +19,7 @@ export default function RootLayout() {
         <GestureHandlerRootView style={{ flex: 1 }}>
           <StatusBar style="dark"></StatusBar>
           <Stack>
+            <Stack.Screen name="index" options={{ headerShown: false }} />
             <Stack.Screen name="(tabs)" options={{ title: "" }} />
             <Stack.Screen name="login" options={{ title: "登录" }} />
             <Stack.Screen name="post-detail" options={{ title: "帖子详情" }} />
