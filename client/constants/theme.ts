@@ -6,6 +6,7 @@ export const Colors = {
     primary: "#4F46E5", // Indigo-600 - 品牌主色，代表科技与智能
     accent: "#8B5CF6", // Violet-500 - 辅助色，代表创造力
     success: "#10B981", // Emerald-500
+    warning: "#F59E0B", // Amber-500
     error: "#EF4444",
     backgroundRoot: "#FAFAFA",
     backgroundDefault: "#FFFFFF",
@@ -22,6 +23,7 @@ export const Colors = {
     primary: "#818CF8", // Indigo-400 - 暗色模式品牌主色
     accent: "#A78BFA", // Violet-400
     success: "#34D399",
+    warning: "#FBBF24", // Amber-400
     error: "#F87171",
     backgroundRoot: "#09090B", // 更深的背景色
     backgroundDefault: "#1C1C1E",

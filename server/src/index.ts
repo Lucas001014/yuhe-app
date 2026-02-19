@@ -4,6 +4,7 @@ import { Pool } from 'pg';
 import authRouter from './routes/auth';
 import postsRouter from './routes/posts';
 import transactionsRouter from './routes/transactions';
+import adminRouter from './routes/admin';
 
 const app = express();
 const port = process.env.PORT || 9091;
@@ -59,6 +60,7 @@ app.get('/api/v1/health', (req, res) => {
 app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/posts', postsRouter);
 app.use('/api/v1/transactions', transactionsRouter);
+app.use('/api/v1/admin', adminRouter);
 
 // 404 处理
 app.use((req, res) => {

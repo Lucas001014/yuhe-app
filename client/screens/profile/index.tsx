@@ -287,6 +287,12 @@ export default function ProfileScreen() {
             <FontAwesome6 name="chevron-right" size={16} color={theme.textMuted} />
           </TouchableOpacity>
 
+          <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/admin')}>
+            <FontAwesome6 name="shield-halved" size={20} color={theme.primary} />
+            <ThemedText variant="body" color={theme.primary}>管理控制台</ThemedText>
+            <FontAwesome6 name="chevron-right" size={16} color={theme.textMuted} />
+          </TouchableOpacity>
+
           <TouchableOpacity style={styles.menuItem}>
             <FontAwesome6 name="gear" size={20} color={theme.textSecondary} />
             <ThemedText variant="body" color={theme.textPrimary}>设置</ThemedText>
