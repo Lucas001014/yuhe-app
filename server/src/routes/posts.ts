@@ -1,23 +1,347 @@
 import express from 'express';
-import { generatePosts, generateAllComments } from '../utils/mockData';
 
 const router = express.Router();
 
-// 生成模拟数据
-const allPosts = generatePosts(100);
-const allComments = generateAllComments(allPosts);
+// 模拟数据生成函数
+function generateMockData(type: string) {
+  const aspectRatios = [0.8, 1.0, 1.2, 1.4];
+  const baseData: Record<string, any> = {
+    normal: [
+      {
+        id: 1,
+        title: '普通帖子1：创业心得分享',
+        content: '分享我创业三年来的心得体会，希望能帮到大家。',
+        authorId: 1,
+        authorName: '用户1',
+        authorAvatar: 'https://i.pravatar.cc/150?img=1',
+        isMerchant: true,
+        type: 'article',
+        contentType: 'image',
+        category: '创业',
+        tags: ['创业', '心得'],
+        images: ['https://images.unsplash.com/photo-1556742049-0cfed4f7a07d?w=800'],
+        videoUrl: '',
+        virtualResources: [],
+        price: 0,
+        status: 'published',
+        createdAt: new Date().toISOString(),
+        viewCount: 100,
+        likeCount: 50,
+        commentCount: 20,
+        forwardCount: 10,
+        collectCount: 15,
+        isLiked: false,
+        isCollected: false,
+        aspectRatio: 1.0,
+      },
+      {
+        id: 2,
+        title: '普通帖子2：市场营销策略',
+        content: '如何低成本进行市场营销，这里有几个实用技巧。',
+        authorId: 2,
+        authorName: '用户2',
+        authorAvatar: 'https://i.pravatar.cc/150?img=2',
+        isMerchant: true,
+        type: 'article',
+        contentType: 'text',
+        category: '营销',
+        tags: ['营销', '技巧'],
+        images: [],
+        videoUrl: '',
+        virtualResources: [],
+        price: 0,
+        status: 'published',
+        createdAt: new Date(Date.now() - 3600000).toISOString(),
+        viewCount: 150,
+        likeCount: 80,
+        commentCount: 30,
+        forwardCount: 15,
+        collectCount: 25,
+        isLiked: false,
+        isCollected: false,
+        aspectRatio: 0.8,
+      },
+      {
+        id: 3,
+        title: '普通帖子3：团队管理经验',
+        content: '团队管理是一门艺术，分享我的管理经验。',
+        authorId: 3,
+        authorName: '用户3',
+        authorAvatar: 'https://i.pravatar.cc/150?img=3',
+        isMerchant: true,
+        type: 'article',
+        contentType: 'image',
+        category: '管理',
+        tags: ['管理', '团队'],
+        images: ['https://images.unsplash.com/photo-1552664730-d307ca884978?w=800'],
+        videoUrl: '',
+        virtualResources: [],
+        price: 0,
+        status: 'published',
+        createdAt: new Date(Date.now() - 7200000).toISOString(),
+        viewCount: 200,
+        likeCount: 100,
+        commentCount: 40,
+        forwardCount: 20,
+        collectCount: 30,
+        isLiked: false,
+        isCollected: false,
+        aspectRatio: 1.2,
+      },
+    ],
+    paid_qa: [
+      {
+        id: 4,
+        title: '付费问答1：如何快速提升用户增长？',
+        content: '我会详细解答关于用户增长的策略和技巧，包括获客、留存、变现等各个环节。',
+        authorId: 4,
+        authorName: '用户4',
+        authorAvatar: 'https://i.pravatar.cc/150?img=4',
+        isMerchant: true,
+        type: 'qa',
+        contentType: 'text',
+        category: '运营',
+        tags: ['用户增长', '运营'],
+        images: [],
+        videoUrl: '',
+        virtualResources: [],
+        price: 99.00,
+        status: 'published',
+        createdAt: new Date().toISOString(),
+        viewCount: 300,
+        likeCount: 150,
+        commentCount: 60,
+        forwardCount: 30,
+        collectCount: 45,
+        isLiked: false,
+        isCollected: false,
+        aspectRatio: 1.0,
+      },
+      {
+        id: 5,
+        title: '付费问答2：产品MVP如何快速验证？',
+        content: '快速验证产品需求，避免开发资源浪费，我会分享我的经验和案例。',
+        authorId: 5,
+        authorName: '用户5',
+        authorAvatar: 'https://i.pravatar.cc/150?img=5',
+        isMerchant: true,
+        type: 'qa',
+        contentType: 'text',
+        category: '产品',
+        tags: ['产品', 'MVP'],
+        images: [],
+        videoUrl: '',
+        virtualResources: [],
+        price: 149.00,
+        status: 'published',
+        createdAt: new Date(Date.now() - 3600000).toISOString(),
+        viewCount: 250,
+        likeCount: 120,
+        commentCount: 50,
+        forwardCount: 25,
+        collectCount: 35,
+        isLiked: false,
+        isCollected: false,
+        aspectRatio: 0.9,
+      },
+      {
+        id: 6,
+        title: '付费问答3：创业公司如何融资？',
+        content: '从种子轮到A轮，分享我的融资经验和避坑指南。',
+        authorId: 6,
+        authorName: '用户6',
+        authorAvatar: 'https://i.pravatar.cc/150?img=6',
+        isMerchant: true,
+        type: 'qa',
+        contentType: 'text',
+        category: '融资',
+        tags: ['融资', '创业'],
+        images: [],
+        videoUrl: '',
+        virtualResources: [],
+        price: 199.00,
+        status: 'published',
+        createdAt: new Date(Date.now() - 7200000).toISOString(),
+        viewCount: 400,
+        likeCount: 200,
+        commentCount: 80,
+        forwardCount: 40,
+        collectCount: 60,
+        isLiked: false,
+        isCollected: false,
+        aspectRatio: 1.1,
+      },
+    ],
+    bounty: [
+      {
+        id: 7,
+        title: '悬赏求助1：求推荐优质的CRM系统',
+        content: '我们需要一款功能完善的CRM系统，预算有限，求推荐。',
+        authorId: 7,
+        authorName: '用户7',
+        authorAvatar: 'https://i.pravatar.cc/150?img=7',
+        isMerchant: false,
+        type: 'bounty',
+        contentType: 'text',
+        category: 'CRM',
+        tags: ['CRM', '推荐'],
+        images: [],
+        videoUrl: '',
+        virtualResources: [],
+        price: 500.00,
+        status: 'published',
+        createdAt: new Date().toISOString(),
+        viewCount: 350,
+        likeCount: 100,
+        commentCount: 90,
+        forwardCount: 15,
+        collectCount: 20,
+        isLiked: false,
+        isCollected: false,
+        aspectRatio: 1.0,
+      },
+      {
+        id: 8,
+        title: '悬赏求助2：求UI设计师合作',
+        content: '项目急需UI设计师，有兴趣的请私聊，预算500-1000元。',
+        authorId: 8,
+        authorName: '用户8',
+        authorAvatar: 'https://i.pravatar.cc/150?img=8',
+        isMerchant: false,
+        type: 'bounty',
+        contentType: 'image',
+        category: 'UI设计',
+        tags: ['UI设计', '合作'],
+        images: ['https://images.unsplash.com/photo-1561070791-2526d30994b5?w=800'],
+        videoUrl: '',
+        virtualResources: [],
+        price: 1000.00,
+        status: 'published',
+        createdAt: new Date(Date.now() - 3600000).toISOString(),
+        viewCount: 280,
+        likeCount: 80,
+        commentCount: 70,
+        forwardCount: 12,
+        collectCount: 15,
+        isLiked: false,
+        isCollected: false,
+        aspectRatio: 1.3,
+      },
+      {
+        id: 9,
+        title: '悬赏求助3：求SEO优化方案',
+        content: '网站SEO排名一直上不去，求大神给点建议，预算800元。',
+        authorId: 9,
+        authorName: '用户9',
+        authorAvatar: 'https://i.pravatar.cc/150?img=9',
+        isMerchant: false,
+        type: 'bounty',
+        contentType: 'text',
+        category: 'SEO',
+        tags: ['SEO', '优化'],
+        images: [],
+        videoUrl: '',
+        virtualResources: [],
+        price: 800.00,
+        status: 'published',
+        createdAt: new Date(Date.now() - 7200000).toISOString(),
+        viewCount: 220,
+        likeCount: 60,
+        commentCount: 55,
+        forwardCount: 8,
+        collectCount: 10,
+        isLiked: false,
+        isCollected: false,
+        aspectRatio: 0.9,
+      },
+    ],
+    product: [
+      {
+        id: 10,
+        title: '产品推广1：智能客服系统',
+        content: '这是一款基于AI的智能客服系统，可以大幅提升客服效率，限时优惠价999元。',
+        authorId: 10,
+        authorName: '用户10',
+        authorAvatar: 'https://i.pravatar.cc/150?img=10',
+        isMerchant: true,
+        type: 'product',
+        contentType: 'image',
+        category: 'SaaS',
+        tags: ['AI', '客服', 'SaaS'],
+        images: ['https://images.unsplash.com/photo-1531746790731-6c087fecd65a?w=800'],
+        videoUrl: '',
+        virtualResources: [],
+        price: 999.00,
+        status: 'published',
+        createdAt: new Date().toISOString(),
+        viewCount: 500,
+        likeCount: 200,
+        commentCount: 100,
+        forwardCount: 50,
+        collectCount: 80,
+        isLiked: false,
+        isCollected: false,
+        aspectRatio: 1.2,
+      },
+      {
+        id: 11,
+        title: '产品推广2：数据分析平台',
+        content: '强大的数据分析平台，帮助企业快速洞察业务数据，试用价1999元。',
+        authorId: 11,
+        authorName: '用户11',
+        authorAvatar: 'https://i.pravatar.cc/150?img=11',
+        isMerchant: true,
+        type: 'product',
+        contentType: 'text',
+        category: 'BI',
+        tags: ['数据分析', 'BI'],
+        images: [],
+        videoUrl: '',
+        virtualResources: [],
+        price: 1999.00,
+        status: 'published',
+        createdAt: new Date(Date.now() - 3600000).toISOString(),
+        viewCount: 450,
+        likeCount: 180,
+        commentCount: 90,
+        forwardCount: 45,
+        collectCount: 70,
+        isLiked: false,
+        isCollected: false,
+        aspectRatio: 1.0,
+      },
+      {
+        id: 12,
+        title: '产品推广3：营销自动化工具',
+        content: '全渠道营销自动化，提升转化率，现在购买立减300元。',
+        authorId: 12,
+        authorName: '用户12',
+        authorAvatar: 'https://i.pravatar.cc/150?img=12',
+        isMerchant: true,
+        type: 'product',
+        contentType: 'image',
+        category: '营销',
+        tags: ['营销', '自动化'],
+        images: ['https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800'],
+        videoUrl: '',
+        virtualResources: [],
+        price: 2999.00,
+        status: 'published',
+        createdAt: new Date(Date.now() - 7200000).toISOString(),
+        viewCount: 400,
+        likeCount: 160,
+        commentCount: 80,
+        forwardCount: 35,
+        collectCount: 60,
+        isLiked: false,
+        isCollected: false,
+        aspectRatio: 1.1,
+      },
+    ],
+  };
 
-// 用户点赞状态存储
-const userLikes = new Map<string, Set<number>>();
-const userBookmarks = new Map<string, Set<number>>();
-
-// 存储帖子的实时数据
-const postsData = new Map<number, any>();
-
-// 初始化帖子数据
-allPosts.forEach(post => {
-  postsData.set(post.id, { ...post, comments: allComments.get(post.id) || [] });
-});
+  return baseData[type] || [];
+}
 
 /**
  * 获取帖子列表
@@ -26,41 +350,39 @@ allPosts.forEach(post => {
  *   userId?: number,
  *   type?: string,
  *   category?: string,
+ *   excludeType?: string,
  *   page?: number,
  *   pageSize?: number
  * }
  */
 router.get('/', (req, res) => {
   try {
-    const { userId, type, category, page = 1, pageSize = 20 } = req.query;
+    const { type, category, excludeType, page = 1, pageSize = 20 } = req.query;
 
-    let filteredPosts = Array.from(postsData.values());
-
-    // 按类型筛选
-    if (type && type !== 'all') {
-      filteredPosts = filteredPosts.filter((p: any) => p.type === type);
+    // 获取对应类型的数据
+    let posts: any[] = [];
+    
+    if (type && String(type) !== 'all') {
+      posts = generateMockData(String(type));
+    } else {
+      // 获取所有类型的数据
+      const allTypes = ['normal', 'paid_qa', 'bounty', 'product'];
+      allTypes.forEach(t => {
+        posts = posts.concat(generateMockData(t));
+      });
     }
 
-    // 按类别筛选
-    if (category && category !== '全部') {
-      filteredPosts = filteredPosts.filter((p: any) => p.category === category);
-    }
-
-    // 更新用户点赞和收藏状态
-    if (userId) {
-      const userLikedPosts = userLikes.get(String(userId)) || new Set();
-      const userBookmarkedPosts = userBookmarks.get(String(userId)) || new Set();
-
-      filteredPosts = filteredPosts.map((post: any) => ({
-        ...post,
-        isLiked: userLikedPosts.has(post.id),
-        isCollected: userBookmarkedPosts.has(post.id),
-      }));
+    // 如果需要排除特定类型
+    if (excludeType) {
+      const excludeTypes = Array.isArray(excludeType) 
+        ? excludeType.map(String)
+        : [String(excludeType)];
+      posts = posts.filter((post: any) => !excludeTypes.includes(post.type));
     }
 
     // 分页
     const offset = (Number(page) - 1) * Number(pageSize);
-    const paginatedPosts = filteredPosts.slice(offset, offset + Number(pageSize));
+    const paginatedPosts = posts.slice(offset, offset + Number(pageSize));
 
     res.json({
       success: true,
@@ -68,382 +390,13 @@ router.get('/', (req, res) => {
       pagination: {
         page: Number(page),
         pageSize: Number(pageSize),
-        total: filteredPosts.length,
-        totalPages: Math.ceil(filteredPosts.length / Number(pageSize))
-      }
+        total: posts.length,
+        totalPages: Math.ceil(posts.length / Number(pageSize)),
+      },
     });
   } catch (error) {
     console.error('获取帖子列表失败:', error);
     res.status(500).json({ error: '获取帖子列表失败' });
-  }
-});
-
-/**
- * 获取帖子详情
- * GET /api/v1/posts/:id
- */
-router.get('/:id', (req, res) => {
-  try {
-    const { id } = req.params;
-    const { userId } = req.query;
-
-    const post = postsData.get(Number(id));
-
-    if (!post) {
-      return res.status(404).json({ error: '帖子不存在' });
-    }
-
-    // 更新用户状态
-    let resultPost = { ...post };
-
-    if (userId) {
-      const userLikedPosts = userLikes.get(String(userId)) || new Set();
-      const userBookmarkedPosts = userBookmarks.get(String(userId)) || new Set();
-
-      resultPost = {
-        ...resultPost,
-        isLiked: userLikedPosts.has(post.id),
-        isCollected: userBookmarkedPosts.has(post.id),
-      };
-    }
-
-    res.json({
-      success: true,
-      post: resultPost
-    });
-  } catch (error) {
-    console.error('获取帖子详情失败:', error);
-    res.status(500).json({ error: '获取帖子详情失败' });
-  }
-});
-
-/**
- * 点赞/取消点赞
- * POST /api/v1/posts/:id/like
- * Body: { userId: number }
- */
-router.post('/:id/like', (req, res) => {
-  try {
-    const { id } = req.params;
-    const { userId } = req.body;
-
-    if (!userId) {
-      return res.status(400).json({ error: '用户ID不能为空' });
-    }
-
-    const post = postsData.get(Number(id));
-
-    if (!post) {
-      return res.status(404).json({ error: '帖子不存在' });
-    }
-
-    const userLikedPosts = userLikes.get(String(userId)) || new Set();
-
-    if (userLikedPosts.has(post.id)) {
-      // 取消点赞
-      userLikedPosts.delete(post.id);
-      post.likeCount -= 1;
-      post.isLiked = false;
-    } else {
-      // 点赞
-      userLikedPosts.add(post.id);
-      post.likeCount += 1;
-      post.isLiked = true;
-    }
-
-    userLikes.set(String(userId), userLikedPosts);
-    postsData.set(post.id, post);
-
-    res.json({
-      success: true,
-      message: post.isLiked ? '点赞成功' : '取消点赞',
-      likeCount: post.likeCount,
-      isLiked: post.isLiked
-    });
-  } catch (error) {
-    console.error('点赞操作失败:', error);
-    res.status(500).json({ error: '点赞操作失败' });
-  }
-});
-
-/**
- * 收藏/取消收藏
- * POST /api/v1/posts/:id/collect
- * Body: { userId: number }
- */
-router.post('/:id/collect', (req, res) => {
-  try {
-    const { id } = req.params;
-    const { userId } = req.body;
-
-    if (!userId) {
-      return res.status(400).json({ error: '用户ID不能为空' });
-    }
-
-    const post = postsData.get(Number(id));
-
-    if (!post) {
-      return res.status(404).json({ error: '帖子不存在' });
-    }
-
-    const userBookmarkedPosts = userBookmarks.get(String(userId)) || new Set();
-
-    if (userBookmarkedPosts.has(post.id)) {
-      // 取消收藏
-      userBookmarkedPosts.delete(post.id);
-      post.collectCount -= 1;
-      post.isCollected = false;
-    } else {
-      // 收藏
-      userBookmarkedPosts.add(post.id);
-      post.collectCount += 1;
-      post.isCollected = true;
-    }
-
-    userBookmarks.set(String(userId), userBookmarkedPosts);
-    postsData.set(post.id, post);
-
-    res.json({
-      success: true,
-      message: post.isCollected ? '收藏成功' : '取消收藏',
-      collectCount: post.collectCount,
-      isCollected: post.isCollected
-    });
-  } catch (error) {
-    console.error('收藏操作失败:', error);
-    res.status(500).json({ error: '收藏操作失败' });
-  }
-});
-
-/**
- * 增加转发次数
- * POST /api/v1/posts/:id/forward
- */
-router.post('/:id/forward', (req, res) => {
-  try {
-    const { id } = req.params;
-
-    const post = postsData.get(Number(id));
-
-    if (!post) {
-      return res.status(404).json({ error: '帖子不存在' });
-    }
-
-    post.forwardCount += 1;
-    postsData.set(post.id, post);
-
-    res.json({
-      success: true,
-      message: '转发成功',
-      forwardCount: post.forwardCount,
-      shareUrl: `http://localhost:5000/post/${post.id}`
-    });
-  } catch (error) {
-    console.error('转发操作失败:', error);
-    res.status(500).json({ error: '转发操作失败' });
-  }
-});
-
-/**
- * 购买虚拟资料
- * POST /api/v1/posts/:id/resources/:resourceId/purchase
- */
-router.post('/:id/resources/:resourceId/purchase', (req, res) => {
-  try {
-    const { id, resourceId } = req.params;
-    const { userId } = req.body;
-
-    if (!userId) {
-      return res.status(400).json({ error: '用户ID不能为空' });
-    }
-
-    const post = postsData.get(Number(id));
-
-    if (!post) {
-      return res.status(404).json({ error: '帖子不存在' });
-    }
-
-    const resource = post.virtualResources?.find((r: any) => r.id === Number(resourceId));
-
-    if (!resource) {
-      return res.status(404).json({ error: '资源不存在' });
-    }
-
-    // 模拟购买成功
-    post.isPurchased = true;
-    postsData.set(post.id, post);
-
-    res.json({
-      success: true,
-      message: '购买成功',
-      resource,
-      isPurchased: true
-    });
-  } catch (error) {
-    console.error('购买资源失败:', error);
-    res.status(500).json({ error: '购买资源失败' });
-  }
-});
-
-/**
- * 下载虚拟资料
- * GET /api/v1/posts/:id/resources/:resourceId/download
- */
-router.get('/:id/resources/:resourceId/download', (req, res) => {
-  try {
-    const { id, resourceId } = req.params;
-    const { userId } = req.query;
-
-    const post = postsData.get(Number(id));
-
-    if (!post) {
-      return res.status(404).json({ error: '帖子不存在' });
-    }
-
-    const resource = post.virtualResources?.find((r: any) => r.id === Number(resourceId));
-
-    if (!resource) {
-      return res.status(404).json({ error: '资源不存在' });
-    }
-
-    // 检查是否已购买
-    if (!post.isPurchased) {
-      return res.status(403).json({ error: '请先购买该资源' });
-    }
-
-    res.json({
-      success: true,
-      message: '下载链接已生成',
-      resource,
-      downloadUrl: resource.downloadUrl,
-      resourceName: resource.name
-    });
-  } catch (error) {
-    console.error('下载资源失败:', error);
-    res.status(500).json({ error: '下载资源失败' });
-  }
-});
-
-/**
- * 获取帖子评论
- * GET /api/v1/posts/:id/comments
- */
-router.get('/:id/comments', (req, res) => {
-  try {
-    const { id } = req.params;
-    const { page = 1, pageSize = 20 } = req.query;
-
-    const post = postsData.get(Number(id));
-
-    if (!post) {
-      return res.status(404).json({ error: '帖子不存在' });
-    }
-
-    const comments = post.comments || [];
-    const offset = (Number(page) - 1) * Number(pageSize);
-    const paginatedComments = comments.slice(offset, offset + Number(pageSize));
-
-    res.json({
-      success: true,
-      comments: paginatedComments,
-      pagination: {
-        page: Number(page),
-        pageSize: Number(pageSize),
-        total: comments.length,
-        totalPages: Math.ceil(comments.length / Number(pageSize))
-      }
-    });
-  } catch (error) {
-    console.error('获取评论失败:', error);
-    res.status(500).json({ error: '获取评论失败' });
-  }
-});
-
-/**
- * 发表评论
- * POST /api/v1/posts/:id/comments
- * Body: {
- *   userId: number,
- *   username: string,
- *   avatar: string,
- *   content: string
- * }
- */
-router.post('/:id/comments', (req, res) => {
-  try {
-    const { id } = req.params;
-    const { userId, username, avatar, content } = req.body;
-
-    if (!userId || !content) {
-      return res.status(400).json({ error: '用户ID和内容不能为空' });
-    }
-
-    const post = postsData.get(Number(id));
-
-    if (!post) {
-      return res.status(404).json({ error: '帖子不存在' });
-    }
-
-    const newComment = {
-      id: Date.now(),
-      userId,
-      username: username || '匿名用户',
-      avatar: avatar || 'https://i.pravatar.cc/150?img=1',
-      content,
-      createdAt: new Date().toISOString(),
-      likeCount: 0,
-      replyCount: 0,
-    };
-
-    post.comments = post.comments || [];
-    post.comments.unshift(newComment);
-    post.commentCount += 1;
-
-    postsData.set(post.id, post);
-
-    res.json({
-      success: true,
-      message: '评论成功',
-      comment: newComment,
-      commentCount: post.commentCount
-    });
-  } catch (error) {
-    console.error('发表评论失败:', error);
-    res.status(500).json({ error: '发表评论失败' });
-  }
-});
-
-/**
- * 点赞评论
- * POST /api/v1/posts/:id/comments/:commentId/like
- */
-router.post('/:id/comments/:commentId/like', (req, res) => {
-  try {
-    const { id, commentId } = req.params;
-
-    const post = postsData.get(Number(id));
-
-    if (!post) {
-      return res.status(404).json({ error: '帖子不存在' });
-    }
-
-    const comment = (post.comments || []).find((c: any) => c.id === Number(commentId));
-
-    if (!comment) {
-      return res.status(404).json({ error: '评论不存在' });
-    }
-
-    comment.likeCount += 1;
-    postsData.set(post.id, post);
-
-    res.json({
-      success: true,
-      message: '点赞成功',
-      likeCount: comment.likeCount
-    });
-  } catch (error) {
-    console.error('点赞评论失败:', error);
-    res.status(500).json({ error: '点赞评论失败' });
   }
 });
 

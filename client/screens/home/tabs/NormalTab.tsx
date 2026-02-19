@@ -60,7 +60,7 @@ interface Comment {
   replyCount: number;
 }
 
-export function HotDiscussionTab() {
+export function NormalTab() {
   const { theme } = useTheme();
   const { width } = Dimensions.get('window');
   const styles = useMemo(() => createStyles(theme, width), [theme, width]);
@@ -77,7 +77,7 @@ export function HotDiscussionTab() {
 
   const API_BASE_URL = process.env.EXPO_PUBLIC_BACKEND_BASE_URL;
 
-  // 加载帖子列表（排除悬赏）
+  // 加载帖子列表（仅普通帖子）
   useEffect(() => {
     const fetchPosts = async () => {
       try {
@@ -90,7 +90,7 @@ export function HotDiscussionTab() {
           setIsMerchant(merchantStatus === 'true');
         }
 
-        let url = `${API_BASE_URL}/api/v1/posts?excludeType=bounty`;
+        let url = `${API_BASE_URL}/api/v1/posts?type=normal`;
         const params = new URLSearchParams();
 
         if (currentUserId) {
@@ -302,8 +302,6 @@ export function HotDiscussionTab() {
 
   // 渲染帖子卡片
   const renderPostCard = (post: Post) => {
-    const typeLabel = post.type === 'paid_qa' ? '付费问答' : post.type === 'product' ? '产品推广' : '';
-
     return (
       <TouchableOpacity
         key={post.id}
@@ -323,20 +321,6 @@ export function HotDiscussionTab() {
           <ThemedText variant="bodyMedium" numberOfLines={2} style={styles.cardTitle}>
             {post.title}
           </ThemedText>
-
-          {typeLabel && (
-            <View style={styles.typeTag}>
-              <ThemedText variant="caption" color={theme.primary} style={styles.typeTagText}>
-                {typeLabel}
-              </ThemedText>
-            </View>
-          )}
-
-          {post.price && post.price > 0 && (
-            <ThemedText variant="caption" color={theme.primary} style={styles.price}>
-              ¥{post.price.toFixed(2)}
-            </ThemedText>
-          )}
 
           <View style={styles.cardFooter}>
             <View style={styles.author}>

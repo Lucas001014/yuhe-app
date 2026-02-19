@@ -3,8 +3,10 @@ import { View, Dimensions } from 'react-native';
 import { TabView, SceneMap, TabBar } from 'react-native-tab-view';
 import { Screen } from '@/components/Screen';
 import { useTheme } from '@/hooks/useTheme';
-import { HotDiscussionTab } from './tabs/HotDiscussionTab';
+import { NormalTab } from './tabs/NormalTab';
+import { PaidQATab } from './tabs/PaidQATab';
 import { BountyTab } from './tabs/BountyTab';
+import { ProductTab } from './tabs/ProductTab';
 
 const initialLayout = { width: Dimensions.get('window').width };
 
@@ -12,13 +14,17 @@ export default function HomeScreen() {
   const { theme } = useTheme();
   const [index, setIndex] = React.useState(0);
   const [routes] = React.useState([
-    { key: 'hot', title: '热点讨论' },
-    { key: 'bounty', title: '悬赏' },
+    { key: 'normal', title: '普通帖子' },
+    { key: 'paid_qa', title: '付费问答' },
+    { key: 'bounty', title: '悬赏求助' },
+    { key: 'product', title: '产品推广' },
   ]);
 
   const renderScene = SceneMap({
-    hot: HotDiscussionTab,
+    normal: NormalTab,
+    paid_qa: PaidQATab,
     bounty: BountyTab,
+    product: ProductTab,
   });
 
   const renderTabBar = (props: any) => (
@@ -33,9 +39,9 @@ export default function HomeScreen() {
       activeColor={theme.primary}
       inactiveColor={theme.textSecondary}
       tabStyle={{ width: 'auto' }}
-      scrollEnabled={false}
+      scrollEnabled={true}
       labelStyle={{
-        fontSize: 16,
+        fontSize: 15,
         fontWeight: '600',
         textTransform: 'none',
       }}
