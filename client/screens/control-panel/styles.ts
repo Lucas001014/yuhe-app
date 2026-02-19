@@ -163,6 +163,12 @@ export const createStyles = (theme: Theme) =>
     actionButtonSuccess: {
       backgroundColor: theme.success,
     },
+    actionButtonWarning: {
+      backgroundColor: theme.warning,
+    },
+    actionButtonInfo: {
+      backgroundColor: theme.accent,
+    },
     actionButtonText: {
       color: '#fff',
       fontSize: 14,

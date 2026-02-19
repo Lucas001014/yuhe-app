@@ -194,9 +194,17 @@ export default function ControlPanel() {
             <FontAwesome6 name="gear" size={20} color="#fff" />
             <ThemedText style={styles.actionButtonText}>管理后台</ThemedText>
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.actionButton, styles.actionButtonSuccess]} onPress={() => router.push('/')}>
+          <TouchableOpacity style={[styles.actionButton, styles.actionButtonSuccess]} onPress={() => router.push('/wallet')}>
+            <FontAwesome6 name="wallet" size={20} color="#fff" />
+            <ThemedText style={styles.actionButtonText}>我的钱包</ThemedText>
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.actionButton, styles.actionButtonWarning]} onPress={() => router.push('/')}>
             <FontAwesome6 name="house" size={20} color="#fff" />
             <ThemedText style={styles.actionButtonText}>返回首页</ThemedText>
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.actionButton, styles.actionButtonInfo]} onPress={() => router.push('/control-panel')}>
+            <FontAwesome6 name="sliders" size={20} color="#fff" />
+            <ThemedText style={styles.actionButtonText}>刷新面板</ThemedText>
           </TouchableOpacity>
         </View>
       </View>
