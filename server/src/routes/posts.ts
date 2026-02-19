@@ -15,6 +15,20 @@ function randomItem<T>(array: T[]): T {
   return array[Math.floor(Math.random() * array.length)];
 }
 
+// 生成图片URL
+function generateImageUrls(keyword: string, count: number = 1): string[] {
+  const urls: string[] = [];
+  const imageKeywords = ['business', 'startup', 'technology', 'office', 'team', 'meeting', 'innovation', 'strategy', 'marketing', 'finance', 'computer', 'work', 'design', 'data', 'analytics'];
+  
+  for (let i = 0; i < count; i++) {
+    const randomKeyword = keyword || imageKeywords[randomInt(0, imageKeywords.length - 1)];
+    const width = randomInt(600, 900);
+    const height = Math.floor(width * [0.7, 0.8, 1.0, 1.2, 1.3][randomInt(0, 4)]);
+    urls.push(`https://source.unsplash.com/${width}x${height}/?${encodeURIComponent(randomKeyword)}`);
+  }
+  return urls;
+}
+
 // 随机生成评论
 function generateComments(postId: number, count: number) {
   const commentTemplates = [
@@ -109,9 +123,8 @@ function generateRecommendPosts(): any[] {
 
     const images: string[] = [];
     if (hasImage) {
-      for (let j = 0; j < imageCount; j++) {
-        images.push(`https://images.unsplash.com/photo-1556742049-${String(i).padStart(3, '0')}${j}?w=800`);
-      }
+      const category = categories[i % categories.length];
+      images.push(...generateImageUrls(category, imageCount));
     }
 
     posts.push({
@@ -200,7 +213,7 @@ function generateKnowledgePosts(): any[] {
   for (let i = 1; i <= 30; i++) {
     const hasImage = Math.random() > 0.5;
     const images = hasImage
-      ? [`https://images.unsplash.com/photo-1556742049-${String(i + 100).padStart(3, '0')}?w=800`]
+      ? generateImageUrls(categories[i % categories.length], 1)
       : [];
 
     posts.push({
@@ -296,7 +309,7 @@ function generateBountyPosts(): any[] {
   for (let i = 1; i <= 30; i++) {
     const hasImage = Math.random() > 0.7;
     const images = hasImage
-      ? [`https://images.unsplash.com/photo-1556742049-${String(i + 200).padStart(3, '0')}?w=800`]
+      ? generateImageUrls(categories[i % categories.length], 1)
       : [];
 
     posts.push({
@@ -399,9 +412,8 @@ function generateHotTopicPosts(): any[] {
 
     const images: string[] = [];
     if (hasImage) {
-      for (let j = 0; j < imageCount; j++) {
-        images.push(`https://images.unsplash.com/photo-1556742049-${String(i + 300).padStart(3, '0')}${j}?w=800`);
-      }
+      const category = categories[i % categories.length];
+      images.push(...generateImageUrls(category, imageCount));
     }
 
     posts.push({
