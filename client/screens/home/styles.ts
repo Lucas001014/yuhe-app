@@ -235,6 +235,112 @@ export const createStyles = (theme: Theme, width: number = Dimensions.get('windo
       paddingVertical: Spacing.md,
       alignItems: 'center',
     },
+    // Tab组件所需样式
+    card: {
+      backgroundColor: theme.backgroundDefault,
+      borderRadius: BorderRadius.lg,
+      overflow: 'hidden',
+      marginBottom: 12,
+    },
+    cardImage: {
+      width: '100%',
+    },
+    cardContent: {
+      padding: Spacing.md,
+    },
+    cardTitle: {
+      marginBottom: Spacing.sm,
+    },
+    typeTag: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: Spacing.xs,
+      paddingHorizontal: Spacing.sm,
+      borderRadius: BorderRadius.xs,
+      backgroundColor: theme.backgroundTertiary,
+      alignSelf: 'flex-start',
+      marginBottom: Spacing.sm,
+    },
+    typeTagText: {
+      fontWeight: '600',
+    },
+    bountyTag: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      paddingVertical: Spacing.xs,
+      paddingHorizontal: Spacing.sm,
+      borderRadius: BorderRadius.xs,
+      backgroundColor: `${theme.primary}15`,
+      alignSelf: 'flex-start',
+      marginBottom: Spacing.sm,
+    },
+    bountyTagText: {
+      fontWeight: '600',
+    },
+    price: {
+      fontWeight: '700',
+      marginBottom: Spacing.sm,
+    },
+    cardFooter: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginTop: Spacing.sm,
+    },
+    author: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      flex: 1,
+    },
+    authorAvatar: {
+      width: 20,
+      height: 20,
+      borderRadius: 10,
+    },
+    stats: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    statText: {
+      marginLeft: 2,
+    },
+    commentModal: {
+      flex: 1,
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      justifyContent: 'flex-end',
+    },
+    commentContainer: {
+      borderTopLeftRadius: BorderRadius.xl,
+      borderTopRightRadius: BorderRadius.xl,
+      padding: Spacing.lg,
+      maxHeight: '80%',
+    },
+    commentHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: Spacing.lg,
+      paddingBottom: Spacing.md,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.borderLight,
+    },
+    commentList: {
+      flex: 1,
+      marginBottom: Spacing.lg,
+    },
+    commentUser: {
+      fontWeight: '600',
+      marginBottom: 2,
+    },
+    commentSubmit: {
+      paddingHorizontal: Spacing.lg,
+      paddingVertical: Spacing.md,
+      borderRadius: BorderRadius.md,
+      marginLeft: Spacing.md,
+    },
   });
 };
 

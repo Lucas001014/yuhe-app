@@ -12,6 +12,7 @@ import refundRouter from './routes/refund';
 import iapRouter from './routes/iap';
 import smsRouter from './routes/sms';
 import auditRouter from './routes/audit';
+import videoRouter from './routes/video';
 
 const app = express();
 const port = process.env.PORT || 9091;
@@ -75,6 +76,7 @@ app.use('/api/v1/refund', refundRouter);
 app.use('/api/v1/iap', iapRouter);
 app.use('/api/v1/sms', smsRouter);
 app.use('/api/v1/audit', auditRouter);
+app.use('/api/v1/video', videoRouter);
 
 // 404 处理
 app.use((req, res) => {
