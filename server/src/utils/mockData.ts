@@ -52,6 +52,7 @@ interface Post {
   collectCount: number;
   isLiked: boolean;
   isCollected: boolean;
+  aspectRatio?: number; // 宽高比（用于瀑布流布局）
 }
 
 // 模拟用户
@@ -330,6 +331,8 @@ export function generatePosts(count: number = 100): Post[] {
       collectCount: Math.floor(Math.random() * 150),
       isLiked: false,
       isCollected: false,
+      // 添加宽高比用于瀑布流布局
+      aspectRatio: 0.7 + Math.random() * 0.7, // 0.7 ~ 1.4
     };
 
     posts.push(post);
