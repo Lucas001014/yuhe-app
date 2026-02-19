@@ -239,6 +239,86 @@ router.post('/:id/forward', (req, res) => {
 });
 
 /**
+ * 购买虚拟资料
+ * POST /api/v1/posts/:id/resources/:resourceId/purchase
+ */
+router.post('/:id/resources/:resourceId/purchase', (req, res) => {
+  try {
+    const { id, resourceId } = req.params;
+    const { userId } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({ error: '用户ID不能为空' });
+    }
+
+    const post = postsData.get(Number(id));
+
+    if (!post) {
+      return res.status(404).json({ error: '帖子不存在' });
+    }
+
+    const resource = post.virtualResources?.find((r: any) => r.id === Number(resourceId));
+
+    if (!resource) {
+      return res.status(404).json({ error: '资源不存在' });
+    }
+
+    // 模拟购买成功
+    post.isPurchased = true;
+    postsData.set(post.id, post);
+
+    res.json({
+      success: true,
+      message: '购买成功',
+      resource,
+      isPurchased: true
+    });
+  } catch (error) {
+    console.error('购买资源失败:', error);
+    res.status(500).json({ error: '购买资源失败' });
+  }
+});
+
+/**
+ * 下载虚拟资料
+ * GET /api/v1/posts/:id/resources/:resourceId/download
+ */
+router.get('/:id/resources/:resourceId/download', (req, res) => {
+  try {
+    const { id, resourceId } = req.params;
+    const { userId } = req.query;
+
+    const post = postsData.get(Number(id));
+
+    if (!post) {
+      return res.status(404).json({ error: '帖子不存在' });
+    }
+
+    const resource = post.virtualResources?.find((r: any) => r.id === Number(resourceId));
+
+    if (!resource) {
+      return res.status(404).json({ error: '资源不存在' });
+    }
+
+    // 检查是否已购买
+    if (!post.isPurchased) {
+      return res.status(403).json({ error: '请先购买该资源' });
+    }
+
+    res.json({
+      success: true,
+      message: '下载链接已生成',
+      resource,
+      downloadUrl: resource.downloadUrl,
+      resourceName: resource.name
+    });
+  } catch (error) {
+    console.error('下载资源失败:', error);
+    res.status(500).json({ error: '下载资源失败' });
+  }
+});
+
+/**
  * 获取帖子评论
  * GET /api/v1/posts/:id/comments
  */

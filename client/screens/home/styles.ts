@@ -18,6 +18,7 @@ export const createStyles = (theme: Theme, width: number = Dimensions.get('windo
     tabItem: {
       marginRight: Spacing.xl,
       paddingBottom: Spacing.sm,
+      flexShrink: 0,
     },
     activeTabItem: {
       borderBottomWidth: 2,
@@ -78,6 +79,49 @@ export const createStyles = (theme: Theme, width: number = Dimensions.get('windo
       height: (width * 0.6) * 0.75,
       borderRadius: BorderRadius.md,
       marginRight: Spacing.sm,
+    },
+    videoContainer: {
+      width: width * 0.6,
+      height: (width * 0.6) * 0.5625,
+      backgroundColor: theme.primary,
+      borderRadius: BorderRadius.md,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginBottom: Spacing.md,
+    },
+    merchantBadge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      alignSelf: 'flex-start',
+      paddingHorizontal: Spacing.md,
+      paddingVertical: Spacing.sm,
+      backgroundColor: `${theme.warning}15`,
+      borderRadius: BorderRadius.sm,
+      marginBottom: Spacing.md,
+    },
+    resourceSection: {
+      marginTop: Spacing.md,
+      padding: Spacing.md,
+      backgroundColor: theme.backgroundTertiary,
+      borderRadius: BorderRadius.md,
+    },
+    resourceItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingVertical: Spacing.sm,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.borderLight,
+    },
+    resourceInfo: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      flex: 1,
+    },
+    resourceButton: {
+      paddingHorizontal: Spacing.md,
+      paddingVertical: Spacing.xs,
+      borderRadius: BorderRadius.sm,
     },
     tagsContainer: {
       flexDirection: 'row',

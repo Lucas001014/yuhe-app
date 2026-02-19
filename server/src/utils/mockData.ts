@@ -17,6 +17,16 @@ interface Comment {
   replyCount: number;
 }
 
+interface VirtualResource {
+  id: number;
+  name: string;
+  description: string;
+  fileSize: string;
+  downloadUrl: string;
+  price: number;
+  fileType: string; // pdf, doc, zip, xlsx等
+}
+
 interface Post {
   id: number;
   title: string;
@@ -24,10 +34,14 @@ interface Post {
   authorId: number;
   authorName: string;
   authorAvatar: string;
+  isMerchant: boolean; // 是否为商家
   type: 'free' | 'paid' | 'bounty';
+  contentType: 'text' | 'image' | 'video' | 'mixed'; // 内容类型
   category: string;
   tags: string[];
   images?: string[];
+  videoUrl?: string; // 视频URL
+  virtualResources?: VirtualResource[]; // 虚拟资料
   price?: number;
   status: 'published';
   createdAt: string;
@@ -53,6 +67,61 @@ const users: User[] = [
   { id: 9, username: 'ai_researcher', avatar: 'https://i.pravatar.cc/150?img=9' },
   { id: 10, username: 'saas_expert', avatar: 'https://i.pravatar.cc/150?img=10' },
 ];
+
+// 虚拟资料名称模板
+const resourceNames = [
+  '创业融资BP模板.pptx',
+  '产品需求文档(PRD)模板.docx',
+  'SaaS产品开发路线图.xlsx',
+  '用户增长策略指南.pdf',
+  '创业团队管理手册.pdf',
+  '技术架构设计文档.docx',
+  '竞品分析报告模板.xlsx',
+  '营销活动策划方案.pptx',
+  '财务预测模型.xlsx',
+  '股权激励方案模板.docx',
+];
+
+// 虚拟资料描述模板
+const resourceDescriptions = [
+  '包含完整的模板和使用说明',
+  '可直接套用的实战工具',
+  '10年经验总结精华',
+  '已帮助500+创业者成功',
+  '含详细案例和数据分析',
+];
+
+const resourceFileTypes = ['pdf', 'docx', 'xlsx', 'pptx', 'zip'];
+
+// 生成虚拟资料
+function generateVirtualResources(postId: number, isMerchant: boolean): VirtualResource[] {
+  // 只有商家才能发布虚拟资料
+  if (!isMerchant) {
+    return [];
+  }
+
+  // 30%的商家帖子有虚拟资料
+  if (Math.random() > 0.7) {
+    return [];
+  }
+
+  const count = Math.floor(Math.random() * 3) + 1; // 1-3个文件
+  const resources: VirtualResource[] = [];
+
+  for (let i = 0; i < count; i++) {
+    resources.push({
+      id: postId * 100 + i + 1,
+      name: randomChoice(resourceNames),
+      description: randomChoice(resourceDescriptions),
+      fileSize: `${(Math.random() * 50 + 1).toFixed(1)}MB`,
+      downloadUrl: `https://example.com/download/${postId}/${i + 1}`,
+      price: Math.floor(Math.random() * 200 + 9), // 9-209元
+      fileType: randomChoice(resourceFileTypes),
+    });
+  }
+
+  return resources;
+}
 
 // 帖子标题模板
 const titleTemplates = [
@@ -197,11 +266,44 @@ export function generatePosts(count: number = 100): Post[] {
   for (let i = 1; i <= count; i++) {
     const user = randomChoice(users);
     const type = randomChoice(['free', 'paid', 'bounty']) as 'free' | 'paid' | 'bounty';
-    const hasImage = Math.random() > 0.5;
-    const images = hasImage ? [
-      `https://picsum.photos/400/300?random=${i}`,
-      `https://picsum.photos/400/300?random=${i + 1000}`,
-    ] : undefined;
+    const isMerchant = Math.random() > 0.7; // 30%的用户是商家
+
+    // 随机内容类型
+    const contentTypeRandom = Math.random();
+    let contentType: 'text' | 'image' | 'video' | 'mixed' = 'text';
+    let hasImage = false;
+    let hasVideo = false;
+    let images: string[] | undefined;
+    let videoUrl: string | undefined;
+
+    if (contentTypeRandom < 0.4) {
+      contentType = 'text';
+      hasImage = Math.random() > 0.7;
+    } else if (contentTypeRandom < 0.7) {
+      contentType = 'image';
+      hasImage = true;
+    } else if (contentTypeRandom < 0.9) {
+      contentType = 'video';
+      hasVideo = true;
+    } else {
+      contentType = 'mixed';
+      hasImage = true;
+      hasVideo = Math.random() > 0.5;
+    }
+
+    if (hasImage) {
+      const imageCount = Math.floor(Math.random() * 3) + 1;
+      images = [];
+      for (let j = 0; j < imageCount; j++) {
+        images.push(`https://picsum.photos/400/300?random=${i * 10 + j}`);
+      }
+    }
+
+    if (hasVideo) {
+      videoUrl = `https://example.com/video/${i}.mp4`;
+    }
+
+    const virtualResources = generateVirtualResources(i, isMerchant);
 
     const post: Post = {
       id: i,
@@ -210,10 +312,14 @@ export function generatePosts(count: number = 100): Post[] {
       authorId: user.id,
       authorName: user.username,
       authorAvatar: user.avatar,
+      isMerchant,
       type,
+      contentType,
       category: randomChoice(categories),
       tags: randomChoice(tagLists),
       images,
+      videoUrl,
+      virtualResources,
       price: type === 'paid' || type === 'bounty' ? Math.floor(Math.random() * 900 + 99) : undefined,
       status: 'published',
       createdAt: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
