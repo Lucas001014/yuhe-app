@@ -1,194 +1,69 @@
 import express from 'express';
+import { generatePosts, generateAllComments } from '../utils/mockData';
 
 const router = express.Router();
 
-/**
- * 创建帖子
- * POST /api/v1/posts
- * Body: {
- *   userId: number,
- *   type: 'normal' | 'qa_paid' | 'qa_bounty' | 'product',
- *   title?: string,
- *   content: string,
- *   images?: string[],
- *   video_url?: string,
- *   qa_price?: number, // 付费问答价格
- *   bounty_price?: number, // 悬赏金额
- *   tags?: string[], // 创业赛道标签
- *   productName?: string, // 产品名称
- *   productPrice?: number, // 产品价格
- *   productDescription?: string, // 产品描述
- *   contactInfo?: string // 联系方式
- * }
- */
-router.post('/', async (req, res) => {
-  const {
-    userId,
-    type,
-    title,
-    content,
-    images = [],
-    video_url,
-    qa_price,
-    bounty_price,
-    tags = [],
-    productName,
-    productPrice,
-    productDescription,
-    contactInfo
-  } = req.body;
+// 生成模拟数据
+const allPosts = generatePosts(100);
+const allComments = generateAllComments(allPosts);
 
-  // 验证必填字段
-  if (!userId || !type || !content) {
-    return res.status(400).json({ error: '用户ID、类型和内容不能为空' });
-  }
+// 用户点赞状态存储
+const userLikes = new Map<string, Set<number>>();
+const userBookmarks = new Map<string, Set<number>>();
 
-  // 验证帖子类型
-  const validTypes = ['normal', 'qa_paid', 'qa_bounty', 'product'];
-  if (!validTypes.includes(type)) {
-    return res.status(400).json({ error: '无效的帖子类型' });
-  }
+// 存储帖子的实时数据
+const postsData = new Map<number, any>();
 
-  // 付费问答必须设置价格
-  if (type === 'qa_paid' && !qa_price) {
-    return res.status(400).json({ error: '付费问答必须设置价格' });
-  }
-
-  // 悬赏帖必须设置金额
-  if (type === 'qa_bounty' && !bounty_price) {
-    return res.status(400).json({ error: '悬赏帖必须设置金额' });
-  }
-
-  // 产品帖必须有产品信息
-  if (type === 'product' && (!productName || !productPrice)) {
-    return res.status(400).json({ error: '产品帖必须填写产品名称和价格' });
-  }
-
-  try {
-    // 开始事务
-    await (req as any).db.query('BEGIN');
-
-    // 创建帖子
-    const postResult = await (req as any).db.query(
-      `INSERT INTO posts (author_id, type, title, content, images, video_url, qa_price, bounty_price, tags)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-       RETURNING *`,
-      [userId, type, title, content, images, video_url, qa_price, bounty_price, tags]
-    );
-
-    const post = postResult.rows[0];
-
-    // 如果是产品帖，创建产品关联
-    if (type === 'product') {
-      await (req as any).db.query(
-        `INSERT INTO post_products (post_id, product_name, product_price, product_description, contact_info)
-         VALUES ($1, $2, $3, $4, $5)`,
-        [post.id, productName, productPrice, productDescription, contactInfo]
-      );
-    }
-
-    await (req as any).db.query('COMMIT');
-
-    res.json({
-      success: true,
-      message: '发布成功',
-      post
-    });
-  } catch (error) {
-    await (req as any).db.query('ROLLBACK');
-    console.error('创建帖子失败:', error);
-    res.status(500).json({ error: '创建帖子失败' });
-  }
+// 初始化帖子数据
+allPosts.forEach(post => {
+  postsData.set(post.id, { ...post, comments: allComments.get(post.id) || [] });
 });
 
 /**
- * 获取帖子列表（首页推荐流）
+ * 获取帖子列表
  * GET /api/v1/posts
  * Query: {
- *   userId?: number, // 当前用户ID（用于检查是否已购买付费问答）
- *   type?: string, // 帖子类型筛选
- *   tag?: string, // 标签筛选
+ *   userId?: number,
+ *   type?: string,
  *   page?: number,
  *   pageSize?: number
  * }
  */
-router.get('/', async (req, res) => {
-  const { userId, type, tag, page = 1, pageSize = 20 } = req.query;
-
+router.get('/', (req, res) => {
   try {
+    const { userId, type, page = 1, pageSize = 20 } = req.query;
+
+    let filteredPosts = Array.from(postsData.values());
+
+    // 按类型筛选
+    if (type && type !== 'all') {
+      filteredPosts = filteredPosts.filter((p: any) => p.type === type);
+    }
+
+    // 更新用户点赞和收藏状态
+    if (userId) {
+      const userLikedPosts = userLikes.get(String(userId)) || new Set();
+      const userBookmarkedPosts = userBookmarks.get(String(userId)) || new Set();
+
+      filteredPosts = filteredPosts.map((post: any) => ({
+        ...post,
+        isLiked: userLikedPosts.has(post.id),
+        isCollected: userBookmarkedPosts.has(post.id),
+      }));
+    }
+
+    // 分页
     const offset = (Number(page) - 1) * Number(pageSize);
-    const limit = Number(pageSize);
-
-    // 构建查询条件
-    const conditions: string[] = ['p.status = $1'];
-    const values: any[] = ['published'];
-    let paramIndex = 2;
-
-    if (type) {
-      conditions.push(`p.type = $${paramIndex++}`);
-      values.push(type);
-    }
-
-    if (tag) {
-      conditions.push(`$${paramIndex} = ANY(p.tags)`);
-      values.push(tag);
-    }
-
-    const whereClause = conditions.join(' AND ');
-
-    // 查询帖子列表
-    const postsQuery = `
-      SELECT
-        p.*,
-        u.username,
-        u.avatar_url,
-        CASE
-          WHEN p.type = 'qa_paid' AND EXISTS (
-            SELECT 1 FROM qa_purchases qp
-            WHERE qp.user_id = $${paramIndex} AND qp.post_id = p.id
-          )
-          THEN true
-          WHEN p.type = 'qa_paid' AND p.author_id = $${paramIndex}
-          THEN true
-          ELSE false
-        END as is_purchased,
-        EXISTS (
-          SELECT 1 FROM likes l
-          WHERE l.user_id = $${paramIndex} AND l.post_id = p.id
-        ) as is_liked,
-        EXISTS (
-          SELECT 1 FROM bookmarks b
-          WHERE b.user_id = $${paramIndex} AND b.post_id = p.id
-        ) as is_bookmarked
-      FROM posts p
-      LEFT JOIN users u ON p.author_id = u.id
-      WHERE ${whereClause}
-      ORDER BY p.created_at DESC
-      LIMIT $${paramIndex + 1} OFFSET $${paramIndex + 2}
-    `;
-
-    values.push(userId || 0, limit, offset);
-
-    const result = await (req as any).db.query(postsQuery, values);
-
-    // 查询总数
-    const countQuery = `
-      SELECT COUNT(*) as total
-      FROM posts p
-      WHERE ${whereClause}
-    `;
-
-    const countResult = await (req as any).db.query(countQuery, values.slice(0, paramIndex - 1));
-    const total = parseInt(countResult.rows[0].total);
+    const paginatedPosts = filteredPosts.slice(offset, offset + Number(pageSize));
 
     res.json({
       success: true,
-      posts: result.rows,
+      posts: paginatedPosts,
       pagination: {
         page: Number(page),
-        pageSize: limit,
-        total,
-        totalPages: Math.ceil(total / limit)
+        pageSize: Number(pageSize),
+        total: filteredPosts.length,
+        totalPages: Math.ceil(filteredPosts.length / Number(pageSize))
       }
     });
   } catch (error) {
@@ -200,83 +75,35 @@ router.get('/', async (req, res) => {
 /**
  * 获取帖子详情
  * GET /api/v1/posts/:id
- * Query: { userId?: number }
  */
-router.get('/:id', async (req, res) => {
-  const { id } = req.params;
-  const { userId } = req.query;
-
+router.get('/:id', (req, res) => {
   try {
-    // 查询帖子详情
-    const postQuery = `
-      SELECT
-        p.*,
-        u.username,
-        u.avatar_url,
-        CASE
-          WHEN p.type = 'qa_paid' AND EXISTS (
-            SELECT 1 FROM qa_purchases qp
-            WHERE qp.user_id = $1 AND qp.post_id = p.id
-          )
-          THEN true
-          WHEN p.type = 'qa_paid' AND p.author_id = $1
-          THEN true
-          ELSE false
-        END as is_purchased,
-        EXISTS (
-          SELECT 1 FROM likes l
-          WHERE l.user_id = $1 AND l.post_id = p.id
-        ) as is_liked,
-        EXISTS (
-          SELECT 1 FROM bookmarks b
-          WHERE b.user_id = $1 AND b.post_id = p.id
-        ) as is_bookmarked
-      FROM posts p
-      LEFT JOIN users u ON p.author_id = u.id
-      WHERE p.id = $2
-    `;
+    const { id } = req.params;
+    const { userId } = req.query;
 
-    const postResult = await (req as any).db.query(postQuery, [userId || 0, id]);
+    const post = postsData.get(Number(id));
 
-    if (postResult.rows.length === 0) {
+    if (!post) {
       return res.status(404).json({ error: '帖子不存在' });
     }
 
-    const post = postResult.rows[0];
+    // 更新用户状态
+    let resultPost = { ...post };
 
-    // 查询产品信息（如果是产品帖）
-    if (post.type === 'product') {
-      const productResult = await (req as any).db.query(
-        'SELECT * FROM post_products WHERE post_id = $1',
-        [id]
-      );
-      if (productResult.rows.length > 0) {
-        post.product = productResult.rows[0];
-      }
+    if (userId) {
+      const userLikedPosts = userLikes.get(String(userId)) || new Set();
+      const userBookmarkedPosts = userBookmarks.get(String(userId)) || new Set();
+
+      resultPost = {
+        ...resultPost,
+        isLiked: userLikedPosts.has(post.id),
+        isCollected: userBookmarkedPosts.has(post.id),
+      };
     }
-
-    // 增加浏览量
-    await (req as any).db.query('UPDATE posts SET view_count = view_count + 1 WHERE id = $1', [id]);
-
-    // 查询评论列表
-    const commentsResult = await (req as any).db.query(
-      `SELECT
-        c.*,
-        u.username,
-        u.avatar_url
-      FROM comments c
-      LEFT JOIN users u ON c.author_id = u.id
-      WHERE c.post_id = $1 AND c.parent_id IS NULL
-      ORDER BY c.created_at DESC
-      LIMIT 20`,
-      [id]
-    );
-
-    post.comments = commentsResult.rows;
 
     res.json({
       success: true,
-      post
+      post: resultPost
     });
   } catch (error) {
     console.error('获取帖子详情失败:', error);
@@ -285,35 +112,47 @@ router.get('/:id', async (req, res) => {
 });
 
 /**
- * 点赞/取消点赞帖子
+ * 点赞/取消点赞
  * POST /api/v1/posts/:id/like
- * Body: { userId: number, action: 'like' | 'unlike' }
+ * Body: { userId: number }
  */
-router.post('/:id/like', async (req, res) => {
-  const { id } = req.params;
-  const { userId, action } = req.body;
-
-  if (!userId || !action) {
-    return res.status(400).json({ error: '用户ID和操作类型不能为空' });
-  }
-
+router.post('/:id/like', (req, res) => {
   try {
-    if (action === 'like') {
-      // 添加点赞
-      await (req as any).db.query(
-        'INSERT INTO likes (user_id, post_id) VALUES ($1, $2) ON CONFLICT DO NOTHING',
-        [userId, id]
-      );
-      await (req as any).db.query('UPDATE posts SET like_count = like_count + 1 WHERE id = $1', [id]);
-    } else if (action === 'unlike') {
-      // 取消点赞
-      await (req as any).db.query('DELETE FROM likes WHERE user_id = $1 AND post_id = $2', [userId, id]);
-      await (req as any).db.query('UPDATE posts SET like_count = GREATEST(like_count - 1, 0) WHERE id = $1', [id]);
+    const { id } = req.params;
+    const { userId } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({ error: '用户ID不能为空' });
     }
+
+    const post = postsData.get(Number(id));
+
+    if (!post) {
+      return res.status(404).json({ error: '帖子不存在' });
+    }
+
+    const userLikedPosts = userLikes.get(String(userId)) || new Set();
+
+    if (userLikedPosts.has(post.id)) {
+      // 取消点赞
+      userLikedPosts.delete(post.id);
+      post.likeCount -= 1;
+      post.isLiked = false;
+    } else {
+      // 点赞
+      userLikedPosts.add(post.id);
+      post.likeCount += 1;
+      post.isLiked = true;
+    }
+
+    userLikes.set(String(userId), userLikedPosts);
+    postsData.set(post.id, post);
 
     res.json({
       success: true,
-      message: action === 'like' ? '点赞成功' : '取消点赞成功'
+      message: post.isLiked ? '点赞成功' : '取消点赞',
+      likeCount: post.likeCount,
+      isLiked: post.isLiked
     });
   } catch (error) {
     console.error('点赞操作失败:', error);
@@ -322,33 +161,47 @@ router.post('/:id/like', async (req, res) => {
 });
 
 /**
- * 收藏/取消收藏帖子
- * POST /api/v1/posts/:id/bookmark
- * Body: { userId: number, action: 'bookmark' | 'unbookmark' }
+ * 收藏/取消收藏
+ * POST /api/v1/posts/:id/collect
+ * Body: { userId: number }
  */
-router.post('/:id/bookmark', async (req, res) => {
-  const { id } = req.params;
-  const { userId, action } = req.body;
-
-  if (!userId || !action) {
-    return res.status(400).json({ error: '用户ID和操作类型不能为空' });
-  }
-
+router.post('/:id/collect', (req, res) => {
   try {
-    if (action === 'bookmark') {
-      // 添加收藏
-      await (req as any).db.query(
-        'INSERT INTO bookmarks (user_id, post_id) VALUES ($1, $2) ON CONFLICT DO NOTHING',
-        [userId, id]
-      );
-    } else if (action === 'unbookmark') {
-      // 取消收藏
-      await (req as any).db.query('DELETE FROM bookmarks WHERE user_id = $1 AND post_id = $2', [userId, id]);
+    const { id } = req.params;
+    const { userId } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({ error: '用户ID不能为空' });
     }
+
+    const post = postsData.get(Number(id));
+
+    if (!post) {
+      return res.status(404).json({ error: '帖子不存在' });
+    }
+
+    const userBookmarkedPosts = userBookmarks.get(String(userId)) || new Set();
+
+    if (userBookmarkedPosts.has(post.id)) {
+      // 取消收藏
+      userBookmarkedPosts.delete(post.id);
+      post.collectCount -= 1;
+      post.isCollected = false;
+    } else {
+      // 收藏
+      userBookmarkedPosts.add(post.id);
+      post.collectCount += 1;
+      post.isCollected = true;
+    }
+
+    userBookmarks.set(String(userId), userBookmarkedPosts);
+    postsData.set(post.id, post);
 
     res.json({
       success: true,
-      message: action === 'bookmark' ? '收藏成功' : '取消收藏成功'
+      message: post.isCollected ? '收藏成功' : '取消收藏',
+      collectCount: post.collectCount,
+      isCollected: post.isCollected
     });
   } catch (error) {
     console.error('收藏操作失败:', error);
@@ -357,48 +210,154 @@ router.post('/:id/bookmark', async (req, res) => {
 });
 
 /**
- * 发布评论
- * POST /api/v1/posts/:id/comments
- * Body: { userId: number, content: string, parentId?: number }
+ * 增加转发次数
+ * POST /api/v1/posts/:id/forward
  */
-router.post('/:id/comments', async (req, res) => {
-  const { id } = req.params;
-  const { userId, content, parentId } = req.body;
-
-  if (!userId || !content) {
-    return res.status(400).json({ error: '用户ID和内容不能为空' });
-  }
-
+router.post('/:id/forward', (req, res) => {
   try {
-    const result = await (req as any).db.query(
-      `INSERT INTO comments (post_id, author_id, content, parent_id)
-       VALUES ($1, $2, $3, $4)
-       RETURNING *`,
-      [id, userId, content, parentId || null]
-    );
+    const { id } = req.params;
 
-    const comment = result.rows[0];
+    const post = postsData.get(Number(id));
 
-    // 增加评论数
-    await (req as any).db.query('UPDATE posts SET comment_count = comment_count + 1 WHERE id = $1', [id]);
+    if (!post) {
+      return res.status(404).json({ error: '帖子不存在' });
+    }
 
-    // 查询评论作者信息
-    const userResult = await (req as any).db.query(
-      'SELECT username, avatar_url FROM users WHERE id = $1',
-      [userId]
-    );
+    post.forwardCount += 1;
+    postsData.set(post.id, post);
 
-    comment.username = userResult.rows[0].username;
-    comment.avatar_url = userResult.rows[0].avatar_url;
+    res.json({
+      success: true,
+      message: '转发成功',
+      forwardCount: post.forwardCount,
+      shareUrl: `http://localhost:5000/post/${post.id}`
+    });
+  } catch (error) {
+    console.error('转发操作失败:', error);
+    res.status(500).json({ error: '转发操作失败' });
+  }
+});
+
+/**
+ * 获取帖子评论
+ * GET /api/v1/posts/:id/comments
+ */
+router.get('/:id/comments', (req, res) => {
+  try {
+    const { id } = req.params;
+    const { page = 1, pageSize = 20 } = req.query;
+
+    const post = postsData.get(Number(id));
+
+    if (!post) {
+      return res.status(404).json({ error: '帖子不存在' });
+    }
+
+    const comments = post.comments || [];
+    const offset = (Number(page) - 1) * Number(pageSize);
+    const paginatedComments = comments.slice(offset, offset + Number(pageSize));
+
+    res.json({
+      success: true,
+      comments: paginatedComments,
+      pagination: {
+        page: Number(page),
+        pageSize: Number(pageSize),
+        total: comments.length,
+        totalPages: Math.ceil(comments.length / Number(pageSize))
+      }
+    });
+  } catch (error) {
+    console.error('获取评论失败:', error);
+    res.status(500).json({ error: '获取评论失败' });
+  }
+});
+
+/**
+ * 发表评论
+ * POST /api/v1/posts/:id/comments
+ * Body: {
+ *   userId: number,
+ *   username: string,
+ *   avatar: string,
+ *   content: string
+ * }
+ */
+router.post('/:id/comments', (req, res) => {
+  try {
+    const { id } = req.params;
+    const { userId, username, avatar, content } = req.body;
+
+    if (!userId || !content) {
+      return res.status(400).json({ error: '用户ID和内容不能为空' });
+    }
+
+    const post = postsData.get(Number(id));
+
+    if (!post) {
+      return res.status(404).json({ error: '帖子不存在' });
+    }
+
+    const newComment = {
+      id: Date.now(),
+      userId,
+      username: username || '匿名用户',
+      avatar: avatar || 'https://i.pravatar.cc/150?img=1',
+      content,
+      createdAt: new Date().toISOString(),
+      likeCount: 0,
+      replyCount: 0,
+    };
+
+    post.comments = post.comments || [];
+    post.comments.unshift(newComment);
+    post.commentCount += 1;
+
+    postsData.set(post.id, post);
 
     res.json({
       success: true,
       message: '评论成功',
-      comment
+      comment: newComment,
+      commentCount: post.commentCount
     });
   } catch (error) {
-    console.error('发布评论失败:', error);
-    res.status(500).json({ error: '发布评论失败' });
+    console.error('发表评论失败:', error);
+    res.status(500).json({ error: '发表评论失败' });
+  }
+});
+
+/**
+ * 点赞评论
+ * POST /api/v1/posts/:id/comments/:commentId/like
+ */
+router.post('/:id/comments/:commentId/like', (req, res) => {
+  try {
+    const { id, commentId } = req.params;
+
+    const post = postsData.get(Number(id));
+
+    if (!post) {
+      return res.status(404).json({ error: '帖子不存在' });
+    }
+
+    const comment = (post.comments || []).find((c: any) => c.id === Number(commentId));
+
+    if (!comment) {
+      return res.status(404).json({ error: '评论不存在' });
+    }
+
+    comment.likeCount += 1;
+    postsData.set(post.id, post);
+
+    res.json({
+      success: true,
+      message: '点赞成功',
+      likeCount: comment.likeCount
+    });
+  } catch (error) {
+    console.error('点赞评论失败:', error);
+    res.status(500).json({ error: '点赞评论失败' });
   }
 });
 

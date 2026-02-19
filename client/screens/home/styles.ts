@@ -1,7 +1,7 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Dimensions } from 'react-native';
 import { Spacing, BorderRadius, Theme } from '@/constants/theme';
 
-export const createStyles = (theme: Theme) => {
+export const createStyles = (theme: Theme, width: number = Dimensions.get('window').width) => {
   return StyleSheet.create({
     scrollContent: {
       flexGrow: 1,
@@ -17,6 +17,11 @@ export const createStyles = (theme: Theme) => {
     },
     tabItem: {
       marginRight: Spacing.xl,
+      paddingBottom: Spacing.sm,
+    },
+    activeTabItem: {
+      borderBottomWidth: 2,
+      borderBottomColor: theme.primary,
     },
     postsContainer: {
       paddingVertical: Spacing.md,
@@ -40,13 +45,10 @@ export const createStyles = (theme: Theme) => {
       alignItems: 'center',
       gap: Spacing.md,
     },
-    avatar: {
+    avatarImage: {
       width: 40,
       height: 40,
       borderRadius: 20,
-      backgroundColor: theme.primary,
-      justifyContent: 'center',
-      alignItems: 'center',
     },
     typeBadge: {
       paddingHorizontal: Spacing.sm,
@@ -71,20 +73,11 @@ export const createStyles = (theme: Theme) => {
     imageScroll: {
       marginBottom: Spacing.md,
     },
-    imageContainer: {
-      marginRight: Spacing.sm,
-    },
-    imagePlaceholder: {
-      width: 120,
-      height: 120,
-      backgroundColor: theme.backgroundTertiary,
+    postImage: {
+      width: width * 0.6,
+      height: (width * 0.6) * 0.75,
       borderRadius: BorderRadius.md,
-      justifyContent: 'center',
-      alignItems: 'center',
-      gap: Spacing.xs,
-    },
-    imageText: {
-      marginTop: Spacing.xs,
+      marginRight: Spacing.sm,
     },
     tagsContainer: {
       flexDirection: 'row',
@@ -100,7 +93,7 @@ export const createStyles = (theme: Theme) => {
     },
     postFooter: {
       flexDirection: 'row',
-      gap: Spacing.xl,
+      justifyContent: 'space-between',
       paddingTop: Spacing.sm,
       borderTopWidth: 1,
       borderTopColor: theme.borderLight,
@@ -108,10 +101,10 @@ export const createStyles = (theme: Theme) => {
     actionButton: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: Spacing.xs,
+      gap: 4,
     },
     actionText: {
-      marginLeft: Spacing.xs,
+      marginLeft: 4,
     },
     emptyContainer: {
       flex: 1,
@@ -122,6 +115,78 @@ export const createStyles = (theme: Theme) => {
     },
     emptyText: {
       textAlign: 'center',
+    },
+    // 评论弹窗样式
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      justifyContent: 'flex-end',
+    },
+    modalContent: {
+      borderTopLeftRadius: BorderRadius.xl,
+      borderTopRightRadius: BorderRadius.xl,
+      padding: Spacing.lg,
+      maxHeight: '80%',
+    },
+    modalHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: Spacing.lg,
+      paddingBottom: Spacing.md,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.borderLight,
+    },
+    commentsList: {
+      flex: 1,
+      marginBottom: Spacing.lg,
+    },
+    commentItem: {
+      flexDirection: 'row',
+      gap: Spacing.md,
+      marginBottom: Spacing.lg,
+    },
+    commentAvatar: {
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+    },
+    commentContent: {
+      flex: 1,
+      gap: Spacing.xs,
+    },
+    commentText: {
+      lineHeight: 20,
+    },
+    commentActions: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    commentLike: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+    },
+    commentInputContainer: {
+      flexDirection: 'row',
+      gap: Spacing.md,
+      alignItems: 'flex-end',
+    },
+    commentInput: {
+      flex: 1,
+      borderRadius: BorderRadius.lg,
+      padding: Spacing.md,
+      minHeight: 80,
+      maxHeight: 120,
+      textAlignVertical: 'top',
+    },
+    sendButton: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      justifyContent: 'center',
+      alignItems: 'center',
     },
   });
 };
