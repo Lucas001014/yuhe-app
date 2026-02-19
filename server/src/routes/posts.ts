@@ -25,19 +25,25 @@ allPosts.forEach(post => {
  * Query: {
  *   userId?: number,
  *   type?: string,
+ *   category?: string,
  *   page?: number,
  *   pageSize?: number
  * }
  */
 router.get('/', (req, res) => {
   try {
-    const { userId, type, page = 1, pageSize = 20 } = req.query;
+    const { userId, type, category, page = 1, pageSize = 20 } = req.query;
 
     let filteredPosts = Array.from(postsData.values());
 
     // 按类型筛选
     if (type && type !== 'all') {
       filteredPosts = filteredPosts.filter((p: any) => p.type === type);
+    }
+
+    // 按类别筛选
+    if (category && category !== '全部') {
+      filteredPosts = filteredPosts.filter((p: any) => p.category === category);
     }
 
     // 更新用户点赞和收藏状态

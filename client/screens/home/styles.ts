@@ -2,27 +2,122 @@ import { StyleSheet, Dimensions } from 'react-native';
 import { Spacing, BorderRadius, Theme } from '@/constants/theme';
 
 export const createStyles = (theme: Theme, width: number = Dimensions.get('window').width) => {
+  // 计算九宫格卡片宽度
+  const gridGap = 12;
+  const gridPadding = 16;
+  const gridItemWidth = (width - gridPadding * 2 - gridGap * 2) / 3;
+
   return StyleSheet.create({
     scrollContent: {
       flexGrow: 1,
       backgroundColor: theme.backgroundRoot,
-    },
-    tabBar: {
-      flexDirection: 'row',
-      paddingHorizontal: Spacing.xl,
       paddingVertical: Spacing.md,
+    },
+    // 类别导航样式
+    categoryNav: {
       backgroundColor: theme.backgroundDefault,
       borderBottomWidth: 1,
       borderBottomColor: theme.borderLight,
-    },
-    tabItem: {
-      marginRight: Spacing.xl,
       paddingBottom: Spacing.sm,
+    },
+    categoryScroll: {
+      paddingHorizontal: Spacing.lg,
+      paddingVertical: Spacing.md,
+    },
+    categoryItem: {
+      marginRight: Spacing.lg,
+      paddingHorizontal: Spacing.md,
+      paddingVertical: Spacing.sm,
+      borderRadius: BorderRadius.xl,
+      backgroundColor: theme.backgroundTertiary,
       flexShrink: 0,
     },
-    activeTabItem: {
-      borderBottomWidth: 2,
-      borderBottomColor: theme.primary,
+    activeCategoryItem: {
+      backgroundColor: theme.primary,
+    },
+    // 九宫格容器
+    gridContainer: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      paddingHorizontal: gridPadding,
+      gap: gridGap,
+      paddingBottom: Spacing['4xl'],
+    },
+    // 九宫格卡片
+    gridCard: {
+      width: gridItemWidth,
+      backgroundColor: theme.backgroundDefault,
+      borderRadius: BorderRadius.lg,
+      overflow: 'hidden',
+      marginBottom: 0,
+    },
+    gridImageContainer: {
+      width: gridItemWidth,
+      height: gridItemWidth * 1.2,
+      backgroundColor: theme.backgroundTertiary,
+      position: 'relative',
+    },
+    gridImage: {
+      width: gridItemWidth,
+      height: gridItemWidth * 1.2,
+    },
+    gridImagePlaceholder: {
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    gridTypeBadge: {
+      position: 'absolute',
+      top: 6,
+      right: 6,
+      paddingHorizontal: 6,
+      paddingVertical: 3,
+      borderRadius: BorderRadius.xs,
+    },
+    gridMerchantBadge: {
+      position: 'absolute',
+      top: 6,
+      left: 6,
+      width: 18,
+      height: 18,
+      borderRadius: 9,
+      backgroundColor: theme.backgroundDefault,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    gridResourceBadge: {
+      position: 'absolute',
+      bottom: 6,
+      right: 6,
+      width: 18,
+      height: 18,
+      borderRadius: 9,
+      backgroundColor: theme.primary,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    gridCardContent: {
+      padding: Spacing.sm,
+    },
+    gridTitle: {
+      marginBottom: Spacing.xs,
+      height: 36,
+      lineHeight: 18,
+    },
+    gridFooter: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    gridAuthor: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      flex: 1,
+    },
+    gridAvatar: {
+      width: 16,
+      height: 16,
+      borderRadius: 8,
     },
     postsContainer: {
       paddingVertical: Spacing.md,

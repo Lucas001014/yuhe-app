@@ -71,11 +71,17 @@ export default function HomeScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [userId, setUserId] = useState<number | null>(null);
   const [isMerchant, setIsMerchant] = useState<boolean>(false);
-  const [activeTab, setActiveTab] = useState<string>('recommend'); // 当前标签
+  const [activeTab, setActiveTab] = useState<string>('全部'); // 当前标签（类别）
   const [commentModalVisible, setCommentModalVisible] = useState(false);
   const [currentPostId, setCurrentPostId] = useState<number | null>(null);
   const [commentText, setCommentText] = useState('');
   const [comments, setComments] = useState<Comment[]>([]);
+
+  // 帖子类别导航
+  const categories = [
+    '全部', '产品心得', '融资经验', '运营推广', '团队管理',
+    '技术分享', '市场营销', '商业模式', '创业故事', '行业洞察', '工具推荐'
+  ];
 
   const API_BASE_URL = process.env.EXPO_PUBLIC_BACKEND_BASE_URL;
 
@@ -91,7 +97,7 @@ export default function HomeScreen() {
         setIsMerchant(merchantStatus === 'true');
       }
 
-      // 根据标签构建请求参数
+      // 根据类别构建请求参数
       let url = `${API_BASE_URL}/api/v1/posts`;
       const params = new URLSearchParams();
 
@@ -99,13 +105,9 @@ export default function HomeScreen() {
         params.append('userId', currentUserId);
       }
 
-      // 根据标签筛选
-      if (activeTab === 'bounty') {
-        params.append('type', 'bounty');
-      } else if (activeTab === 'difficult') {
-        params.append('category', '技术难点');
-      } else if (activeTab === 'hot') {
-        params.append('sort', 'hot');
+      // 根据类别筛选（不是"全部"时才筛选）
+      if (activeTab !== '全部') {
+        params.append('category', activeTab);
       }
 
       if (params.toString()) {
@@ -361,269 +363,119 @@ export default function HomeScreen() {
     }
   };
 
-  // 渲染帖子卡片
-  const renderPostCard = (post: Post) => (
-    <View key={post.id} style={styles.postCard}>
-      {/* 用户信息 */}
-      <View style={styles.postHeader}>
-        <View style={styles.userInfo}>
-          <Image source={{ uri: post.authorAvatar }} style={styles.avatarImage} />
-          <View>
-            <ThemedText variant="bodyMedium" color={theme.textPrimary}>
-              {post.authorName}
-            </ThemedText>
-            <ThemedText variant="caption" color={theme.textMuted}>
-              {new Date(post.createdAt).toLocaleDateString()} · {post.category}
-            </ThemedText>
+  // 渲染九宫格帖子卡片
+  const renderGridCard = (post: Post) => (
+    <TouchableOpacity
+      key={post.id}
+      style={styles.gridCard}
+      onPress={() => router.push('/post', { id: post.id })}
+    >
+      {/* 主图或视频封面 */}
+      <View style={styles.gridImageContainer}>
+        {post.images && post.images.length > 0 ? (
+          <Image
+            source={{ uri: post.images[0] }}
+            style={styles.gridImage}
+            contentFit="cover"
+          />
+        ) : (
+          <View style={[styles.gridImage, styles.gridImagePlaceholder]}>
+            <FontAwesome6 name="image" size={32} color={theme.textMuted} />
           </View>
-        </View>
+        )}
+
+        {/* 类型标签 */}
         <View style={[
-          styles.typeBadge,
+          styles.gridTypeBadge,
           { backgroundColor: post.type === 'paid' || post.type === 'bounty'
-            ? `${theme.primary}20`
-            : `${theme.success}20` }
+            ? `${theme.primary}CC`
+            : `${theme.success}CC` }
         ]}>
-          <ThemedText variant="caption" color={post.type === 'paid' || post.type === 'bounty'
-            ? theme.primary
-            : theme.success}>
+          <ThemedText variant="caption" color="#fff">
             {getPostTypeLabel(post.type)}
           </ThemedText>
         </View>
+
+        {/* 商家标识 */}
+        {post.isMerchant && (
+          <View style={styles.gridMerchantBadge}>
+            <FontAwesome6 name="store" size={10} color={theme.warning} />
+          </View>
+        )}
+
+        {/* 有虚拟资料标识 */}
+        {post.virtualResources && post.virtualResources.length > 0 && (
+          <View style={styles.gridResourceBadge}>
+            <FontAwesome6 name="paperclip" size={10} color={theme.buttonPrimaryText} />
+          </View>
+        )}
       </View>
 
-      {/* 帖子内容 */}
-      {post.title && (
-        <ThemedText variant="h4" color={theme.textPrimary} style={styles.postTitle}>
-          {post.title}
+      {/* 卡片内容 */}
+      <View style={styles.gridCardContent}>
+        {/* 标题 */}
+        <ThemedText
+          variant="bodyMedium"
+          color={theme.textPrimary}
+          style={styles.gridTitle}
+          numberOfLines={2}
+        >
+          {post.title || '无标题'}
         </ThemedText>
-      )}
 
-      <ThemedText variant="body" color={theme.textSecondary} style={styles.postContent} numberOfLines={4}>
-        {post.content}
-      </ThemedText>
-
-      {/* 价格标签 */}
-      {post.price && (
-        <View style={styles.priceBadge}>
-          <ThemedText variant="small" color={theme.primary}>
-            💰 ¥{post.price}
+        {/* 作者和互动 */}
+        <View style={styles.gridFooter}>
+          <View style={styles.gridAuthor}>
+            <Image source={{ uri: post.authorAvatar }} style={styles.gridAvatar} />
+            <ThemedText variant="caption" color={theme.textMuted} numberOfLines={1}>
+              {post.authorName}
+            </ThemedText>
+          </View>
+          <ThemedText variant="caption" color={theme.textMuted}>
+            ♥ {post.likeCount}
           </ThemedText>
         </View>
-      )}
-
-      {/* 图片 */}
-      {post.images && post.images.length > 0 && post.contentType !== 'video' && (
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.imageScroll}>
-          {post.images.map((imageUrl, index) => (
-            <Image
-              key={index}
-              source={{ uri: imageUrl }}
-              style={styles.postImage}
-              contentFit="cover"
-            />
-          ))}
-        </ScrollView>
-      )}
-
-      {/* 视频 */}
-      {post.videoUrl && post.contentType === 'video' && (
-        <View style={styles.videoContainer}>
-          <FontAwesome6 name="circle-play" size={48} color={theme.buttonPrimaryText} />
-          <ThemedText variant="small" color={theme.buttonPrimaryText} style={{ marginTop: 8 }}>
-            点击播放视频
-          </ThemedText>
-        </View>
-      )}
-
-      {/* 商家标识 */}
-      {post.isMerchant && (
-        <View style={styles.merchantBadge}>
-          <FontAwesome6 name="store" size={12} color={theme.warning} />
-          <ThemedText variant="caption" color={theme.warning} style={{ marginLeft: 4 }}>
-            商家认证
-          </ThemedText>
-        </View>
-      )}
-
-      {/* 虚拟资料 */}
-      {post.virtualResources && post.virtualResources.length > 0 && (
-        <View style={styles.resourceSection}>
-          <ThemedText variant="smallMedium" color={theme.textPrimary} style={{ marginBottom: 8 }}>
-            📎 附件资料 ({post.virtualResources.length})
-          </ThemedText>
-          {post.virtualResources.map((resource, index) => (
-            <View key={index} style={styles.resourceItem}>
-              <View style={styles.resourceInfo}>
-                <FontAwesome6 name="file-lines" size={16} color={theme.primary} />
-                <View style={{ marginLeft: 8, flex: 1 }}>
-                  <ThemedText variant="small" color={theme.textPrimary} numberOfLines={1}>
-                    {resource.name}
-                  </ThemedText>
-                  <ThemedText variant="caption" color={theme.textMuted}>
-                    {resource.fileSize} · {resource.fileType.toUpperCase()}
-                  </ThemedText>
-                </View>
-              </View>
-              <TouchableOpacity
-                style={[
-                  styles.resourceButton,
-                  post.isPurchased
-                    ? { backgroundColor: `${theme.success}20` }
-                    : { backgroundColor: `${theme.primary}20` }
-                ]}
-                onPress={() => {
-                  if (post.isPurchased) {
-                    handleDownloadResource(post.id, resource.id);
-                  } else {
-                    handleBuyResource(post.id, resource.id, resource.price);
-                  }
-                }}
-              >
-                <ThemedText
-                  variant="caption"
-                  color={post.isPurchased ? theme.success : theme.primary}
-                >
-                  {post.isPurchased ? '下载' : `¥${resource.price}`}
-                </ThemedText>
-              </TouchableOpacity>
-            </View>
-          ))}
-        </View>
-      )}
-
-      {/* 标签 */}
-      {post.tags && post.tags.length > 0 && (
-        <View style={styles.tagsContainer}>
-          {post.tags.map((tag, index) => (
-            <View key={index} style={styles.tag}>
-              <ThemedText variant="caption" color={theme.textSecondary}>
-                #{tag}
-              </ThemedText>
-            </View>
-          ))}
-        </View>
-      )}
-
-      {/* 底部操作栏 */}
-      <View style={styles.postFooter}>
-        <TouchableOpacity
-          style={styles.actionButton}
-          onPress={() => handleLike(post.id, post.isLiked)}
-        >
-          <FontAwesome6
-            name={post.isLiked ? 'heart' : 'heart'}
-            size={16}
-            color={post.isLiked ? theme.primary : theme.textMuted}
-            solid={post.isLiked}
-          />
-          <ThemedText variant="caption" color={theme.textMuted} style={styles.actionText}>
-            {post.likeCount || 0}
-          </ThemedText>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.actionButton}
-          onPress={() => openComments(post.id)}
-        >
-          <FontAwesome6 name="comment" size={16} color={theme.textMuted} />
-          <ThemedText variant="caption" color={theme.textMuted} style={styles.actionText}>
-            {post.commentCount || 0}
-          </ThemedText>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.actionButton}
-          onPress={() => handleCollect(post.id, post.isCollected)}
-        >
-          <FontAwesome6
-            name="bookmark"
-            size={16}
-            color={post.isCollected ? theme.warning : theme.textMuted}
-            solid={post.isCollected}
-          />
-          <ThemedText variant="caption" color={theme.textMuted} style={styles.actionText}>
-            {post.collectCount || 0}
-          </ThemedText>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.actionButton}
-          onPress={() => handleForward(post.id)}
-        >
-          <FontAwesome6 name="share-nodes" size={16} color={theme.textMuted} />
-          <ThemedText variant="caption" color={theme.textMuted} style={styles.actionText}>
-            {post.forwardCount || 0}
-          </ThemedText>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.actionButton}>
-          <FontAwesome6 name="eye" size={16} color={theme.textMuted} />
-          <ThemedText variant="caption" color={theme.textMuted} style={styles.actionText}>
-            {post.viewCount || 0}
-          </ThemedText>
-        </TouchableOpacity>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 
   return (
     <Screen backgroundColor={theme.backgroundRoot} statusBarStyle="light">
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* 顶部标签栏 */}
-        <View style={styles.tabBar}>
-          <TouchableOpacity
-            style={[styles.tabItem, activeTab === 'recommend' && styles.activeTabItem]}
-            onPress={() => setActiveTab('recommend')}
-          >
-            <ThemedText variant="bodyMedium" color={activeTab === 'recommend' ? theme.primary : theme.textSecondary}>
-              推荐
-            </ThemedText>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.tabItem, activeTab === 'following' && styles.activeTabItem]}
-            onPress={() => setActiveTab('following')}
-          >
-            <ThemedText variant="bodyMedium" color={activeTab === 'following' ? theme.primary : theme.textSecondary}>
-              关注
-            </ThemedText>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.tabItem, activeTab === 'hot' && styles.activeTabItem]}
-            onPress={() => setActiveTab('hot')}
-          >
-            <ThemedText variant="bodyMedium" color={activeTab === 'hot' ? theme.primary : theme.textSecondary}>
-              热点讨论
-            </ThemedText>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.tabItem, activeTab === 'bounty' && styles.activeTabItem]}
-            onPress={() => setActiveTab('bounty')}
-          >
-            <ThemedText variant="bodyMedium" color={activeTab === 'bounty' ? theme.primary : theme.textSecondary}>
-              问题悬赏
-            </ThemedText>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.tabItem, activeTab === 'difficult' && styles.activeTabItem]}
-            onPress={() => setActiveTab('difficult')}
-          >
-            <ThemedText variant="bodyMedium" color={activeTab === 'difficult' ? theme.primary : theme.textSecondary}>
-              难点讨论
-            </ThemedText>
-          </TouchableOpacity>
-        </View>
+      {/* 顶部类别导航 */}
+      <View style={styles.categoryNav}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoryScroll}>
+          {categories.map((category) => (
+            <TouchableOpacity
+              key={category}
+              style={[
+                styles.categoryItem,
+                activeTab === category && styles.activeCategoryItem
+              ]}
+              onPress={() => setActiveTab(category)}
+            >
+              <ThemedText
+                variant="bodyMedium"
+                color={activeTab === category ? theme.buttonPrimaryText : theme.textSecondary}
+              >
+                {category}
+              </ThemedText>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </View>
 
-        {/* 帖子列表 */}
+      {/* 九宫格帖子列表 */}
+      <ScrollView contentContainerStyle={styles.scrollContent}>
         {posts.length === 0 ? (
           <View style={styles.emptyContainer}>
             <FontAwesome6 name="inbox" size={48} color={theme.textMuted} />
             <ThemedText variant="body" color={theme.textMuted} style={styles.emptyText}>
-              暂无帖子，快来发布第一条内容吧
+              暂无{activeTab !== '全部' ? activeTab : ''}帖子，快来发布第一条内容吧
             </ThemedText>
           </View>
         ) : (
-          <View style={styles.postsContainer}>
-            {posts.map(renderPostCard)}
+          <View style={styles.gridContainer}>
+            {posts.map(renderGridCard)}
           </View>
         )}
       </ScrollView>
