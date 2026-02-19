@@ -513,7 +513,7 @@ export default function HomeScreen() {
         {/* 管理入口 */}
         <TouchableOpacity
           style={[styles.adminButton, { backgroundColor: theme.primary }]}
-          onPress={() => router.push('/admin')}
+          onPress={() => router.push('/admin-web')}
         >
           <FontAwesome6 name="gear" size={20} color="#fff" />
         </TouchableOpacity>

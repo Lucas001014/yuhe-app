@@ -18,12 +18,7 @@ export default function RootLayout() {
       <ColorSchemeProvider>
         <GestureHandlerRootView style={{ flex: 1 }}>
           <StatusBar style="dark"></StatusBar>
-          <Stack screenOptions={{
-            animation: 'slide_from_right',
-            gestureEnabled: true,
-            gestureDirection: 'horizontal',
-            headerShown: false
-          }}>
+          <Stack>
             <Stack.Screen name="(tabs)" options={{ title: "" }} />
             <Stack.Screen name="login" options={{ title: "登录" }} />
             <Stack.Screen name="post-detail" options={{ title: "帖子详情" }} />
@@ -31,6 +26,7 @@ export default function RootLayout() {
             <Stack.Screen name="admin/posts" options={{ title: "帖子管理" }} />
             <Stack.Screen name="admin/users" options={{ title: "用户管理" }} />
             <Stack.Screen name="admin/categories" options={{ title: "类别管理" }} />
+            <Stack.Screen name="admin-web" options={{ title: "管理后台" }} />
           </Stack>
           <Toast />
         </GestureHandlerRootView>
