@@ -1,7 +1,5 @@
 import express from "express";
 import cors from "cors";
-import path from 'path';
-import { fileURLToPath } from 'url';
 import { Pool } from 'pg';
 import authRouter from './routes/auth';
 import postsRouter from './routes/posts';
@@ -9,16 +7,6 @@ import transactionsRouter from './routes/transactions';
 import adminRouter from './routes/admin';
 import usersRouter from './routes/users';
 import categoriesRouter from './routes/categories';
-import iapRouter from './routes/iap';
-import orderRouter from './routes/order';
-import refundRouter from './routes/refund';
-import withdrawRouter from './routes/withdraw';
-import iapAdminRouter from './routes/iap-admin';
-import smsRouter from './routes/sms';
-import auditRouter from './routes/audit';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 const app = express();
 const port = process.env.PORT || 9091;
@@ -65,9 +53,6 @@ app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
-// 静态文件服务
-app.use(express.static(path.join(__dirname, '../public')));
-
 // 健康检查
 app.get('/api/v1/health', (req, res) => {
   res.status(200).json({ status: 'ok' });
@@ -80,13 +65,6 @@ app.use('/api/v1/transactions', transactionsRouter);
 app.use('/api/v1/admin', adminRouter);
 app.use('/api/v1/users', usersRouter);
 app.use('/api/v1/categories', categoriesRouter);
-app.use('/api/v1/iap', iapRouter);
-app.use('/api/v1/order', orderRouter);
-app.use('/api/v1/refund', refundRouter);
-app.use('/api/v1/withdraw', withdrawRouter);
-app.use('/api/v1/iap-admin', iapAdminRouter);
-app.use('/api/v1/sms', smsRouter);
-app.use('/api/v1/audit', auditRouter);
 
 // 404 处理
 app.use((req, res) => {

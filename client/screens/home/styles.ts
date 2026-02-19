@@ -48,18 +48,6 @@ export const createStyles = (theme: Theme, width: number = Dimensions.get('windo
       alignItems: 'center',
       marginRight: Spacing.lg,
     },
-    controlButtons: {
-      flexDirection: 'row',
-      gap: Spacing.sm,
-      marginRight: Spacing.lg,
-    },
-    controlButton: {
-      width: 36,
-      height: 36,
-      borderRadius: 18,
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
     // 瀑布流容器（2列布局）
     masonryContainer: {
       flexDirection: 'row',
