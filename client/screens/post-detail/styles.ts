@@ -81,8 +81,9 @@ export const createStyles = (theme: Theme) => {
       marginBottom: Spacing.md,
     },
     postImage: {
-      width: 200,
-      height: 200,
+      width: 280,
+      minHeight: 150,
+      maxHeight: 400,
       borderRadius: BorderRadius.md,
       marginRight: Spacing.sm,
     },

@@ -52,11 +52,14 @@ export const createStyles = (theme: Theme) => {
     postImage: {
       width: 80,
       height: 80,
+      minHeight: 60,
+      maxHeight: 120,
       borderRadius: BorderRadius.md,
     },
     singleImage: {
       width: '100%',
-      height: 200,
+      minHeight: 150,
+      maxHeight: 400,
     },
     moreImagesBadge: {
       position: 'absolute',

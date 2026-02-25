@@ -348,14 +348,22 @@ export function PaidQATab() {
             </View>
 
             <View style={styles.stats}>
-              <FontAwesome6 name="heart" size={12} color={theme.textMuted} />
-              <ThemedText variant="caption" color={theme.textMuted} style={styles.statText}>
-                {post.likeCount}
-              </ThemedText>
-              <FontAwesome6 name="comment" size={12} color={theme.textMuted} />
-              <ThemedText variant="caption" color={theme.textMuted} style={styles.statText}>
-                {post.commentCount}
-              </ThemedText>
+              {post.likeCount > 0 && (
+                <>
+                  <FontAwesome6 name="heart" size={12} color={theme.textMuted} />
+                  <ThemedText variant="caption" color={theme.textMuted} style={styles.statText}>
+                    {post.likeCount}
+                  </ThemedText>
+                </>
+              )}
+              {post.commentCount > 0 && (
+                <>
+                  <FontAwesome6 name="comment" size={12} color={theme.textMuted} />
+                  <ThemedText variant="caption" color={theme.textMuted} style={styles.statText}>
+                    {post.commentCount}
+                  </ThemedText>
+                </>
+              )}
             </View>
           </View>
         </ThemedView>

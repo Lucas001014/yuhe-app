@@ -349,24 +349,30 @@ export default function PostDetailScreen() {
 
             {/* 统计信息 */}
             <View style={styles.statsRow}>
-              <View style={styles.statItem}>
-                <FontAwesome6 name="eye" size={14} color={theme.textMuted} />
-                <ThemedText variant="caption" color={theme.textMuted}>
-                  {post.viewCount}
-                </ThemedText>
-              </View>
-              <View style={styles.statItem}>
-                <FontAwesome6 name="heart" size={14} color={theme.textMuted} />
-                <ThemedText variant="caption" color={theme.textMuted}>
-                  {post.likeCount}
-                </ThemedText>
-              </View>
-              <View style={styles.statItem}>
-                <FontAwesome6 name="comment" size={14} color={theme.textMuted} />
-                <ThemedText variant="caption" color={theme.textMuted}>
-                  {post.commentCount}
-                </ThemedText>
-              </View>
+              {post.viewCount > 0 && (
+                <View style={styles.statItem}>
+                  <FontAwesome6 name="eye" size={14} color={theme.textMuted} />
+                  <ThemedText variant="caption" color={theme.textMuted}>
+                    {post.viewCount}
+                  </ThemedText>
+                </View>
+              )}
+              {post.likeCount > 0 && (
+                <View style={styles.statItem}>
+                  <FontAwesome6 name="heart" size={14} color={theme.textMuted} />
+                  <ThemedText variant="caption" color={theme.textMuted}>
+                    {post.likeCount}
+                  </ThemedText>
+                </View>
+              )}
+              {post.commentCount > 0 && (
+                <View style={styles.statItem}>
+                  <FontAwesome6 name="comment" size={14} color={theme.textMuted} />
+                  <ThemedText variant="caption" color={theme.textMuted}>
+                    {post.commentCount}
+                  </ThemedText>
+                </View>
+              )}
             </View>
 
             {/* 操作按钮 */}
@@ -381,12 +387,14 @@ export default function PostDetailScreen() {
                   color={post.isLiked ? theme.primary : theme.textMuted}
                   solid={post.isLiked}
                 />
-                <ThemedText
-                  variant="small"
-                  color={post.isLiked ? theme.primary : theme.textMuted}
-                >
-                  {post.likeCount}
-                </ThemedText>
+                {post.likeCount > 0 && (
+                  <ThemedText
+                    variant="small"
+                    color={post.isLiked ? theme.primary : theme.textMuted}
+                  >
+                    {post.likeCount}
+                  </ThemedText>
+                )}
               </TouchableOpacity>
 
               <TouchableOpacity style={styles.actionButton}>
@@ -403,7 +411,7 @@ export default function PostDetailScreen() {
             {/* 评论区 */}
             <View style={styles.commentsSection}>
               <ThemedText variant="bodyMedium" color={theme.textPrimary} style={styles.sectionTitle}>
-                评论 ({post.commentCount})
+                {post.commentCount > 0 ? `评论 (${post.commentCount})` : '评论'}
               </ThemedText>
 
               {!post.comments || post.comments.length === 0 ? (

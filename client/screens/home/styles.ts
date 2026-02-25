@@ -244,6 +244,8 @@ export const createStyles = (theme: Theme, width: number = Dimensions.get('windo
     },
     cardImage: {
       width: '100%',
+      minHeight: 100,
+      maxHeight: 400,
     },
     cardContent: {
       padding: Spacing.md,

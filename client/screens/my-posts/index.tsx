@@ -187,18 +187,22 @@ export default function MyPostsScreen() {
 
                 <View style={styles.postFooter}>
                   <View style={styles.postStats}>
-                    <View style={styles.statItem}>
-                      <FontAwesome6 name="heart" size={14} color={theme.textMuted} />
-                      <ThemedText variant="caption" color={theme.textMuted}>
-                        {post.likes_count}
-                      </ThemedText>
-                    </View>
-                    <View style={styles.statItem}>
-                      <FontAwesome6 name="comment" size={14} color={theme.textMuted} />
-                      <ThemedText variant="caption" color={theme.textMuted}>
-                        {post.comments_count}
-                      </ThemedText>
-                    </View>
+                    {post.likes_count > 0 && (
+                      <View style={styles.statItem}>
+                        <FontAwesome6 name="heart" size={14} color={theme.textMuted} />
+                        <ThemedText variant="caption" color={theme.textMuted}>
+                          {post.likes_count}
+                        </ThemedText>
+                      </View>
+                    )}
+                    {post.comments_count > 0 && (
+                      <View style={styles.statItem}>
+                        <FontAwesome6 name="comment" size={14} color={theme.textMuted} />
+                        <ThemedText variant="caption" color={theme.textMuted}>
+                          {post.comments_count}
+                        </ThemedText>
+                      </View>
+                    )}
                   </View>
                   {post.is_paid && post.price && (
                     <ThemedText variant="small" color={theme.primary}>
