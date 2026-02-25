@@ -7,20 +7,20 @@ const slugAppName = projectId ? `app${projectId}` : 'myapp';
 export default ({ config }: ConfigContext): ExpoConfig => {
   return {
     ...config,
-    "name": "SoloCoder - 创业者社区",
-    "slug": "solocoder",
+    "name": "遇合",
+    "slug": "yuhe",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "solocoder",
+    "scheme": "yuhe",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "ios": {
-      "bundleIdentifier": "com.solocoder.app",
+      "bundleIdentifier": "com.yuhe.app",
       "buildNumber": "1",
       "supportsTablet": true,
       "infoPlist": {
-        "CFBundleDisplayName": "SoloCoder",
+        "CFBundleDisplayName": "遇合",
         "CFBundleShortVersionString": "1.0.0",
         "CFBundleVersion": "1",
         "NSCameraUsageDescription": "需要访问相机以拍摄照片和视频，分享您的创业故事",
@@ -34,7 +34,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#1677FF"
       },
-      "package": "com.solocoder.app"
+      "package": "com.yuhe.app"
     },
     "web": {
       "bundler": "metro",
@@ -65,29 +65,29 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       [
         "expo-image-picker",
         {
-          "photosPermission": "允许 SoloCoder 访问您的相册，以便您上传图片分享创业经验",
-          "cameraPermission": "允许 SoloCoder 使用您的相机，以便您直接拍摄照片上传",
-          "microphonePermission": "允许 SoloCoder 访问您的麦克风，以便您拍摄带有声音的视频"
+          "photosPermission": "允许遇合访问您的相册，以便您上传图片分享创业经验",
+          "cameraPermission": "允许遇合使用您的相机，以便您直接拍摄照片上传",
+          "microphonePermission": "允许遇合访问您的麦克风，以便您拍摄带有声音的视频"
         }
       ],
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "SoloCoder 需要访问您的位置以提供周边创业资源和服务"
+          "locationWhenInUsePermission": "遇合需要访问您的位置以提供周边创业资源和服务"
         }
       ],
       [
         "expo-camera",
         {
-          "cameraPermission": "SoloCoder 需要访问相机以拍摄照片和视频",
-          "microphonePermission": "SoloCoder 需要访问麦克风以录制视频声音",
+          "cameraPermission": "遇合需要访问相机以拍摄照片和视频",
+          "microphonePermission": "遇合需要访问麦克风以录制视频声音",
           "recordAudioAndroid": true
         }
       ],
       [
         "expo-av",
         {
-          "microphonePermission": "SoloCoder 需要访问麦克风以录制音频内容"
+          "microphonePermission": "遇合需要访问麦克风以录制音频内容"
         }
       ]
     ],

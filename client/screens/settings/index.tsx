@@ -39,8 +39,8 @@ export default function SettingsScreen() {
 
   const handleAbout = () => {
     Alert.alert(
-      '关于我们',
-      '创业者社交平台\n\n版本：1.0.0\n\n专为创业者打造的交流平台，支持知识付费、悬赏求助、产品推广等功能。'
+      '关于遇合',
+      '遇合，开拓属于自己的商业山河\n\n版本：1.0.0\n\n专为创业者打造的交流平台，支持知识付费、悬赏求助、产品推广等功能。'
     );
   };
 
@@ -175,7 +175,10 @@ export default function SettingsScreen() {
         {/* 版本信息 */}
         <View style={styles.versionContainer}>
           <ThemedText variant="caption" color={theme.textMuted}>
-            创业者社交平台 v1.0.0
+            遇合 v1.0.0
+          </ThemedText>
+          <ThemedText variant="caption" color={theme.textMuted}>
+            遇合，开拓属于自己的商业山河
           </ThemedText>
           <ThemedText variant="caption" color={theme.textMuted}>
             {Platform.OS === 'web' ? 'Web 版' : Platform.OS === 'ios' ? 'iOS 版' : 'Android 版'}
