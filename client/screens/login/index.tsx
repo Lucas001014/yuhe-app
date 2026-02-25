@@ -118,7 +118,7 @@ export default function LoginScreen() {
             遇合
           </ThemedText>
           <ThemedText variant="body" color={theme.textSecondary} style={styles.subtitle}>
-            {isLogin ? '遇合，书写属于自己的商业山河' : '加入我们，与更多创业者交流'}
+            {isLogin ? '书写属于自己的商业山河' : '加入我们，与更多创业者交流'}
           </ThemedText>
         </ThemedView>
 
