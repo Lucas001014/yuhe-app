@@ -115,10 +115,10 @@ export default function LoginScreen() {
       <View style={styles.container}>
         <ThemedView style={styles.header}>
           <ThemedText variant="h1" color={theme.primary}>
-            创业者社区
+            遇合
           </ThemedText>
           <ThemedText variant="body" color={theme.textSecondary} style={styles.subtitle}>
-            {isLogin ? '欢迎回来，继续你的创业之旅' : '加入我们，与更多创业者交流'}
+            {isLogin ? '遇合，书写属于自己的商业山河' : '加入我们，与更多创业者交流'}
           </ThemedText>
         </ThemedView>
 
