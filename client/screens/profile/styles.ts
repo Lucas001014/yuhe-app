@@ -16,6 +16,7 @@ export const createStyles = (theme: Theme) => {
     },
     scrollContent: {
       flexGrow: 1,
+      paddingBottom: Spacing['5xl'],
     },
     headerCard: {
       flexDirection: 'row',
@@ -45,6 +46,25 @@ export const createStyles = (theme: Theme) => {
       padding: Spacing.sm,
       backgroundColor: theme.backgroundTertiary,
       borderRadius: BorderRadius.md,
+    },
+    statsCard: {
+      flexDirection: 'row',
+      justifyContent: 'space-around',
+      alignItems: 'center',
+      marginHorizontal: Spacing.lg,
+      marginBottom: Spacing.lg,
+      paddingVertical: Spacing.lg,
+      backgroundColor: theme.backgroundDefault,
+      borderRadius: BorderRadius.lg,
+    },
+    statItem: {
+      alignItems: 'center',
+      gap: Spacing.xs,
+      flex: 1,
+    },
+    statDivider: {
+      width: 1,
+      height: 40,
     },
     balanceCard: {
       flexDirection: 'row',

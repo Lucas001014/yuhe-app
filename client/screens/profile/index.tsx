@@ -19,6 +19,11 @@ interface User {
   balance: number;
   tags: string[];
   created_at: string;
+  stats?: {
+    followersCount: number;
+    followingCount: number;
+    likesCount: number;
+  };
 }
 
 interface Transaction {
@@ -197,6 +202,36 @@ export default function ProfileScreen() {
           </TouchableOpacity>
         </View>
 
+        {/* 统计数据 */}
+        <View style={styles.statsCard}>
+          <View style={styles.statItem}>
+            <ThemedText variant="h4" color={theme.primary}>
+              {user.stats?.followersCount || 0}
+            </ThemedText>
+            <ThemedText variant="caption" color={theme.textSecondary}>
+              粉丝
+            </ThemedText>
+          </View>
+          <View style={[styles.statDivider, { backgroundColor: theme.border }]} />
+          <View style={styles.statItem}>
+            <ThemedText variant="h4" color={theme.primary}>
+              {user.stats?.followingCount || 0}
+            </ThemedText>
+            <ThemedText variant="caption" color={theme.textSecondary}>
+              关注
+            </ThemedText>
+          </View>
+          <View style={[styles.statDivider, { backgroundColor: theme.border }]} />
+          <View style={styles.statItem}>
+            <ThemedText variant="h4" color={theme.primary}>
+              {user.stats?.likesCount || 0}
+            </ThemedText>
+            <ThemedText variant="caption" color={theme.textSecondary}>
+              获赞
+            </ThemedText>
+          </View>
+        </View>
+
         {/* 余额卡片 */}
         <View style={styles.balanceCard}>
           <View style={styles.balanceInfo}>
@@ -205,7 +240,7 @@ export default function ProfileScreen() {
               ¥{user.balance.toFixed(2)}
             </ThemedText>
           </View>
-          <TouchableOpacity style={styles.rechargeButton}>
+          <TouchableOpacity style={styles.rechargeButton} onPress={() => router.push('/wallet')}>
             <ThemedText variant="small" color={theme.buttonPrimaryText}>
               充值
             </ThemedText>
@@ -236,7 +271,7 @@ export default function ProfileScreen() {
             <ThemedText variant="bodyMedium" color={theme.textPrimary} style={styles.sectionTitle}>
               交易记录
             </ThemedText>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={() => router.push('/wallet')}>
               <ThemedText variant="small" color={theme.primary}>查看全部</ThemedText>
             </TouchableOpacity>
           </View>
@@ -287,13 +322,13 @@ export default function ProfileScreen() {
             <FontAwesome6 name="chevron-right" size={16} color={theme.textMuted} />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.menuItem}>
+          <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/my-posts')}>
             <FontAwesome6 name="file-lines" size={20} color={theme.textSecondary} />
             <ThemedText variant="body" color={theme.textPrimary}>我的发布</ThemedText>
             <FontAwesome6 name="chevron-right" size={16} color={theme.textMuted} />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.menuItem}>
+          <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/my-favorites')}>
             <FontAwesome6 name="bookmark" size={20} color={theme.textSecondary} />
             <ThemedText variant="body" color={theme.textPrimary}>我的收藏</ThemedText>
             <FontAwesome6 name="chevron-right" size={16} color={theme.textMuted} />
@@ -305,7 +340,7 @@ export default function ProfileScreen() {
             <FontAwesome6 name="chevron-right" size={16} color={theme.textMuted} />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.menuItem}>
+          <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/settings')}>
             <FontAwesome6 name="gear" size={20} color={theme.textSecondary} />
             <ThemedText variant="body" color={theme.textPrimary}>设置</ThemedText>
             <FontAwesome6 name="chevron-right" size={16} color={theme.textMuted} />

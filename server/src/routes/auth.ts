@@ -190,18 +190,50 @@ router.get('/me', async (req, res) => {
   }
 
   try {
-    const result = await (req as any).db.query(
+    // 获取用户基本信息
+    const userResult = await (req as any).db.query(
       'SELECT id, phone, username, avatar_url, bio, balance, tags, created_at FROM users WHERE id = $1',
       [userId]
     );
 
-    if (result.rows.length === 0) {
+    if (userResult.rows.length === 0) {
       return res.status(404).json({ error: '用户不存在' });
     }
 
+    const user = userResult.rows[0];
+
+    // 获取统计数据
+    // 粉丝数（关注该用户的用户数）
+    const followersResult = await (req as any).db.query(
+      'SELECT COUNT(*) as count FROM follows WHERE following_id = $1',
+      [userId]
+    );
+    const followersCount = parseInt(followersResult.rows[0].count);
+
+    // 关注数（该用户关注的用户数）
+    const followingResult = await (req as any).db.query(
+      'SELECT COUNT(*) as count FROM follows WHERE follower_id = $1',
+      [userId]
+    );
+    const followingCount = parseInt(followingResult.rows[0].count);
+
+    // 获赞数（该用户发布的帖子获得的点赞总数）
+    const likesResult = await (req as any).db.query(
+      'SELECT COUNT(*) as count FROM likes WHERE post_id IN (SELECT id FROM posts WHERE user_id = $1)',
+      [userId]
+    );
+    const likesCount = parseInt(likesResult.rows[0].count);
+
     res.json({
       success: true,
-      user: result.rows[0]
+      user: {
+        ...user,
+        stats: {
+          followersCount,
+          followingCount,
+          likesCount,
+        }
+      }
     });
   } catch (error) {
     console.error('获取用户信息失败:', error);

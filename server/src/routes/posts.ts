@@ -457,6 +457,108 @@ function generateMockData(type: string) {
 }
 
 /**
+ * 获取用户收藏的帖子
+ * GET /api/v1/posts/favorites
+ * Query: { userId: number, page?: number, pageSize?: number }
+ */
+router.get('/favorites', (req, res) => {
+  try {
+    const { userId, page = 1, pageSize = 20 } = req.query;
+
+    if (!userId) {
+      return res.status(400).json({ error: '用户ID不能为空' });
+    }
+
+    // 模拟收藏的帖子ID列表（假设用户收藏了一些帖子）
+    const favoritePostIds = [1, 5, 9, 13, 17, 21, 25, 29, 33, 37, 41, 45, 49, 53, 57];
+
+    // 从所有类型中获取帖子
+    const allTypes = ['normal', 'paid_qa', 'bounty', 'product'];
+    let posts: any[] = [];
+
+    allTypes.forEach(t => {
+      const typePosts = generateMockData(t);
+      // 过滤出收藏的帖子
+      const favoritePosts = typePosts.filter((p: any) => favoritePostIds.includes(p.id));
+      posts = posts.concat(favoritePosts);
+    });
+
+    // 按创建时间倒序排序
+    posts.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+    // 分页
+    const offset = (Number(page) - 1) * Number(pageSize);
+    const paginatedPosts = posts.slice(offset, offset + Number(pageSize));
+
+    res.json({
+      success: true,
+      posts: paginatedPosts,
+      pagination: {
+        page: Number(page),
+        pageSize: Number(pageSize),
+        total: posts.length,
+        totalPages: Math.ceil(posts.length / Number(pageSize)),
+      },
+    });
+  } catch (error) {
+    console.error('获取收藏列表失败:', error);
+    res.status(500).json({ error: '获取收藏列表失败' });
+  }
+});
+
+/**
+ * 获取用户发布的帖子
+ * GET /api/v1/posts/user
+ * Query: { userId: number, type?: string, page?: number, pageSize?: number }
+ */
+router.get('/user', (req, res) => {
+  try {
+    const { userId, type, page = 1, pageSize = 20 } = req.query;
+
+    if (!userId) {
+      return res.status(400).json({ error: '用户ID不能为空' });
+    }
+
+    // 从所有类型中获取帖子
+    const allTypes = ['normal', 'paid_qa', 'bounty', 'product'];
+    let posts: any[] = [];
+
+    allTypes.forEach(t => {
+      const typePosts = generateMockData(t);
+      // 过滤出特定用户的帖子
+      const userPosts = typePosts.filter((p: any) => p.user_id === Number(userId));
+      posts = posts.concat(userPosts);
+    });
+
+    // 按类型过滤
+    if (type && String(type) !== 'all') {
+      posts = posts.filter((post: any) => post.type === String(type));
+    }
+
+    // 按创建时间倒序排序
+    posts.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+    // 分页
+    const offset = (Number(page) - 1) * Number(pageSize);
+    const paginatedPosts = posts.slice(offset, offset + Number(pageSize));
+
+    res.json({
+      success: true,
+      posts: paginatedPosts,
+      pagination: {
+        page: Number(page),
+        pageSize: Number(pageSize),
+        total: posts.length,
+        totalPages: Math.ceil(posts.length / Number(pageSize)),
+      },
+    });
+  } catch (error) {
+    console.error('获取用户帖子失败:', error);
+    res.status(500).json({ error: '获取用户帖子失败' });
+  }
+});
+
+/**
  * 获取帖子列表
  * GET /api/v1/posts
  * Query: {
