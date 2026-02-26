@@ -1,22 +1,21 @@
 import express from 'express';
+import { Pool } from 'pg';
 
 const router = express.Router();
 
-// 生成随机数据
-function randomInt(min: number, max: number) {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
+// 获取数据库连接
+declare global {
+  var db: Pool;
 }
 
-function randomDate(start: Date, end: Date) {
-  return new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
-}
+const db = global.db;
 
 /**
  * 获取用户消息列表
  * GET /api/v1/messages
  * Query: { userId: number }
  */
-router.get('/', (req, res) => {
+router.get('/', async (req, res) => {
   try {
     const { userId } = req.query;
 
@@ -24,127 +23,34 @@ router.get('/', (req, res) => {
       return res.status(400).json({ error: '用户ID不能为空' });
     }
 
-    // 生成模拟消息数据
-    const messages = [
-      {
-        id: 1,
-        type: 'chat',
-        title: '私信消息',
-        content: '你有一条新的私信消息',
-        avatar: 'https://i.pravatar.cc/150?img=10',
-        username: '用户10',
-        time: randomDate(new Date(2025, 0, 1), new Date()).toISOString(),
-        unread: true,
-        count: randomInt(1, 10),
-      },
-      {
-        id: 2,
-        type: 'like',
-        title: '点赞',
-        content: '用户20 赞了你的帖子',
-        avatar: 'https://i.pravatar.cc/150?img=20',
-        username: '用户20',
-        postId: 1,
-        postTitle: '创业初期需要注意的三个关键点',
-        time: randomDate(new Date(2025, 0, 1), new Date()).toISOString(),
-        unread: true,
-      },
-      {
-        id: 3,
-        type: 'comment',
-        title: '评论',
-        content: '用户15 在你的帖子下评论了',
-        avatar: 'https://i.pravatar.cc/150?img=15',
-        username: '用户15',
-        postId: 2,
-        postTitle: '如何快速验证创业想法的可行性',
-        time: randomDate(new Date(2025, 0, 1), new Date()).toISOString(),
-        unread: true,
-        count: randomInt(1, 5),
-      },
-      {
-        id: 4,
-        type: 'collect',
-        title: '收藏',
-        content: '用户25 收藏了你的帖子',
-        avatar: 'https://i.pravatar.cc/150?img=25',
-        username: '用户25',
-        postId: 3,
-        postTitle: '创业者如何平衡工作和生活',
-        time: randomDate(new Date(2025, 0, 1), new Date()).toISOString(),
-        unread: false,
-      },
-      {
-        id: 5,
-        type: 'forward',
-        title: '转发',
-        content: '用户30 转发了你的帖子',
-        avatar: 'https://i.pravatar.cc/150?img=30',
-        username: '用户30',
-        postId: 4,
-        postTitle: '从0到1的创业经验总结',
-        time: randomDate(new Date(2025, 0, 1), new Date()).toISOString(),
-        unread: false,
-      },
-      {
-        id: 6,
-        type: 'follow',
-        title: '新粉丝',
-        content: '有新的粉丝关注了你',
-        avatar: 'https://i.pravatar.cc/150?img=35',
-        username: '用户35',
-        time: randomDate(new Date(2025, 0, 1), new Date()).toISOString(),
-        unread: true,
-        count: randomInt(1, 3),
-      },
-      {
-        id: 7,
-        type: 'like',
-        title: '点赞',
-        content: '用户40 赞了你的帖子',
-        avatar: 'https://i.pravatar.cc/150?img=40',
-        username: '用户40',
-        postId: 5,
-        postTitle: '创业者必备的时间管理技巧',
-        time: randomDate(new Date(2025, 0, 1), new Date()).toISOString(),
-        unread: false,
-      },
-      {
-        id: 8,
-        type: 'comment',
-        title: '评论',
-        content: '用户45 在你的帖子下评论了',
-        avatar: 'https://i.pravatar.cc/150?img=45',
-        username: '用户45',
-        postId: 6,
-        postTitle: '如何找到合适的创业合伙人',
-        time: randomDate(new Date(2025, 0, 1), new Date()).toISOString(),
-        unread: false,
-      },
-      {
-        id: 9,
-        type: 'follow',
-        title: '新粉丝',
-        content: '有新的粉丝关注了你',
-        avatar: 'https://i.pravatar.cc/150?img=50',
-        username: '用户50',
-        time: randomDate(new Date(2025, 0, 1), new Date()).toISOString(),
-        unread: false,
-      },
-      {
-        id: 10,
-        type: 'chat',
-        title: '私信消息',
-        content: '你有一条新的私信消息',
-        avatar: 'https://i.pravatar.cc/150?img=5',
-        username: '用户5',
-        time: randomDate(new Date(2025, 0, 1), new Date()).toISOString(),
-        unread: false,
-      },
-    ];
+    // 从数据库获取通知
+    const result = await db.query(
+      `SELECT
+        n.*,
+        u.avatar as from_user_avatar
+      FROM notifications n
+      LEFT JOIN users u ON n.from_user_id = u.id
+      WHERE n.user_id = $1
+      ORDER BY n.created_at DESC
+      LIMIT 50`,
+      [parseInt(userId as string)]
+    );
 
-    // 按时间倒序排序
-    messages.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
+    const messages = result.rows.map((row: any) => {
+      return {
+        id: row.id,
+        type: row.type,
+        title: row.title,
+        content: row.content,
+        avatar: row.from_user_avatar || 'https://i.pravatar.cc/150',
+        username: row.from_username || '未知用户',
+        postId: row.post_id,
+        postTitle: row.content,
+        time: row.created_at,
+        unread: !row.is_read,
+        count: row.type === 'comment' || row.type === 'follow' ? 1 : undefined,
+      };
+    });
 
     res.json({
       success: true,
@@ -153,6 +59,40 @@ router.get('/', (req, res) => {
   } catch (error) {
     console.error('获取消息列表失败:', error);
     res.status(500).json({ error: '获取消息列表失败' });
+  }
+});
+
+/**
+ * 标记消息为已读
+ * POST /api/v1/messages/read
+ * Body: { userId: number, messageId?: number }
+ */
+router.post('/read', async (req, res) => {
+  try {
+    const { userId, messageId } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({ error: '用户ID不能为空' });
+    }
+
+    if (messageId) {
+      // 标记单条消息为已读
+      await db.query(
+        'UPDATE notifications SET is_read = true WHERE id = $1 AND user_id = $2',
+        [messageId, userId]
+      );
+    } else {
+      // 标记所有消息为已读
+      await db.query(
+        'UPDATE notifications SET is_read = true WHERE user_id = $1',
+        [userId]
+      );
+    }
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('标记消息已读失败:', error);
+    res.status(500).json({ error: '标记消息已读失败' });
   }
 });
 

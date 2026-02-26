@@ -91,6 +91,9 @@ export default function CreateScreen() {
     setLoading(true);
     try {
       const userId = await AsyncStorage.getItem('userId');
+      const username = await AsyncStorage.getItem('username');
+      const avatar = await AsyncStorage.getItem('avatar');
+
       if (!userId) {
         Alert.alert('提示', '请先登录');
         return;
@@ -100,6 +103,8 @@ export default function CreateScreen() {
 
       const payload: any = {
         userId: parseInt(userId),
+        username,
+        avatar,
         type: postType,
         content,
         title: postType !== 'normal' ? title : undefined,
@@ -127,9 +132,15 @@ export default function CreateScreen() {
       const data = await response.json();
 
       if (data.success) {
-        Alert.alert('成功', '发布成功', [
-          { text: '确定', onPress: () => router.back() }
-        ]);
+        if (data.post.status === 'approved') {
+          Alert.alert('成功', '发布成功！', [
+            { text: '确定', onPress: () => router.back() }
+          ]);
+        } else {
+          Alert.alert('审核未通过', data.message || '您的帖子未通过审核', [
+            { text: '确定', onPress: () => router.back() }
+          ]);
+        }
       } else {
         Alert.alert('失败', data.error || '发布失败');
       }

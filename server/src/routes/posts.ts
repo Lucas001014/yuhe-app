@@ -1,678 +1,577 @@
 import express from 'express';
+import { Pool } from 'pg';
 
 const router = express.Router();
 
-// 生成随机数据
-function randomInt(min: number, max: number) {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
+// 获取数据库连接
+declare global {
+  var db: Pool;
 }
 
-function randomDate(start: Date, end: Date) {
-  return new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
-}
+const db = global.db;
 
-function randomItem<T>(array: T[]): T {
-  return array[Math.floor(Math.random() * array.length)];
-}
-
-// 生成图片URL（使用 picsum.photos 稳定服务）
-function generateImageUrls(count: number = 1): string[] {
-  const urls: string[] = [];
-  
-  for (let i = 0; i < count; i++) {
-    const width = randomInt(600, 900);
-    const height = Math.floor(width * [0.7, 0.8, 1.0, 1.2, 1.3][randomInt(0, 4)]);
-    const randomId = randomInt(1, 1000);
-    urls.push(`https://picsum.photos/${width}/${height}?random=${randomId}`);
-  }
-  return urls;
-}
-
-// 随机生成评论
-function generateComments(postId: number, count: number) {
-  const commentTemplates = [
-    '非常赞同作者的观点，确实如此！',
-    '这个观点很有启发，受教了。',
-    '文章写得很详细，感谢分享。',
-    '请问可以详细说明一下吗？',
-    '我也遇到过类似的问题，这个方法很有用。',
-    '期待更多类似的内容。',
-    '这篇内容太实用了，已经收藏了。',
-    '希望能继续分享这类干货。',
-    '这是一个很棒的资源，感谢提供。',
-    '学习了，受益匪浅！',
-    '这个思路很新颖，值得借鉴。',
-    '希望能有机会和作者交流一下。',
-    '内容很丰富，需要慢慢消化。',
-    '解决了我的困惑，谢谢！',
-    '这个建议很中肯，会尝试一下。',
-  ];
-
-  const comments = [];
-  for (let i = 0; i < count; i++) {
-    comments.push({
-      id: postId * 100 + i + 1,
-      userId: randomInt(1, 20),
-      username: `用户${randomInt(1, 50)}`,
-      avatar: `https://i.pravatar.cc/150?img=${randomInt(1, 70)}`,
-      content: randomItem(commentTemplates),
-      createdAt: randomDate(new Date(2025, 0, 1), new Date()).toISOString(),
-      likeCount: randomInt(0, 50),
-      replyCount: randomInt(0, 10),
-    });
-  }
-  return comments;
-}
-
-// 生成推荐帖子数据
-function generateRecommendPosts(): any[] {
-  const titles = [
-    '创业初期需要注意的三个关键点',
-    '如何快速验证创业想法的可行性',
-    '创业者如何平衡工作和生活',
-    '从0到1的创业经验总结',
-    '创业者必备的时间管理技巧',
-    '如何找到合适的创业合伙人',
-    '初创企业如何快速获取第一批用户',
-    '创业者应该避免的五个常见误区',
-    '如何打造一个有凝聚力的创业团队',
-    '创业公司如何制定有效的营销策略',
-    '创业者如何保持持续的学习和成长',
-    '从失败中学习：创业路上的坑与避坑指南',
-    '如何建立良好的创业心态',
-    '创业者如何有效利用人脉资源',
-    '创业公司如何进行成本控制',
-    '如何制定创业公司的战略规划',
-    '创业者如何应对压力和焦虑',
-    '从产品到市场：创业公司的推广策略',
-    '如何培养创业公司的创新文化',
-    '创业者如何建立个人品牌',
-    '创业公司如何进行人才招聘',
-    '如何进行有效的市场调研',
-    '创业者如何与投资人沟通',
-    '从数据中洞察：创业公司的数据分析方法',
-    '如何提高创业公司的运营效率',
-    '创业者如何建立良好的客户关系',
-    '创业公司如何应对竞争',
-    '如何打造让用户喜欢的产品',
-    '创业者如何进行有效的财务管理',
-    '从失败到成功：创业者的韧性培养',
-    '如何保持创业公司的活力和创新力',
-  ];
-
-  const categories = ['创业', '产品', '营销', '团队', '管理', '融资', '技术', '运营'];
-  const tagsList = [
-    ['创业心得', '经验分享'],
-    ['产品开发', '用户增长'],
-    ['营销策略', '品牌建设'],
-    ['团队管理', '领导力'],
-    ['创业技巧', '方法论'],
-    ['商业模式', '创新'],
-    ['运营心得', '效率提升'],
-    ['财务规划', '成本控制'],
-    ['市场竞争', '差异化'],
-    ['产品思维', '用户洞察'],
-  ];
-
-  const posts = [];
-  for (let i = 1; i <= 30; i++) {
-    const hasImage = Math.random() > 0.3;
-    const hasMultipleImages = hasImage && Math.random() > 0.7;
-    const imageCount = hasMultipleImages ? randomInt(2, 5) : 1;
-
-    const images: string[] = [];
-    if (hasImage) {
-      images.push(...generateImageUrls(imageCount));
-    }
-
-    posts.push({
-      id: i,
-      title: titles[i - 1],
-      content: `这是一篇关于${categories[i % categories.length]}的深度分享，包含了我多年来的实践经验和思考。希望能对正在创业或准备创业的朋友有所帮助。内容涵盖策略制定、执行落地、团队协作等多个方面，既有理论也有实践案例。`,
-      authorId: randomInt(1, 20),
-      authorName: `创作者${randomInt(1, 50)}`,
-      authorAvatar: `https://i.pravatar.cc/150?img=${randomInt(1, 70)}`,
-      isMerchant: Math.random() > 0.7,
-      type: 'article',
-      contentType: hasImage ? 'image' : 'text',
-      category: categories[i % categories.length],
-      tags: tagsList[i % tagsList.length],
-      images,
-      videoUrl: '',
-      virtualResources: [],
-      price: 0,
-      status: 'published',
-      createdAt: randomDate(new Date(2025, 0, 1), new Date()).toISOString(),
-      viewCount: randomInt(100, 5000),
-      likeCount: randomInt(10, 500),
-      commentCount: randomInt(0, 100),
-      forwardCount: randomInt(0, 200),
-      collectCount: randomInt(0, 150),
-      isLiked: false,
-      isCollected: false,
-      aspectRatio: [0.8, 1.0, 1.2, 1.4][randomInt(0, 3)],
-      comments: generateComments(i, randomInt(0, 10)),
-    });
-  }
-  return posts;
-}
-
-// 生成知识库帖子数据
-function generateKnowledgePosts(): any[] {
-  const titles = [
-    '2024年创业环境分析报告',
-    '创业融资全流程指南（含PPT模板）',
-    'SaaS产品从0到1的开发手册',
-    '创业者必读的10本经典书籍清单',
-    '创业公司股权设计实战指南',
-    '企业税务筹划与合规指南',
-    '用户增长黑客实战案例集',
-    '内容营销策略与执行手册',
-    '初创企业法律风险防范指南',
-    '创业团队绩效考核体系设计',
-    '产品原型设计工具与流程指南',
-    '创业公司品牌建设完整方案',
-    '电商运营从入门到精通（含实战案例）',
-    '私域流量运营实战手册',
-    '短视频营销完整操作指南',
-    '直播带货创业实操指南',
-    '跨境电商平台选择与运营策略',
-    '创业公司HR招聘与管理手册',
-    '新媒体平台运营策略对比分析',
-    '创业项目商业计划书写作指南',
-    '创业公司财务报表分析与优化',
-    '用户调研方法论与工具使用指南',
-    '创业公司敏捷开发实践手册',
-    '企业数据安全与隐私保护指南',
-    '创业者个人IP打造完整方案',
-    '社交媒体营销策略与实战技巧',
-    '创业危机公关处理手册',
-    '创业公司办公效率提升工具集',
-    '创业项目路演技巧与注意事项',
-    '创业者心理健康维护指南',
-    '创业失败案例分析总结报告',
-  ];
-
-  const categories = ['报告', '模板', '手册', '指南', '清单', '案例', '方案'];
-  const tagsList = [
-    ['创业资料', '融资', 'PPT'],
-    ['SaaS', '产品开发', '技术'],
-    ['股权设计', '法律', '管理'],
-    ['用户增长', '营销', '运营'],
-    ['内容营销', '品牌', '策略'],
-    ['法律风险', '合规', '防范'],
-    ['私域流量', '运营', '实操'],
-    ['短视频', '直播', '营销'],
-    ['跨境电商', '电商', '平台'],
-    ['数据分析', '财务', '优化'],
-  ];
-
-  const posts = [];
-  for (let i = 1; i <= 30; i++) {
-    const hasImage = Math.random() > 0.3; // 提高图片生成概率到70%
-    const images = hasImage
-      ? generateImageUrls(1)
-      : [];
-
-    posts.push({
-      id: 100 + i,
-      title: titles[i - 1],
-      content: `这是一份精心整理的${categories[i % categories.length]}，包含了丰富的实战经验和专业指导。内容详实、条理清晰，适合创业者系统学习和参考。`,
-      authorId: randomInt(1, 20),
-      authorName: `知识官${randomInt(1, 50)}`,
-      authorAvatar: `https://i.pravatar.cc/150?img=${randomInt(1, 70)}`,
-      isMerchant: true,
-      type: 'qa',
-      contentType: hasImage ? 'image' : 'text',
-      category: categories[i % categories.length],
-      tags: tagsList[i % tagsList.length],
-      images,
-      videoUrl: '',
-      virtualResources: [
-        {
-          id: i,
-          name: `${titles[i - 1]}.pdf`,
-          size: `${randomInt(1, 50)}MB`,
-          description: '高清PDF版本，支持下载和打印',
-          downloadUrl: `https://example.com/download/resource_${i}.pdf`,
-          price: randomInt(9, 199),
-        },
-      ],
-      price: randomInt(9, 199),
-      status: 'published',
-      createdAt: randomDate(new Date(2025, 0, 1), new Date()).toISOString(),
-      viewCount: randomInt(200, 10000),
-      likeCount: randomInt(50, 1000),
-      commentCount: randomInt(0, 50),
-      forwardCount: randomInt(10, 300),
-      collectCount: randomInt(20, 500),
-      isLiked: false,
-      isCollected: false,
-      aspectRatio: [0.8, 1.0, 1.2, 1.4][randomInt(0, 3)],
-      comments: generateComments(100 + i, randomInt(0, 10)),
-    });
-  }
-  return posts;
-}
-
-// 生成悬赏帖子数据
-function generateBountyPosts(): any[] {
-  const titles = [
-    '悬赏500元：求推荐优质的CRM系统',
-    '悬赏800元：需要一位UI设计师合作完成项目',
-    '悬赏1000元：求大神提供SEO优化方案',
-    '悬赏2000元：急需开发一个小程序',
-    '悬赏1500元：需要撰写商业计划书',
-    '悬赏600元：求解答法律相关问题',
-    '悬赏1200元：需要一位产品经理协助梳理需求',
-    '悬赏1800元：求推荐靠谱的供应链资源',
-    '悬赏700元：需要制作企业宣传片',
-    '悬赏2500元：急需一个专业的融资顾问',
-    '悬赏900元：求解答财务税务问题',
-    '悬赏3000元：需要开发一个APP原型',
-    '悬赏1100元：求推荐优质的办公场地',
-    '悬赏1600元：需要一位营销顾问制定推广方案',
-    '悬赏1300元：求解答人力资源相关问题',
-    '悬赏2200元：需要一位技术合伙人',
-    '悬赏850元：求推荐优质的物流服务商',
-    '悬赏1750元：需要撰写产品文案',
-    '悬赏2100元：求解答品牌营销问题',
-    '悬赏950元：需要一位翻译协助',
-    '悬赏2800元：需要开发一个网站',
-    '悬赏1400元：求推荐优质的代账公司',
-    '悬赏1950元：需要一位运营顾问',
-    '悬赏2600元：急需一个数据分析专家',
-    '悬赏1050元：求解答知识产权问题',
-    '悬赏2300元：需要一位投资人对接',
-    '悬赏1650元：求推荐优质的招聘渠道',
-    '悬赏1900元：需要一位客服培训师',
-    '悬赏2400元：求解答合规相关问题',
-    '悬赏1550元：需要一位内容编辑',
-    '悬赏2700元：需要一位战略规划顾问',
-  ];
-
-  const categories = ['技术开发', '设计', '营销', '财务', '法务', '人力资源', '运营', '其他'];
-  const tagsList = [
-    ['需求悬赏', '合作'],
-    ['技术支持', '开发'],
-    ['设计需求', 'UI/UX'],
-    ['营销推广', '品牌'],
-    ['财务咨询', '税务'],
-    ['法律咨询', '合规'],
-    ['人力资源', '招聘'],
-    ['运营支持', '咨询'],
-  ];
-
-  const posts = [];
-  for (let i = 1; i <= 30; i++) {
-    const hasImage = Math.random() > 0.4; // 提高图片生成概率到60%
-    const images = hasImage
-      ? generateImageUrls(1)
-      : [];
-
-    posts.push({
-      id: 200 + i,
-      title: titles[i - 1],
-      content: `我正在寻找一位专业人士协助我解决${categories[i % categories.length]}方面的问题，预算已定，请有意者私信联系。要求：有相关经验，能按时交付质量可靠的工作成果。`,
-      authorId: randomInt(1, 20),
-      authorName: `求助者${randomInt(1, 50)}`,
-      authorAvatar: `https://i.pravatar.cc/150?img=${randomInt(1, 70)}`,
-      isMerchant: false,
-      type: 'bounty',
-      contentType: hasImage ? 'image' : 'text',
-      category: categories[i % categories.length],
-      tags: tagsList[i % tagsList.length],
-      images,
-      videoUrl: '',
-      virtualResources: [],
-      price: randomInt(500, 5000),
-      status: 'published',
-      createdAt: randomDate(new Date(2025, 0, 1), new Date()).toISOString(),
-      viewCount: randomInt(150, 5000),
-      likeCount: randomInt(20, 300),
-      commentCount: randomInt(5, 80),
-      forwardCount: randomInt(5, 100),
-      collectCount: randomInt(5, 50),
-      isLiked: false,
-      isCollected: false,
-      aspectRatio: [0.8, 1.0, 1.2, 1.4][randomInt(0, 3)],
-      comments: generateComments(200 + i, randomInt(5, 20)),
-    });
-  }
-  return posts;
-}
-
-// 生成热点讨论帖子数据
-function generateHotTopicPosts(): any[] {
-  const titles = [
-    '创业者如何应对2025年的市场变化？',
-    'ChatGPT等AI工具对创业的影响和机遇',
-    '创业公司应该优先选择哪条赛道？',
-    '如何判断一个创业项目是否值得投入？',
-    '创业者需要具备哪些核心能力？',
-    '初创企业如何快速建立品牌影响力？',
-    '创业过程中最难的是什么？',
-    '如何找到适合自己的创业方向？',
-    '创业公司如何应对资金短缺？',
-    '创业者如何平衡短期利益和长期发展？',
-    '2025年最值得关注的创业趋势',
-    '创业公司如何进行有效的人才培养？',
-    '如何提高创业成功率？',
-    '创业者如何建立良好的行业人脉？',
-    '创业公司如何进行有效的市场定位？',
-    '如何打造有竞争力的产品？',
-    '创业者如何应对激烈的竞争环境？',
-    '创业公司如何进行有效的成本管理？',
-    '如何进行创业项目的风险评估？',
-    '创业者如何建立可持续的商业模式？',
-    '2025年创业环境的新变化',
-    '创业公司如何进行创新管理？',
-    '如何选择合适的创业合伙人？',
-    '创业者如何保持持续的创新能力？',
-    '创业公司如何建立良好的企业文化？',
-    '如何进行创业项目的有效执行？',
-    '创业者如何应对市场的不确定性？',
-    '创业公司如何进行有效的资源整合？',
-    '如何进行创业项目的持续优化？',
-    '创业者如何建立个人影响力？',
-    '2025年创业者需要关注的关键问题',
-  ];
-
-  const categories = ['市场趋势', '创业策略', '产品创新', '团队管理', '资金管理', '品牌建设', '风险管理', '商业模式'];
-  const tagsList = [
-    ['创业讨论', '趋势'],
-    ['AI创业', '新技术'],
-    ['赛道选择', '方向'],
-    ['项目评估', '投资'],
-    ['创业能力', '素质'],
-    ['品牌建设', '营销'],
-    ['创业困难', '挑战'],
-    ['创业方向', '定位'],
-    ['资金问题', '融资'],
-    ['长期发展', '战略'],
-    ['2025趋势', '预测'],
-    ['人才培养', '团队'],
-    ['成功率', '方法'],
-    ['人脉建设', '社交'],
-    ['市场定位', '策略'],
-    ['产品竞争力', '创新'],
-    ['市场竞争', '应对'],
-    ['成本管理', '优化'],
-    ['风险评估', '控制'],
-    ['商业模式', '盈利'],
-  ];
-
-  const posts = [];
-  for (let i = 1; i <= 30; i++) {
-    const hasImage = Math.random() > 0.4;
-    const hasMultipleImages = hasImage && Math.random() > 0.6;
-    const imageCount = hasMultipleImages ? randomInt(2, 5) : 1;
-
-    const images: string[] = [];
-    if (hasImage) {
-      images.push(...generateImageUrls(imageCount));
-    }
-
-    posts.push({
-      id: 300 + i,
-      title: titles[i - 1],
-      content: `这是一个关于${categories[i % categories.length]}的热门话题，希望能引发大家的讨论和思考。欢迎分享你的观点和经验！`,
-      authorId: randomInt(1, 20),
-      authorName: `话题发起者${randomInt(1, 50)}`,
-      authorAvatar: `https://i.pravatar.cc/150?img=${randomInt(1, 70)}`,
-      isMerchant: Math.random() > 0.6,
-      type: 'product',
-      contentType: hasImage ? 'image' : 'text',
-      category: categories[i % categories.length],
-      tags: tagsList[i % tagsList.length],
-      images,
-      videoUrl: '',
-      virtualResources: [],
-      price: 0,
-      status: 'published',
-      createdAt: randomDate(new Date(2025, 0, 1), new Date()).toISOString(),
-      viewCount: randomInt(500, 20000),
-      likeCount: randomInt(100, 2000),
-      commentCount: randomInt(20, 200),
-      forwardCount: randomInt(20, 500),
-      collectCount: randomInt(30, 400),
-      isLiked: false,
-      isCollected: false,
-      aspectRatio: [0.8, 1.0, 1.2, 1.4][randomInt(0, 3)],
-      comments: generateComments(300 + i, randomInt(10, 30)),
-    });
-  }
-  return posts;
-}
-
-// 模拟数据生成函数
-function generateMockData(type: string) {
-  const dataMap: Record<string, any> = {
-    normal: generateRecommendPosts(),
-    paid_qa: generateKnowledgePosts(),
-    bounty: generateBountyPosts(),
-    product: generateHotTopicPosts(),
-  };
-  return dataMap[type] || [];
-}
-
-/**
- * 获取用户收藏的帖子
- * GET /api/v1/posts/favorites
- * Query: { userId: number, page?: number, pageSize?: number }
- */
-router.get('/favorites', (req, res) => {
+// 获取用户自己的帖子列表（包括所有状态）
+router.get('/my-posts', async (req, res) => {
   try {
-    const { userId, page = 1, pageSize = 20 } = req.query;
-
-    if (!userId) {
-      return res.status(400).json({ error: '用户ID不能为空' });
-    }
-
-    // 模拟收藏的帖子ID列表（假设用户收藏了一些帖子）
-    const favoritePostIds = [1, 5, 9, 13, 17, 21, 25, 29, 33, 37, 41, 45, 49, 53, 57];
-
-    // 从所有类型中获取帖子
-    const allTypes = ['normal', 'paid_qa', 'bounty', 'product'];
-    let posts: any[] = [];
-
-    allTypes.forEach(t => {
-      const typePosts = generateMockData(t);
-      // 过滤出收藏的帖子
-      const favoritePosts = typePosts.filter((p: any) => favoritePostIds.includes(p.id));
-      posts = posts.concat(favoritePosts);
-    });
-
-    // 按创建时间倒序排序
-    posts.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-
-    // 分页
-    const offset = (Number(page) - 1) * Number(pageSize);
-    const paginatedPosts = posts.slice(offset, offset + Number(pageSize));
-
-    res.json({
-      success: true,
-      posts: paginatedPosts,
-      pagination: {
-        page: Number(page),
-        pageSize: Number(pageSize),
-        total: posts.length,
-        totalPages: Math.ceil(posts.length / Number(pageSize)),
-      },
-    });
-  } catch (error) {
-    console.error('获取收藏列表失败:', error);
-    res.status(500).json({ error: '获取收藏列表失败' });
-  }
-});
-
-/**
- * 获取用户发布的帖子
- * GET /api/v1/posts/user
- * Query: { userId: number, type?: string, page?: number, pageSize?: number }
- */
-router.get('/user', (req, res) => {
-  try {
-    const { userId, type, page = 1, pageSize = 20 } = req.query;
-
-    if (!userId) {
-      return res.status(400).json({ error: '用户ID不能为空' });
-    }
-
-    // 从所有类型中获取帖子
-    const allTypes = ['normal', 'paid_qa', 'bounty', 'product'];
-    let posts: any[] = [];
-
-    allTypes.forEach(t => {
-      const typePosts = generateMockData(t);
-      // 过滤出特定用户的帖子
-      const userPosts = typePosts.filter((p: any) => p.user_id === Number(userId));
-      posts = posts.concat(userPosts);
-    });
-
-    // 按类型过滤
-    if (type && String(type) !== 'all') {
-      posts = posts.filter((post: any) => post.type === String(type));
-    }
-
-    // 按创建时间倒序排序
-    posts.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-
-    // 分页
-    const offset = (Number(page) - 1) * Number(pageSize);
-    const paginatedPosts = posts.slice(offset, offset + Number(pageSize));
-
-    res.json({
-      success: true,
-      posts: paginatedPosts,
-      pagination: {
-        page: Number(page),
-        pageSize: Number(pageSize),
-        total: posts.length,
-        totalPages: Math.ceil(posts.length / Number(pageSize)),
-      },
-    });
-  } catch (error) {
-    console.error('获取用户帖子失败:', error);
-    res.status(500).json({ error: '获取用户帖子失败' });
-  }
-});
-
-/**
- * 获取帖子列表
- * GET /api/v1/posts
- * Query: {
- *   userId?: number,
- *   type?: string,
- *   category?: string,
- *   excludeType?: string,
- *   page?: number,
- *   pageSize?: number
- * }
- */
-router.get('/', (req, res) => {
-  try {
-    const { type, category, excludeType, page = 1, pageSize = 20 } = req.query;
-
-    // 获取对应类型的数据
-    let posts: any[] = [];
-    
-    if (type && String(type) !== 'all') {
-      posts = generateMockData(String(type));
-    } else {
-      // 获取所有类型的数据
-      const allTypes = ['normal', 'paid_qa', 'bounty', 'product'];
-      allTypes.forEach(t => {
-        posts = posts.concat(generateMockData(t));
-      });
-    }
-
-    // 如果需要排除特定类型
-    if (excludeType) {
-      const excludeTypes = Array.isArray(excludeType) 
-        ? excludeType.map(String)
-        : [String(excludeType)];
-      posts = posts.filter((post: any) => !excludeTypes.includes(post.type));
-    }
-
-    // 分页
-    const offset = (Number(page) - 1) * Number(pageSize);
-    const paginatedPosts = posts.slice(offset, offset + Number(pageSize));
-
-    res.json({
-      success: true,
-      posts: paginatedPosts,
-      pagination: {
-        page: Number(page),
-        pageSize: Number(pageSize),
-        total: posts.length,
-        totalPages: Math.ceil(posts.length / Number(pageSize)),
-      },
-    });
-  } catch (error) {
-    console.error('获取帖子列表失败:', error);
-    res.status(500).json({ error: '获取帖子列表失败' });
-  }
-});
-
-/**
- * 获取帖子详情
- * GET /api/v1/posts/:id
- */
-router.get('/:id', (req, res) => {
-  try {
-    const { id } = req.params;
     const { userId } = req.query;
 
-    // 从所有类型中查找帖子
-    const allTypes = ['normal', 'paid_qa', 'bounty', 'product'];
-    let post: any = null;
-    
-    for (const type of allTypes) {
-      const posts = generateMockData(type);
-      post = posts.find((p: any) => p.id === Number(id));
-      if (post) break;
+    if (!userId) {
+      return res.status(400).json({ success: false, error: '用户ID不能为空' });
     }
 
-    if (!post) {
-      return res.status(404).json({ error: '帖子不存在' });
+    const query = `
+      SELECT * FROM posts
+      WHERE author_id = $1
+      ORDER BY created_at DESC
+      LIMIT 50
+    `;
+
+    const result = await db.query(query, [parseInt(userId as string)]);
+
+    const posts = result.rows.map((row: any) => {
+      return {
+        ...row,
+        images: row.images || [],
+        tags: row.tags || [],
+        aspectRatio: calculateAspectRatio(row.images),
+      };
+    });
+
+    res.json({ success: true, posts });
+  } catch (error: any) {
+    console.error('获取用户帖子列表失败：', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// 获取帖子列表（只返回已审核通过的）
+router.get('/', async (req, res) => {
+  try {
+    const { type, userId } = req.query;
+    const currentUserId = userId ? parseInt(userId as string) : null;
+
+    let query = `
+      SELECT p.*,
+        COALESCE(json_agg(
+          json_build_object(
+            'userId', pi.user_id,
+            'interactionType', pi.interaction_type
+          )
+        ) FILTER (WHERE pi.user_id = $1), '[]') as user_interactions
+      FROM posts p
+      LEFT JOIN post_interactions pi ON p.id = pi.post_id AND pi.user_id = $1
+      WHERE p.status = 'approved'
+    `;
+
+    const params: any[] = [];
+    if (currentUserId) {
+      params.push(currentUserId);
+    } else {
+      params.push(0); // 占位符
     }
+
+    if (type) {
+      query += ` AND p.type = $${params.length + 1}`;
+      params.push(type);
+    }
+
+    query += `
+      GROUP BY p.id
+      ORDER BY p.created_at DESC
+      LIMIT 50
+    `;
+
+    const result = await db.query(query, params);
+
+    const posts = result.rows.map((row: any) => {
+      // 处理用户互动状态
+      const interactions = row.user_interactions || [];
+      const isLiked = interactions.some((i: any) => i.interactionType === 'like');
+      const isCollected = interactions.some((i: any) => i.interactionType === 'collect');
+
+      return {
+        ...row,
+        images: row.images || [],
+        tags: row.tags || [],
+        aspectRatio: calculateAspectRatio(row.images),
+        isLiked,
+        isCollected,
+      };
+    });
+
+    res.json({ success: true, posts });
+  } catch (error: any) {
+    console.error('获取帖子列表失败：', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// 计算图片宽高比（简化实现）
+function calculateAspectRatio(images: string[]): number {
+  if (!images || images.length === 0) return 1;
+  // 这里简化处理，实际应该从图片元数据获取
+  return [0.8, 1.0, 1.2, 1.4][Math.floor(Math.random() * 4)];
+}
+
+// 创建帖子（自动审核）
+router.post('/', async (req, res) => {
+  const client = await db.connect();
+  try {
+    const {
+      userId,
+      username,
+      avatar,
+      type = 'normal',
+      title,
+      content,
+      images = [],
+      category,
+      tags = [],
+      price = 0,
+    } = req.body;
+
+    if (!userId || !title || !content) {
+      return res.status(400).json({ success: false, error: '缺少必填参数' });
+    }
+
+    await client.query('BEGIN');
+
+    // 调用审核接口
+    const auditResult = await auditContent(content, images);
+    const auditStatus = auditResult.passed ? 'approved' : 'rejected';
+    const auditTime = new Date();
+    const auditReason = auditResult.reason || null;
+
+    // 插入帖子
+    const query = `
+      INSERT INTO posts (
+        author_id, author_name, author_avatar, type, content_type,
+        title, content, category, tags, images, price,
+        status, audit_status, audit_time, audit_reason
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+      RETURNING *
+    `;
+
+    const values = [
+      userId,
+      username,
+      avatar,
+      type,
+      images.length > 0 ? 'image' : 'text',
+      title,
+      content,
+      category,
+      tags,
+      images,
+      price,
+      auditStatus, // 使用审核状态
+      auditStatus,
+      auditTime,
+      auditReason,
+    ];
+
+    const result = await client.query(query, values);
+    const post = result.rows[0];
+
+    await client.query('COMMIT');
 
     res.json({
       success: true,
       post: {
         ...post,
-        isLiked: false,
-        isCollected: false,
-        isFollowing: false,
-      }
+        images: post.images || [],
+        tags: post.tags || [],
+        aspectRatio: calculateAspectRatio(post.images),
+        likeCount: 0,
+        commentCount: 0,
+        forwardCount: 0,
+        collectCount: 0,
+        viewCount: 0,
+      },
+      message: auditStatus === 'approved' ? '发布成功' : `发布失败：${auditReason}`,
     });
-  } catch (error) {
-    console.error('获取帖子详情失败:', error);
-    res.status(500).json({ error: '获取帖子详情失败' });
+  } catch (error: any) {
+    await client.query('ROLLBACK');
+    console.error('创建帖子失败：', error);
+    res.status(500).json({ success: false, error: error.message });
+  } finally {
+    client.release();
   }
 });
 
-/**
- * 关注/取消关注用户
- * POST /api/v1/users/:id/follow
- * Body: { currentUserId: number }
- */
-router.post('/:id/follow', (req, res) => {
+// 内容审核（自动审核）
+async function auditContent(content: string, images: string[]) {
+  try {
+    // 1. 检查内容长度
+    if (content.length > 10000) {
+      return { passed: false, reason: '内容过长，请控制在10000字以内' };
+    }
+
+    if (content.length < 10) {
+      return { passed: false, reason: '内容过短，至少需要10个字符' };
+    }
+
+    // 2. 检查敏感词（这里使用简化的敏感词列表，实际应接入专业审核API）
+    const sensitiveWords = [
+      '暴力', '色情', '赌博', '毒品', '诈骗', '违禁品',
+      '敏感词1', '敏感词2', '敏感词3'
+    ];
+
+    for (const word of sensitiveWords) {
+      if (content.includes(word)) {
+        return { passed: false, reason: `内容包含敏感词：${word}` };
+      }
+    }
+
+    // 3. 检查图片数量
+    if (images.length > 9) {
+      return { passed: false, reason: '图片数量不能超过9张' };
+    }
+
+    // 4. 检查是否包含纯广告（简单规则：包含多个联系方式）
+    const phonePattern = /1[3-9]\d{9}/g;
+    const phoneMatches = content.match(phonePattern);
+    if (phoneMatches && phoneMatches.length > 2) {
+      return { passed: false, reason: '疑似广告信息，请勿发布过多联系方式' };
+    }
+
+    // TODO: 实际应调用专业审核API（如阿里云内容安全、腾讯云天御等）
+    // 这里暂时使用简化的规则，实际生产环境应该调用真实审核API
+
+    return { passed: true };
+  } catch (error) {
+    console.error('内容审核失败：', error);
+    return { passed: false, reason: '审核服务异常' };
+  }
+}
+
+// 获取帖子详情
+router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { currentUserId } = req.body;
+    const { userId } = req.query;
+    const currentUserId = userId ? parseInt(userId as string) : null;
 
-    // 模拟关注操作
+    // 更新浏览次数
+    await db.query('UPDATE posts SET view_count = view_count + 1 WHERE id = $1', [id]);
+
+    const query = `
+      SELECT p.*,
+        COALESCE(json_agg(
+          json_build_object(
+            'userId', pi.user_id,
+            'interactionType', pi.interaction_type
+          )
+        ) FILTER (WHERE pi.user_id = $2), '[]') as user_interactions
+      FROM posts p
+      LEFT JOIN post_interactions pi ON p.id = pi.post_id AND pi.user_id = $2
+      WHERE p.id = $1 AND p.status = 'approved'
+      GROUP BY p.id
+    `;
+
+    const params: any[] = [id];
+    if (currentUserId) {
+      params.push(currentUserId);
+    } else {
+      params.push(0);
+    }
+
+    const result = await db.query(query, params);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ success: false, error: '帖子不存在' });
+    }
+
+    const row = result.rows[0];
+    const interactions = row.user_interactions || [];
+    const isLiked = interactions.some((i: any) => i.interactionType === 'like');
+    const isCollected = interactions.some((i: any) => i.interactionType === 'collect');
+
     res.json({
       success: true,
-      message: '关注成功',
-      isFollowing: true,
+      post: {
+        ...row,
+        images: row.images || [],
+        tags: row.tags || [],
+        aspectRatio: calculateAspectRatio(row.images),
+        isLiked,
+        isCollected,
+      },
     });
-  } catch (error) {
-    console.error('关注操作失败:', error);
-    res.status(500).json({ error: '关注操作失败' });
+  } catch (error: any) {
+    console.error('获取帖子详情失败：', error);
+    res.status(500).json({ success: false, error: error.message });
   }
 });
+
+// 点赞帖子
+router.post('/:id/like', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { userId, username } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({ success: false, error: '用户ID不能为空' });
+    }
+
+    const client = await db.connect();
+
+    try {
+      // 检查是否已点赞
+      const checkResult = await client.query(
+        'SELECT * FROM post_interactions WHERE post_id = $1 AND user_id = $2 AND interaction_type = $3',
+        [id, userId, 'like']
+      );
+
+      let isLiked = false;
+      let likeCount = 0;
+
+      if (checkResult.rows.length === 0) {
+        // 点赞
+        await client.query(
+          'INSERT INTO post_interactions (post_id, user_id, interaction_type) VALUES ($1, $2, $3)',
+          [id, userId, 'like']
+        );
+        await client.query('UPDATE posts SET like_count = like_count + 1 WHERE id = $1', [id]);
+        isLiked = true;
+
+        // 创建点赞通知
+        await createNotification(db, parseInt(userId), parseInt(id), 'like', username);
+      } else {
+        // 取消点赞
+        await client.query(
+          'DELETE FROM post_interactions WHERE post_id = $1 AND user_id = $2 AND interaction_type = $3',
+          [id, userId, 'like']
+        );
+        await client.query('UPDATE posts SET like_count = like_count - 1 WHERE id = $1', [id]);
+        isLiked = false;
+      }
+
+      const countResult = await client.query('SELECT like_count FROM posts WHERE id = $1', [id]);
+      likeCount = countResult.rows[0].like_count;
+
+      res.json({ success: true, isLiked, likeCount });
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
+  } catch (error: any) {
+    console.error('点赞失败：', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// 收藏帖子
+router.post('/:id/collect', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { userId, username } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({ success: false, error: '用户ID不能为空' });
+    }
+
+    const client = await db.connect();
+
+    try {
+      const checkResult = await client.query(
+        'SELECT * FROM post_interactions WHERE post_id = $1 AND user_id = $2 AND interaction_type = $3',
+        [id, userId, 'collect']
+      );
+
+      let isCollected = false;
+      let collectCount = 0;
+
+      if (checkResult.rows.length === 0) {
+        // 收藏
+        await client.query(
+          'INSERT INTO post_interactions (post_id, user_id, interaction_type) VALUES ($1, $2, $3)',
+          [id, userId, 'collect']
+        );
+        await client.query('UPDATE posts SET collect_count = collect_count + 1 WHERE id = $1', [id]);
+        isCollected = true;
+
+        // 创建收藏通知
+        await createNotification(db, parseInt(userId), parseInt(id), 'collect', username);
+      } else {
+        // 取消收藏
+        await client.query(
+          'DELETE FROM post_interactions WHERE post_id = $1 AND user_id = $2 AND interaction_type = $3',
+          [id, userId, 'collect']
+        );
+        await client.query('UPDATE posts SET collect_count = collect_count - 1 WHERE id = $1', [id]);
+        isCollected = false;
+      }
+
+      const countResult = await client.query('SELECT collect_count FROM posts WHERE id = $1', [id]);
+      collectCount = countResult.rows[0].collect_count;
+
+      res.json({ success: true, isCollected, collectCount, message: isCollected ? '收藏成功' : '取消收藏' });
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
+  } catch (error: any) {
+    console.error('收藏失败：', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// 转发帖子
+router.post('/:id/forward', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { userId, username } = req.body;
+
+    const client = await db.connect();
+
+    try {
+      await client.query(
+        'INSERT INTO post_interactions (post_id, user_id, interaction_type) VALUES ($1, $2, $3)',
+        [id, userId, 'forward']
+      );
+      await client.query('UPDATE posts SET forward_count = forward_count + 1 WHERE id = $1', [id]);
+
+      // 创建转发通知
+      await createNotification(db, parseInt(userId), parseInt(id), 'forward', username);
+
+      const result = await client.query('SELECT forward_count FROM posts WHERE id = $1', [id]);
+
+      res.json({
+        success: true,
+        forwardCount: result.rows[0].forward_count,
+        shareUrl: `https://example.com/post/${id}`,
+      });
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
+  } catch (error: any) {
+    console.error('转发失败：', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// 获取帖子评论
+router.get('/:id/comments', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const result = await db.query(
+      `SELECT * FROM post_comments
+       WHERE post_id = $1 AND parent_id IS NULL
+       ORDER BY created_at DESC
+       LIMIT 50`,
+      [id]
+    );
+
+    res.json({ success: true, comments: result.rows });
+  } catch (error: any) {
+    console.error('获取评论失败：', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// 发表评论
+router.post('/:id/comments', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { userId, username, avatar, content } = req.body;
+
+    if (!userId || !content) {
+      return res.status(400).json({ success: false, error: '缺少必填参数' });
+    }
+
+    const client = await db.connect();
+
+    try {
+      const result = await client.query(
+        `INSERT INTO post_comments (post_id, user_id, username, avatar, content)
+         VALUES ($1, $2, $3, $4, $5)
+         RETURNING *`,
+        [id, userId, username, avatar, content]
+      );
+
+      // 更新帖子评论数
+      await client.query('UPDATE posts SET comment_count = comment_count + 1 WHERE id = $1', [id]);
+
+      // 创建评论通知
+      await createNotification(db, parseInt(userId), parseInt(id), 'comment', username);
+
+      res.json({ success: true, comment: result.rows[0] });
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
+  } catch (error: any) {
+    console.error('发表评论失败：', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// 创建通知
+async function createNotification(db: Pool, userId: number, postId: number, type: string, username: string) {
+  try {
+    // 获取帖子作者ID
+    const postResult = await db.query('SELECT author_id, title FROM posts WHERE id = $1', [postId]);
+    if (postResult.rows.length === 0) return;
+
+    const authorId = postResult.rows[0].author_id;
+    const postTitle = postResult.rows[0].title;
+
+    // 如果是自己对自己的帖子互动，不创建通知
+    if (authorId === userId) return;
+
+    // 检查是否已有通知表，如果没有则创建
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS notifications (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL,
+        type VARCHAR(20) NOT NULL,
+        title VARCHAR(500),
+        content TEXT,
+        from_user_id INTEGER,
+        from_username VARCHAR(100),
+        post_id INTEGER,
+        is_read BOOLEAN DEFAULT false,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    const titleMap: { [key: string]: string } = {
+      like: '点赞',
+      collect: '收藏',
+      forward: '转发',
+      comment: '评论',
+    };
+
+    await db.query(
+      `INSERT INTO notifications (user_id, type, title, content, from_user_id, from_username, post_id)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+      [
+        authorId,
+        type,
+        `${titleMap[type]}了你的帖子`,
+        postTitle || '未知帖子',
+        userId,
+        username,
+        postId,
+      ]
+    );
+
+    console.log(`[通知] 用户${username}${titleMap[type]}了用户${authorId}的帖子${postId}`);
+  } catch (error) {
+    console.error('创建通知失败：', error);
+  }
+}
 
 export default router;
