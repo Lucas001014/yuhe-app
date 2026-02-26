@@ -30,6 +30,15 @@ export default function RootLayout() {
             <Stack.Screen name="login" options={{ title: "登录" }} />
             <Stack.Screen name="post-detail" options={{ title: "帖子详情" }} />
             <Stack.Screen name="admin" options={{ title: "管理控制台" }} />
+            <Stack.Screen name="chat-list" options={{ title: "私信" }} />
+            <Stack.Screen name="follow-list" options={{ title: "关注列表" }} />
+            <Stack.Screen name="my-favorites" options={{ title: "我的收藏" }} />
+            <Stack.Screen name="my-posts" options={{ title: "我的发布" }} />
+            <Stack.Screen name="orders" options={{ title: "订单" }} />
+            <Stack.Screen name="settings" options={{ title: "设置" }} />
+            <Stack.Screen name="wallet" options={{ title: "钱包" }} />
+            <Stack.Screen name="wallet-transactions" options={{ title: "交易记录" }} />
+            <Stack.Screen name="wallet-withdraw" options={{ title: "提现" }} />
           </Stack>
           <Toast />
         </GestureHandlerRootView>
