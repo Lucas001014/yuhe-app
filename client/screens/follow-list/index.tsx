@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from 'react';
-import { View, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import React, { useState, useMemo, useCallback } from 'react';
+import { View, ScrollView, TouchableOpacity, Alert, RefreshControl } from 'react-native';
 import { FontAwesome6 } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
 import { ThemedText } from '@/components/ThemedText';
@@ -126,7 +126,12 @@ export default function FollowListScreen() {
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
-        refreshControl={{ refreshing: loading, onRefresh: loadUsers } as any}
+        refreshControl={
+          <RefreshControl
+            refreshing={loading}
+            onRefresh={loadUsers}
+          />
+        }
       >
         {users.length === 0 ? (
           <View style={styles.emptyContainer}>

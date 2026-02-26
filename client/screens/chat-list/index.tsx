@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { View, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { View, ScrollView, TouchableOpacity, Alert, RefreshControl } from 'react-native';
 import { FontAwesome6 } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
 import { ThemedText } from '@/components/ThemedText';
@@ -77,7 +77,12 @@ export default function ChatListScreen() {
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
-        refreshControl={{ refreshing: loading, onRefresh: loadChats } as any}
+        refreshControl={
+          <RefreshControl
+            refreshing={loading}
+            onRefresh={loadChats}
+          />
+        }
       >
         {chats.length === 0 ? (
           <View style={styles.emptyContainer}>

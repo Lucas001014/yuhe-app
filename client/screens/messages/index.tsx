@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { View, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { View, ScrollView, TouchableOpacity, Alert, RefreshControl } from 'react-native';
 import { FontAwesome6 } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
 import { ThemedText } from '@/components/ThemedText';
@@ -128,7 +128,12 @@ export default function MessagesScreen() {
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
-        refreshControl={{ refreshing: loading, onRefresh: loadMessages } as any}
+        refreshControl={
+          <RefreshControl
+            refreshing={loading}
+            onRefresh={loadMessages}
+          />
+        }
       >
         {messages.length === 0 ? (
           <View style={styles.emptyContainer}>
