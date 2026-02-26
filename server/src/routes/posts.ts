@@ -3,13 +3,6 @@ import { Pool } from 'pg';
 
 const router = express.Router();
 
-// 获取数据库连接
-declare global {
-  var db: Pool;
-}
-
-const db = global.db;
-
 // 获取用户自己的帖子列表（包括所有状态）
 router.get('/my-posts', async (req, res) => {
   try {
@@ -17,6 +10,11 @@ router.get('/my-posts', async (req, res) => {
 
     if (!userId) {
       return res.status(400).json({ success: false, error: '用户ID不能为空' });
+    }
+
+    const db = (req as any).db;
+    if (!db) {
+      return res.status(500).json({ success: false, error: '数据库连接失败' });
     }
 
     const query = `
@@ -47,10 +45,15 @@ router.get('/my-posts', async (req, res) => {
 // 获取帖子列表（只返回已审核通过的）
 router.get('/', async (req, res) => {
   try {
+    const db = (req as any).db;
+    if (!db) {
+      return res.status(500).json({ success: false, error: '数据库连接失败' });
+    }
+
     const { type, userId } = req.query;
     const currentUserId = userId ? parseInt(userId as string) : null;
 
-    let query = `
+    let sqlQuery = `
       SELECT p.*,
         COALESCE(json_agg(
           json_build_object(
@@ -71,17 +74,17 @@ router.get('/', async (req, res) => {
     }
 
     if (type) {
-      query += ` AND p.type = $${params.length + 1}`;
+      sqlQuery += ` AND p.type = $${params.length + 1}`;
       params.push(type);
     }
 
-    query += `
+    sqlQuery += `
       GROUP BY p.id
       ORDER BY p.created_at DESC
       LIMIT 50
     `;
 
-    const result = await db.query(query, params);
+    const result = await db.query(sqlQuery, params);
 
     const posts = result.rows.map((row: any) => {
       // 处理用户互动状态
@@ -115,6 +118,11 @@ function calculateAspectRatio(images: string[]): number {
 
 // 创建帖子（自动审核）
 router.post('/', async (req, res) => {
+  const db = (req as any).db;
+  if (!db) {
+    return res.status(500).json({ success: false, error: '数据库连接失败' });
+  }
+
   const client = await db.connect();
   try {
     const {
@@ -249,6 +257,11 @@ async function auditContent(content: string, images: string[]) {
 // 获取帖子详情
 router.get('/:id', async (req, res) => {
   try {
+    const db = (req as any).db;
+    if (!db) {
+      return res.status(500).json({ success: false, error: '数据库连接失败' });
+    }
+
     const { id } = req.params;
     const { userId } = req.query;
     const currentUserId = userId ? parseInt(userId as string) : null;
@@ -308,6 +321,11 @@ router.get('/:id', async (req, res) => {
 // 点赞帖子
 router.post('/:id/like', async (req, res) => {
   try {
+    const db = (req as any).db;
+    if (!db) {
+      return res.status(500).json({ success: false, error: '数据库连接失败' });
+    }
+
     const { id } = req.params;
     const { userId, username } = req.body;
 
@@ -367,6 +385,11 @@ router.post('/:id/like', async (req, res) => {
 // 收藏帖子
 router.post('/:id/collect', async (req, res) => {
   try {
+    const db = (req as any).db;
+    if (!db) {
+      return res.status(500).json({ success: false, error: '数据库连接失败' });
+    }
+
     const { id } = req.params;
     const { userId, username } = req.body;
 
@@ -425,6 +448,11 @@ router.post('/:id/collect', async (req, res) => {
 // 转发帖子
 router.post('/:id/forward', async (req, res) => {
   try {
+    const db = (req as any).db;
+    if (!db) {
+      return res.status(500).json({ success: false, error: '数据库连接失败' });
+    }
+
     const { id } = req.params;
     const { userId, username } = req.body;
 
@@ -462,6 +490,11 @@ router.post('/:id/forward', async (req, res) => {
 // 获取帖子评论
 router.get('/:id/comments', async (req, res) => {
   try {
+    const db = (req as any).db;
+    if (!db) {
+      return res.status(500).json({ success: false, error: '数据库连接失败' });
+    }
+
     const { id } = req.params;
 
     const result = await db.query(
@@ -482,6 +515,11 @@ router.get('/:id/comments', async (req, res) => {
 // 发表评论
 router.post('/:id/comments', async (req, res) => {
   try {
+    const db = (req as any).db;
+    if (!db) {
+      return res.status(500).json({ success: false, error: '数据库连接失败' });
+    }
+
     const { id } = req.params;
     const { userId, username, avatar, content } = req.body;
 

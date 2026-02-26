@@ -68,8 +68,18 @@ export default function CreateScreen() {
 
   // 发布帖子
   const handlePublish = async () => {
+    if (!title.trim()) {
+      Alert.alert('提示', '请输入标题');
+      return;
+    }
+
     if (!content.trim()) {
       Alert.alert('提示', '请输入内容');
+      return;
+    }
+
+    if (content.length < 10) {
+      Alert.alert('提示', '内容至少需要10个字符');
       return;
     }
 
@@ -107,9 +117,11 @@ export default function CreateScreen() {
         avatar,
         type: postType,
         content,
-        title: postType !== 'normal' ? title : undefined,
+        title: title.trim(),
         images: images.length > 0 ? images : undefined,
         tags: tagArray.length > 0 ? tagArray : undefined,
+        category: 'general',
+        price: 0,
       };
 
       if (postType === 'qa_paid') {
@@ -200,21 +212,27 @@ export default function CreateScreen() {
           </View>
 
           {/* 标题 */}
-          {postType !== 'normal' && (
-            <View style={styles.section}>
-              <ThemedText variant="bodyMedium" color={theme.textPrimary} style={styles.sectionTitle}>
-                标题
-              </ThemedText>
-              <TextInput
-                style={[styles.input, { color: theme.textPrimary }]}
-                placeholder={postType === 'product' ? '产品名称' : '问题/主题'}
-                placeholderTextColor={theme.textMuted}
-                value={title}
-                onChangeText={setTitle}
-                maxLength={200}
-              />
-            </View>
-          )}
+          <View style={styles.section}>
+            <ThemedText variant="bodyMedium" color={theme.textPrimary} style={styles.sectionTitle}>
+              标题
+            </ThemedText>
+            <TextInput
+              style={[styles.input, { color: theme.textPrimary }]}
+              placeholder={
+                postType === 'product'
+                  ? '产品名称'
+                  : postType === 'qa_paid'
+                  ? '问题/主题'
+                  : postType === 'qa_bounty'
+                  ? '悬赏主题'
+                  : '帖子标题'
+              }
+              placeholderTextColor={theme.textMuted}
+              value={title}
+              onChangeText={setTitle}
+              maxLength={200}
+            />
+          </View>
 
           {/* 内容 */}
           <View style={styles.section}>
