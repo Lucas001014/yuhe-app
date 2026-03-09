@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Dimensions } from 'react-native';
 import { TabView, SceneMap, TabBar } from 'react-native-tab-view';
 import { Screen } from '@/components/Screen';
+import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/hooks/useTheme';
 import { NormalTab } from './tabs/NormalTab';
 import { PaidQATab } from './tabs/PaidQATab';
@@ -14,7 +15,7 @@ export default function HomeScreen() {
   const { theme } = useTheme();
   const [index, setIndex] = React.useState(0);
   const [routes] = React.useState([
-    { key: 'normal', title: '推荐' },
+    { key: 'normal', title: '全部' },
     { key: 'paid_qa', title: '知识库' },
     { key: 'bounty', title: '悬赏' },
     { key: 'product', title: '热点讨论' },
@@ -50,6 +51,14 @@ export default function HomeScreen() {
 
   return (
     <Screen backgroundColor={theme.backgroundRoot} statusBarStyle="light">
+      {/* 主标题 */}
+      <View style={styles.header}>
+        <ThemedText variant="h2" color={theme.textPrimary} style={styles.headerTitle}>
+          推荐
+        </ThemedText>
+      </View>
+
+      {/* 二级Tab导航 */}
       <TabView
         navigationState={{ index, routes }}
         renderScene={renderScene}
@@ -61,3 +70,16 @@ export default function HomeScreen() {
     </Screen>
   );
 }
+
+const styles = {
+  header: {
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: '700' as const,
+  },
+};
