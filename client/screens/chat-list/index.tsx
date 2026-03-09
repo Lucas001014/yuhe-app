@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { View, FlatList, TouchableOpacity, StyleSheet, RefreshControl } from 'react-native';
+import { View, FlatList, TouchableOpacity, StyleSheet, RefreshControl, TextInput } from 'react-native';
 import { FontAwesome6 } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
 import { ThemedText } from '@/components/ThemedText';
@@ -8,12 +8,14 @@ import { useTheme } from '@/hooks/useTheme';
 import { useSafeRouter } from '@/hooks/useSafeRouter';
 import { Image } from 'expo-image';
 
+// 聊天用户信息接口
 interface ChatUser {
   id: number;
   name: string;
   avatar: string;
 }
 
+// 聊天消息接口
 interface ChatMessage {
   id: number;
   user: ChatUser;
@@ -29,6 +31,8 @@ export default function ChatListScreen() {
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(false);
+  const [filterType, setFilterType] = useState<'all' | 'unread'>('all');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const API_BASE_URL = process.env.EXPO_PUBLIC_BACKEND_BASE_URL;
 
@@ -118,6 +122,27 @@ export default function ChatListScreen() {
     }, [loadChats])
   );
 
+  // 获取过滤后的消息
+  const filteredMessages = useMemo(() => {
+    let result = messages;
+
+    // 按未读筛选
+    if (filterType === 'unread') {
+      result = result.filter(msg => msg.unread);
+    }
+
+    // 按搜索关键词筛选
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      result = result.filter(msg =>
+        msg.user.name.toLowerCase().includes(query) ||
+        msg.lastMessage.toLowerCase().includes(query)
+      );
+    }
+
+    return result;
+  }, [messages, filterType, searchQuery]);
+
   // 点击会话项
   const handleChatPress = (chat: ChatMessage) => {
     // 标记为已读
@@ -205,11 +230,51 @@ export default function ChatListScreen() {
         <ThemedText variant="h3" color={theme.textPrimary}>
           聊天
         </ThemedText>
+        {/* 筛选按钮 */}
+        <TouchableOpacity
+          style={styles.filterButton}
+          onPress={() => {
+            setFilterType(filterType === 'all' ? 'unread' : 'all');
+          }}
+        >
+          <FontAwesome6
+            name={filterType === 'unread' ? 'envelope' : 'envelope-open'}
+            size={20}
+            color={filterType === 'unread' ? theme.primary : theme.textSecondary}
+          />
+        </TouchableOpacity>
       </View>
+
+      {/* 搜索框 */}
+      <View style={styles.searchContainer}>
+        <FontAwesome6 name="magnifying-glass" size={16} color={theme.textMuted} />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="搜索聊天记录..."
+          placeholderTextColor={theme.textMuted}
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+        />
+        {searchQuery.length > 0 && (
+          <TouchableOpacity onPress={() => setSearchQuery('')}>
+            <FontAwesome6 name="xmark" size={16} color={theme.textMuted} />
+          </TouchableOpacity>
+        )}
+      </View>
+
+      {/* 筛选提示 */}
+      {filterType === 'unread' && (
+        <View style={styles.filterHint}>
+          <FontAwesome6 name="circle-info" size={14} color={theme.primary} />
+          <ThemedText variant="caption" color={theme.primary} style={styles.filterHintText}>
+            仅显示未读消息
+          </ThemedText>
+        </View>
+      )}
 
       {/* 聊天列表 */}
       <FlatList
-        data={messages}
+        data={filteredMessages}
         renderItem={renderChatItem}
         keyExtractor={(item) => item.id.toString()}
         ItemSeparatorComponent={renderSeparator}
@@ -238,11 +303,50 @@ export default function ChatListScreen() {
 const createStyles = (theme: any) =>
   StyleSheet.create({
     header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
       paddingHorizontal: 16,
       paddingVertical: 12,
       backgroundColor: theme.backgroundDefault,
       borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: theme.border,
+    },
+    filterButton: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: theme.backgroundTertiary,
+    },
+    searchContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 16,
+      paddingVertical: 10,
+      marginHorizontal: 16,
+      marginTop: 12,
+      marginBottom: 8,
+      backgroundColor: theme.backgroundTertiary,
+      borderRadius: 12,
+      gap: 10,
+    },
+    searchInput: {
+      flex: 1,
+      fontSize: 14,
+      color: theme.textPrimary,
+    },
+    filterHint: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+      backgroundColor: `${theme.primary}10`,
+      gap: 6,
+    },
+    filterHintText: {
+      marginLeft: 4,
     },
     listContent: {
       flexGrow: 1,
