@@ -6,6 +6,7 @@ import { Screen } from '@/components/Screen';
 import { useTheme } from '@/hooks/useTheme';
 import { useSafeRouter } from '@/hooks/useSafeRouter';
 import { createStyles } from './styles';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface MenuItem {
   id: string;
@@ -88,8 +89,19 @@ export default function ProfileScreen() {
             {
               text: '确定',
               style: 'destructive',
-              onPress: () => {
-                Alert.alert('成功', '已退出登录');
+              onPress: async () => {
+                try {
+                  // 清除用户信息
+                  await AsyncStorage.removeItem('userId');
+                  await AsyncStorage.removeItem('username');
+                  await AsyncStorage.removeItem('avatar');
+                  await AsyncStorage.removeItem('userInfo');
+                  
+                  // 跳转到登录页面
+                  router.replace('/login');
+                } catch (error) {
+                  Alert.alert('错误', '退出失败，请重试');
+                }
               },
             },
           ]
