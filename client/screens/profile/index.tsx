@@ -1,85 +1,96 @@
-import React from 'react';
-import { View, ScrollView, TouchableOpacity, Alert, Modal, Text, Pressable } from 'react-native';
+import React, { useState, useMemo, useCallback } from 'react';
+import { View, ScrollView, TouchableOpacity, Alert, Modal, Pressable } from 'react-native';
 import { FontAwesome6 } from '@expo/vector-icons';
+import { useFocusEffect } from 'expo-router';
 import { ThemedText } from '@/components/ThemedText';
 import { Screen } from '@/components/Screen';
 import { useTheme } from '@/hooks/useTheme';
 import { useSafeRouter } from '@/hooks/useSafeRouter';
 import { createStyles } from './styles';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Image } from 'expo-image';
 
-interface MenuItem {
-  id: string;
-  icon: string;
-  title: string;
-  arrow?: boolean;
+interface UserInfo {
+  id: number;
+  username: string;
+  avatar: string;
+  verified: boolean;
+  identityVerified: boolean; // 身份认证状态
+  identityStatus: 'pending' | 'approved' | 'rejected' | 'none'; // 认证状态
+}
+
+interface PostStats {
+  myPosts: number;
+  likedPosts: number;
+  collectedPosts: number;
 }
 
 export default function ProfileScreen() {
   const { theme, isDark } = useTheme();
-  const styles = createStyles(theme);
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const router = useSafeRouter();
-  
-  // 控制退出登录确认对话框
-  const [showLogoutModal, setShowLogoutModal] = React.useState(false);
+
+  const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
+  const [postStats, setPostStats] = useState<PostStats>({
+    myPosts: 0,
+    likedPosts: 0,
+    collectedPosts: 0,
+  });
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   // 模拟用户信息
-  const userInfo = {
-    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face',
-    name: '张三',
+  const mockUserInfo: UserInfo = {
+    id: 1,
+    username: '张三',
+    avatar: 'https://i.pravatar.cc/150?img=68',
     verified: true,
-    membership: 'gold', // 'silver', 'gold', 'platinum'
+    identityVerified: false,
+    identityStatus: 'pending', // 待审核
   };
 
-  const getMembershipText = (membership: string) => {
-    switch (membership) {
-      case 'platinum':
-        return '铂金会员';
-      case 'gold':
-        return '金牌会员';
-      case 'silver':
-        return '银牌会员';
-      default:
-        return '普通会员';
+  // 模拟发帖统计
+  const mockPostStats: PostStats = {
+    myPosts: 12,
+    likedPosts: 45,
+    collectedPosts: 23,
+  };
+
+  // 加载用户信息
+  const loadUserInfo = useCallback(async () => {
+    try {
+      // 这里可以调用真实的 API
+      const userId = await AsyncStorage.getItem('userId');
+      if (!userId) return;
+
+      // 使用模拟数据
+      setUserInfo(mockUserInfo);
+      setPostStats(mockPostStats);
+    } catch (error) {
+      console.error('加载用户信息失败:', error);
     }
-  };
+  }, []);
 
-  const getMembershipColor = (membership: string) => {
-    switch (membership) {
-      case 'platinum':
-        return '#E5E4E2';
-      case 'gold':
-        return '#FFD700';
-      case 'silver':
-        return '#C0C0C0';
-      default:
-        return theme.textMuted;
-    }
-  };
+  // 页面聚焦时刷新数据
+  useFocusEffect(
+    useCallback(() => {
+      loadUserInfo();
+    }, [loadUserInfo])
+  );
 
+  // 处理退出登录
   const handleLogout = () => {
     setShowLogoutModal(true);
   };
 
   const confirmLogout = async () => {
     try {
-      console.log('开始退出登录...');
-      
-      // 清除用户信息
       await AsyncStorage.removeItem('userId');
       await AsyncStorage.removeItem('username');
       await AsyncStorage.removeItem('avatar');
       await AsyncStorage.removeItem('userInfo');
       
-      console.log('用户信息已清除');
-      
-      // 关闭弹窗
       setShowLogoutModal(false);
-      
-      // 跳转到登录页面
       router.replace('/login');
-      
-      console.log('已跳转到登录页');
     } catch (error) {
       console.error('退出登录失败:', error);
       setShowLogoutModal(false);
@@ -91,156 +102,206 @@ export default function ProfileScreen() {
     setShowLogoutModal(false);
   };
 
-  const handleMenuItemPress = (item: MenuItem) => {
-    switch (item.id) {
-      case 'progress':
-        router.push('/');
-        break;
-      case 'matching':
-        router.push('/matching');
-        break;
-      case 'incubator':
-        router.push('/matching');
-        break;
-      case 'resources':
-        Alert.alert('我的资源库', '功能开发中...');
-        break;
-      case 'subscription':
-        Alert.alert('我的订阅', '功能开发中...');
-        break;
-      case 'notifications':
-        router.push('/matching');
-        break;
-      case 'privacy':
-        Alert.alert('隐私设置', '功能开发中...');
-        break;
-      case 'about':
-        Alert.alert('关于我们', '遇合 v1.0.0\n书写属于自己的商业山河');
-        break;
+  // 身份认证状态显示
+  const getIdentityStatusText = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return '审核中';
+      case 'approved':
+        return '已认证';
+      case 'rejected':
+        return '审核未通过';
       default:
-        break;
+        return '未认证';
     }
   };
 
-  const handleSettings = () => {
-    Alert.alert('设置', '功能开发中...');
+  const getIdentityStatusColor = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return '#F59E0B'; // 橙色
+      case 'approved':
+        return '#10B981'; // 绿色
+      case 'rejected':
+        return '#EF4444'; // 红色
+      default:
+        return theme.textMuted;
+    }
   };
 
-  const featureCards: MenuItem[] = [
-    { id: 'progress', icon: 'chart-line', title: '创业进度看板', arrow: true },
-    { id: 'matching', icon: 'handshake', title: '我的对接记录', arrow: true },
-    { id: 'incubator', icon: 'lightbulb', title: '我的孵化项目', arrow: true },
-    { id: 'resources', icon: 'cubes-stacked', title: '我的资源库', arrow: true },
-  ];
-
-  const menuItems: MenuItem[] = [
-    { id: 'subscription', icon: 'crown', title: '我的订阅', arrow: true },
-    { id: 'notifications', icon: 'bell', title: '消息通知', arrow: true },
-    { id: 'privacy', icon: 'shield-halved', title: '隐私设置', arrow: true },
-    { id: 'about', icon: 'circle-info', title: '关于我们', arrow: true },
-  ];
+  if (!userInfo) {
+    return (
+      <Screen backgroundColor={theme.backgroundRoot} statusBarStyle={isDark ? 'light' : 'dark'}>
+        <View style={styles.loadingContainer}>
+          <ThemedText variant="body" color={theme.textMuted}>加载中...</ThemedText>
+        </View>
+      </Screen>
+    );
+  }
 
   return (
     <Screen backgroundColor={theme.backgroundRoot} statusBarStyle={isDark ? 'light' : 'dark'}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* 顶部用户信息区 */}
+        {/* 用户信息区 */}
         <View style={styles.header}>
-          <View style={styles.userInfo}>
+          <TouchableOpacity onPress={() => router.push('/profile-edit')}>
             <View style={styles.avatarContainer}>
-              <FontAwesome6 name="circle-user" size={64} color={theme.border} />
+              <Image
+                source={{ uri: userInfo.avatar }}
+                style={styles.avatar}
+                contentFit="cover"
+              />
             </View>
-            <View style={styles.userDetails}>
-              <View style={styles.userNameContainer}>
-                <ThemedText variant="h3" color={theme.textPrimary} style={{ fontWeight: '700' }}>
-                  {userInfo.name}
-                </ThemedText>
-                {userInfo.verified && (
-                  <FontAwesome6 name="circle-check" size={20} color={theme.success} />
-                )}
-              </View>
-              <TouchableOpacity style={styles.membershipBadge}>
+          </TouchableOpacity>
+          
+          <View style={styles.userInfo}>
+            <View style={styles.userNameContainer}>
+              <ThemedText variant="h3" color={theme.textPrimary} style={{ fontWeight: '700' }}>
+                {userInfo.username}
+              </ThemedText>
+              {userInfo.verified && (
+                <FontAwesome6 name="circle-check" size={20} color={theme.success} />
+              )}
+            </View>
+            
+            {/* 身份认证状态 */}
+            {userInfo.identityStatus !== 'none' && (
+              <TouchableOpacity
+                style={styles.identityBadge}
+                onPress={() => router.push('/identity-verification')}
+              >
                 <FontAwesome6
-                  name="crown"
+                  name="certificate"
                   size={14}
-                  color={getMembershipColor(userInfo.membership)}
-                  solid
+                  color={getIdentityStatusColor(userInfo.identityStatus)}
                 />
                 <ThemedText
                   variant="caption"
-                  color={theme.textSecondary}
+                  color={getIdentityStatusColor(userInfo.identityStatus)}
                   style={{ fontWeight: '600' }}
                 >
-                  {getMembershipText(userInfo.membership)}
+                  {getIdentityStatusText(userInfo.identityStatus)}
                 </ThemedText>
               </TouchableOpacity>
-            </View>
+            )}
           </View>
-          <TouchableOpacity style={styles.settingsButton} onPress={handleSettings}>
+
+          {/* 设置按钮 */}
+          <TouchableOpacity style={styles.settingsButton} onPress={() => router.push('/settings')}>
             <FontAwesome6 name="gear" size={24} color={theme.textSecondary} />
           </TouchableOpacity>
         </View>
 
-        {/* 功能卡片区 */}
-        <View style={styles.featureCardsSection}>
-          {featureCards.map((item) => (
-            <TouchableOpacity
-              key={item.id}
-              style={styles.featureCard}
-              onPress={() => handleMenuItemPress(item)}
-            >
-              <View style={styles.cardLeft}>
-                <View style={styles.cardIconContainer}>
-                  <FontAwesome6 name={item.icon as any} size={24} color={theme.primary} />
-                </View>
-                <ThemedText variant="bodyMedium" color={theme.textPrimary}>
-                  {item.title}
+        {/* 身份认证卡片（仅当有认证记录时显示） */}
+        {userInfo.identityStatus === 'pending' && (
+          <View style={styles.verifyCard}>
+            <View style={styles.verifyCardContent}>
+              <FontAwesome6 name="clock" size={20} color="#F59E0B" />
+              <View style={styles.verifyCardText}>
+                <ThemedText variant="bodyMedium" color={theme.textPrimary} style={{ fontWeight: '600' }}>
+                  身份认证审核中
+                </ThemedText>
+                <ThemedText variant="caption" color={theme.textSecondary}>
+                  我们正在审核您的身份认证申请，请耐心等待
                 </ThemedText>
               </View>
-              {item.arrow && (
-                <FontAwesome6 name="chevron-right" size={16} color={theme.textMuted} />
-              )}
-            </TouchableOpacity>
-          ))}
-        </View>
+            </View>
+          </View>
+        )}
 
-        {/* 菜单项区 */}
-        <View style={styles.menuSection}>
-          {menuItems.map((item) => (
-            <TouchableOpacity
-              key={item.id}
-              style={styles.menuItem}
-              onPress={() => handleMenuItemPress(item)}
-            >
-              <View style={styles.menuItemLeft}>
-                <FontAwesome6
-                  name={item.icon as any}
-                  size={20}
-                  color={theme.textSecondary}
-                  style={{ width: 24 }}
-                />
-                <ThemedText variant="bodyMedium" color={theme.textPrimary}>
-                  {item.title}
+        {userInfo.identityStatus === 'rejected' && (
+          <View style={[styles.verifyCard, styles.verifyCardRejected]}>
+            <View style={styles.verifyCardContent}>
+              <FontAwesome6 name="circle-xmark" size={20} color="#EF4444" />
+              <View style={styles.verifyCardText}>
+                <ThemedText variant="bodyMedium" color={theme.textPrimary} style={{ fontWeight: '600' }}>
+                  身份认证未通过
+                </ThemedText>
+                <ThemedText variant="caption" color={theme.textSecondary}>
+                  您的认证申请未通过，请修改后重新提交
                 </ThemedText>
               </View>
-              {item.arrow && (
-                <FontAwesome6 name="chevron-right" size={16} color={theme.textMuted} />
-              )}
-            </TouchableOpacity>
-          ))}
-        </View>
+              <TouchableOpacity
+                style={styles.retryButton}
+                onPress={() => router.push('/identity-verification')}
+              >
+                <ThemedText variant="caption" color={theme.buttonPrimaryText}>重新提交</ThemedText>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
 
-        {/* 退出登录按钮 */}
-        <TouchableOpacity
-          style={styles.logoutButton}
-          onPress={handleLogout}
-        >
-          <FontAwesome6 name="right-from-bracket" size={20} color={theme.error} style={{ width: 24 }} />
-          <ThemedText variant="bodyMedium" color={theme.error}>
-            退出登录
+        {userInfo.identityStatus === 'none' && (
+          <View style={styles.verifyCard}>
+            <View style={styles.verifyCardContent}>
+              <FontAwesome6 name="certificate" size={20} color={theme.primary} />
+              <View style={styles.verifyCardText}>
+                <ThemedText variant="bodyMedium" color={theme.textPrimary} style={{ fontWeight: '600' }}>
+                  完成身份认证
+                </ThemedText>
+                <ThemedText variant="caption" color={theme.textSecondary}>
+                  认证后可解锁更多功能，提高账号可信度
+                </ThemedText>
+              </View>
+              <TouchableOpacity
+                style={styles.verifyButton}
+                onPress={() => router.push('/identity-verification')}
+              >
+                <ThemedText variant="caption" color={theme.buttonPrimaryText}>立即认证</ThemedText>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+
+        {/* 发帖统计区 */}
+        <View style={styles.statsSection}>
+          <ThemedText variant="h4" color={theme.textPrimary} style={styles.sectionTitle}>
+            发帖统计
           </ThemedText>
-        </TouchableOpacity>
+          
+          <View style={styles.statsGrid}>
+            <TouchableOpacity
+              style={styles.statItem}
+              onPress={() => router.push('/my-posts')}
+            >
+              <FontAwesome6 name="file-lines" size={24} color={theme.primary} />
+              <ThemedText variant="h3" color={theme.textPrimary} style={styles.statNumber}>
+                {postStats.myPosts}
+              </ThemedText>
+              <ThemedText variant="caption" color={theme.textSecondary}>
+                我的发帖
+              </ThemedText>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.statItem}
+              onPress={() => router.push('/my-likes')}
+            >
+              <FontAwesome6 name="heart" size={24} color="#FF6B6B" />
+              <ThemedText variant="h3" color={theme.textPrimary} style={styles.statNumber}>
+                {postStats.likedPosts}
+              </ThemedText>
+              <ThemedText variant="caption" color={theme.textSecondary}>
+                点赞
+              </ThemedText>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.statItem}
+              onPress={() => router.push('/my-collections')}
+            >
+              <FontAwesome6 name="bookmark" size={24} color="#FFD93D" />
+              <ThemedText variant="h3" color={theme.textPrimary} style={styles.statNumber}>
+                {postStats.collectedPosts}
+              </ThemedText>
+              <ThemedText variant="caption" color={theme.textSecondary}>
+                收藏
+              </ThemedText>
+            </TouchableOpacity>
+          </View>
+        </View>
       </ScrollView>
-      
+
       {/* 退出登录确认弹窗 */}
       <Modal
         visible={showLogoutModal}

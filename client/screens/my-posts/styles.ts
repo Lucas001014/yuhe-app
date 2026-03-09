@@ -3,89 +3,85 @@ import { Spacing, BorderRadius, Theme } from '@/constants/theme';
 
 export const createStyles = (theme: Theme) => {
   return StyleSheet.create({
-    scrollContent: {
-      flexGrow: 1,
-    },
-    tabsContainer: {
+    // Tab 导航
+    tabBar: {
       flexDirection: 'row',
+      backgroundColor: theme.backgroundDefault,
       paddingHorizontal: Spacing.lg,
       paddingVertical: Spacing.md,
-      gap: Spacing.sm,
-      backgroundColor: theme.backgroundDefault,
+      gap: Spacing.xl,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.borderLight,
     },
-    tab: {
-      paddingHorizontal: Spacing.md,
-      paddingVertical: Spacing.sm,
-      borderRadius: BorderRadius.md,
-      backgroundColor: theme.backgroundTertiary,
-    },
-    emptyContainer: {
+    tabItem: {
       flex: 1,
-      justifyContent: 'center',
       alignItems: 'center',
-      paddingVertical: Spacing['5xl'],
-      gap: Spacing.lg,
+      paddingVertical: Spacing.sm,
+      position: 'relative',
     },
-    emptyText: {
-      marginTop: Spacing.md,
+    tabItemActive: {},
+    tabLabel: {
+      marginTop: Spacing.xs,
+      fontWeight: '600',
     },
-    postsList: {
+    tabIndicator: {
+      position: 'absolute',
+      bottom: -Spacing.sm,
+      width: 24,
+      height: 3,
+      backgroundColor: theme.primary,
+      borderRadius: 2,
+    },
+    // 列表
+    listContent: {
       padding: Spacing.lg,
-      gap: Spacing.md,
+      flexGrow: 1,
     },
-    postCard: {
-      padding: Spacing.lg,
+    // 帖子项
+    postItem: {
       backgroundColor: theme.backgroundDefault,
       borderRadius: BorderRadius.lg,
-    },
-    postHeader: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginBottom: Spacing.sm,
-    },
-    postTypeBadge: {
-      paddingHorizontal: Spacing.sm,
-      paddingVertical: Spacing.xs,
-      backgroundColor: `${theme.primary}10`,
-      borderRadius: BorderRadius.sm,
-    },
-    postTitle: {
-      marginBottom: Spacing.sm,
-    },
-    postContent: {
       marginBottom: Spacing.md,
-    },
-    postImages: {
-      flexDirection: 'row',
-      gap: Spacing.sm,
-      marginBottom: Spacing.md,
-      flexWrap: 'wrap',
+      overflow: 'hidden',
+      shadowColor: '#00000008',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.08,
+      shadowRadius: 8,
+      elevation: 2,
     },
     postImage: {
-      width: 80,
-      height: 80,
-      minHeight: 60,
-      maxHeight: 120,
-      borderRadius: BorderRadius.md,
-    },
-    singleImage: {
       width: '100%',
-      minHeight: 150,
-      maxHeight: 400,
+      aspectRatio: 1.3,
+      backgroundColor: theme.backgroundTertiary,
     },
-    moreImagesBadge: {
-      position: 'absolute',
-      top: Spacing.xs,
-      right: Spacing.xs,
-      paddingHorizontal: Spacing.sm,
-      paddingVertical: Spacing.xs,
-      borderRadius: BorderRadius.sm,
+    postContent: {
+      padding: Spacing.md,
     },
-    postFooter: {
+    postTitle: {
+      fontWeight: '600',
+      marginBottom: Spacing.xs,
+      lineHeight: 22,
+    },
+    postExcerpt: {
+      marginBottom: Spacing.md,
+      lineHeight: 18,
+    },
+    postMeta: {
       flexDirection: 'row',
-      justifyContent: 'space-between',
       alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: Spacing.sm,
+    },
+    postAuthor: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.xs,
+    },
+    authorAvatar: {
+      width: 20,
+      height: 20,
+      borderRadius: 10,
+      backgroundColor: theme.backgroundTertiary,
     },
     postStats: {
       flexDirection: 'row',
@@ -95,6 +91,17 @@ export const createStyles = (theme: Theme) => {
       flexDirection: 'row',
       alignItems: 'center',
       gap: Spacing.xs,
+    },
+    // 空状态
+    emptyContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingTop: Spacing['5xl'],
+      gap: Spacing.md,
+    },
+    emptyText: {
+      textAlign: 'center',
     },
   });
 };

@@ -1,148 +1,163 @@
 import { StyleSheet } from 'react-native';
-import { Theme } from '@/constants/theme';
+import { Spacing, BorderRadius, Theme } from '@/constants/theme';
 
-export const createStyles = (theme: Theme) => StyleSheet.create({
-  scrollContent: {
-    padding: 16,
-    paddingBottom: 100,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  userInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  avatarContainer: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: theme.backgroundTertiary,
-    marginRight: 16,
-    overflow: 'hidden',
-  },
-  userDetails: {
-    justifyContent: 'center',
-  },
-  userNameContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 8,
-  },
-  membershipBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: `${theme.primary}15`,
-    borderRadius: 16,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-  },
-  settingsButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: theme.backgroundDefault,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  featureCardsSection: {
-    backgroundColor: theme.backgroundDefault,
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 24,
-  },
-  featureCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 12,
-  },
-  cardLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  cardIconContainer: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    backgroundColor: `${theme.primary}15`,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  menuSection: {
-    backgroundColor: theme.backgroundDefault,
-    borderRadius: 16,
-    overflow: 'hidden',
-    marginBottom: 24,
-  },
-  menuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.border,
-  },
-  menuItemLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  logoutButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: theme.backgroundDefault,
-    borderRadius: 16,
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  modalContent: {
-    backgroundColor: theme.backgroundDefault,
-    borderRadius: 16,
-    padding: 24,
-    width: '100%',
-    maxWidth: 320,
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    marginBottom: 12,
-    textAlign: 'center',
-  },
-  modalMessage: {
-    textAlign: 'center',
-    marginBottom: 24,
-  },
-  modalButtons: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  modalButton: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  cancelButton: {
-    backgroundColor: theme.backgroundTertiary,
-  },
-  confirmButton: {
-    backgroundColor: theme.error,
-  },
-});
+export const createStyles = (theme: Theme) => {
+  return StyleSheet.create({
+    scrollContent: {
+      flexGrow: 1,
+      padding: Spacing.xl,
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    // 用户信息区
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: Spacing.xl,
+    },
+    avatarContainer: {
+      marginRight: Spacing.lg,
+    },
+    avatar: {
+      width: 64,
+      height: 64,
+      borderRadius: 32,
+      backgroundColor: theme.backgroundDefault,
+    },
+    userInfo: {
+      flex: 1,
+    },
+    userNameContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.xs,
+      marginBottom: Spacing.xs,
+    },
+    identityBadge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.xs,
+      paddingHorizontal: Spacing.sm,
+      paddingVertical: Spacing.xs,
+      backgroundColor: `${theme.primary}10`,
+      borderRadius: BorderRadius.sm,
+      alignSelf: 'flex-start',
+    },
+    settingsButton: {
+      padding: Spacing.sm,
+      marginLeft: Spacing.sm,
+    },
+    // 认证卡片
+    verifyCard: {
+      backgroundColor: theme.backgroundDefault,
+      borderRadius: BorderRadius.lg,
+      padding: Spacing.lg,
+      marginBottom: Spacing.xl,
+      shadowColor: theme.primary,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.08,
+      shadowRadius: 12,
+      elevation: 4,
+    },
+    verifyCardRejected: {
+      shadowColor: '#EF4444',
+    },
+    verifyCardContent: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      gap: Spacing.md,
+    },
+    verifyCardText: {
+      flex: 1,
+      gap: Spacing.xs,
+    },
+    verifyButton: {
+      backgroundColor: theme.primary,
+      paddingHorizontal: Spacing.lg,
+      paddingVertical: Spacing.sm,
+      borderRadius: BorderRadius.sm,
+    },
+    retryButton: {
+      backgroundColor: '#EF4444',
+      paddingHorizontal: Spacing.lg,
+      paddingVertical: Spacing.sm,
+      borderRadius: BorderRadius.sm,
+    },
+    // 发帖统计区
+    statsSection: {
+      marginBottom: Spacing.xl,
+    },
+    sectionTitle: {
+      fontSize: 18,
+      fontWeight: '700',
+      marginBottom: Spacing.lg,
+    },
+    statsGrid: {
+      flexDirection: 'row',
+      gap: Spacing.md,
+    },
+    statItem: {
+      flex: 1,
+      backgroundColor: theme.backgroundDefault,
+      borderRadius: BorderRadius.lg,
+      padding: Spacing.xl,
+      alignItems: 'center',
+      gap: Spacing.sm,
+      shadowColor: '#00000008',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.08,
+      shadowRadius: 8,
+      elevation: 2,
+    },
+    statNumber: {
+      fontSize: 24,
+      fontWeight: '700',
+      marginTop: Spacing.xs,
+    },
+    // Modal
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: Spacing.xl,
+    },
+    modalContent: {
+      backgroundColor: theme.backgroundDefault,
+      borderRadius: BorderRadius.xl,
+      padding: Spacing.xl,
+      width: '100%',
+      maxWidth: 320,
+    },
+    modalTitle: {
+      fontSize: 20,
+      fontWeight: '700',
+      marginBottom: Spacing.md,
+      textAlign: 'center',
+    },
+    modalMessage: {
+      textAlign: 'center',
+      marginBottom: Spacing.xl,
+    },
+    modalButtons: {
+      flexDirection: 'row',
+      gap: Spacing.md,
+    },
+    modalButton: {
+      flex: 1,
+      paddingVertical: Spacing.lg,
+      borderRadius: BorderRadius.md,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    cancelButton: {
+      backgroundColor: theme.backgroundTertiary,
+    },
+    confirmButton: {
+      backgroundColor: theme.primary,
+    },
+  });
+};

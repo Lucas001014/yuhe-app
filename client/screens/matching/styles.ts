@@ -129,12 +129,8 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
   resourceItem: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 8,
     marginBottom: 8,
-  },
-  resourceItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginLeft: 8,
   },
   // 实时动态
   privacyToggle: {
@@ -270,6 +266,17 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
     backgroundColor: theme.primary,
     borderRadius: 12,
     paddingVertical: 14,
+  },
+  // 发布对接需求按钮
+  publishButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: theme.primary,
+    borderRadius: 12,
+    paddingVertical: 16,
+    marginBottom: 16,
   },
   // 对接中心筛选
   filterSection: {

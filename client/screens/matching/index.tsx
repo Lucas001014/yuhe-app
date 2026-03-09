@@ -137,9 +137,84 @@ export default function MatchingScreen() {
       setAnalysisResult({
         feasibility: 'high',
         feasibilityText: '高可行',
-        report: '【市场分析】\n市场规模大，目标用户清晰，需求真实存在。预计潜在用户规模达 500 万+，市场空间充足。\n\n【竞争分析】\n现有竞品较少，差异化优势明显。',
-        trackAnalysis: '【赛道概况】\n该赛道正处于快速发展期，年增长率超过 40%。\n\n【主要参与者】\n头部企业：A公司、B公司',
-        businessModel: '【用户群体】\n核心用户：25-40 岁职场人士\n\n【财务预测】\n第一年：预计营收 50-100 万',
+        report: `
+【市场分析】
+市场规模大，目标用户清晰，需求真实存在。预计潜在用户规模达 500 万+，市场空间充足。
+
+【竞争分析】
+现有竞品较少，差异化优势明显。主要竞争对手覆盖约 30% 的市场份额，仍有较大发展空间。
+
+【盈利模式】
+可探索多种盈利模式：
+1. 订阅制（月付 9.9 元，年付 99 元）
+2. 增值服务（专业版 199 元/年）
+3. 企业定制（起价 5000 元）
+
+【风险提示】
+1. 用户获取成本可能较高，需优化推广策略
+2. 技术实现难度中等，建议预留 3-6 个月开发周期
+3. 建议前期聚焦核心功能，快速验证市场
+        `,
+        trackAnalysis: `
+【赛道概况】
+该赛道正处于快速发展期，年增长率超过 40%。政策支持力度大，市场需求旺盛。预计未来 3 年将迎来爆发式增长。
+
+【主要参与者】
+头部企业：A公司（35%市场份额）、B公司（25%）、C公司（15%）
+其他玩家占 25%，市场机会充足
+
+【发展趋势】
+1. AI技术融合成为主流，智能化需求增长
+2. 个性化定制需求增长 60%
+3. 跨界合作增多，生态化趋势明显
+
+【进入壁垒】
+技术门槛：中等（需基础 AI 能力）
+资金需求：100-500 万起（初期）
+人才需求：需技术 + 产品双核团队
+时间周期：6-12 个月产品打磨期
+        `,
+        businessModel: `
+【用户群体】
+核心用户：25-40 岁职场人士（占比 75%）
+收入水平：月薪 8000+ 元
+地域分布：一二线城市为主（70%），三线城市为辅（30%）
+
+【获客渠道】
+1. 社交媒体营销（微信、抖音、小红书）- 预计占比 40%
+2. 内容营销（知乎、B站）- 预计占比 25%
+3. KOL合作（行业大号、知识博主）- 预计占比 20%
+4. 线下活动（创业沙龙、行业峰会）- 预计占比 15%
+
+【变现路径】
+初期（第 1-6 个月）：免费 + 增值服务（验证需求，积累用户）
+中期（第 7-18 个月）：订阅制 + 企业服务（稳定收入来源）
+后期（第 18 个月后）：生态化平台（构建完整商业闭环）
+
+【财务预测】
+第一年：预计营收 50-100 万，净亏损 -30~50 万
+第二年：预计营收 200-500 万，净亏损 -20~50 万
+第三年：预计营收 1000-2000 万，净利润 100~300 万
+        `,
+        resourceAnalysis: `
+【核心资源需求】
+1. 技术资源：需要 2-3 名开发工程师（前端+后端+AI）
+2. 产品资源：需要 1 名产品经理负责需求规划
+3. 运营资源：需要 1-2 名运营人员负责用户增长
+4. 资金资源：种子轮 50-100 万，天使轮 200-500 万
+
+【潜在合作伙伴】
+技术平台：云服务商（阿里云、腾讯云）
+内容平台：知识付费平台（知乎、得到）
+流量平台：社交媒体（抖音、小红书）
+投资机构：天使投资人、VC机构
+
+【时间规划】
+第 1-3 个月：需求调研 + 原型设计
+第 4-6 个月：MVP 开发 + 小范围测试
+第 7-12 个月：产品迭代 + 市场推广
+第 13-24 个月：规模化运营 + 融资
+        `,
       });
       setShowResult(true);
       setIsAnalyzing(false);
@@ -387,85 +462,133 @@ export default function MatchingScreen() {
     </ScrollView>
   );
 
-  const MatchingScene = () => (
-    <ScrollView contentContainerStyle={styles.sceneContent}>
-      {/* 筛选区 */}
-      <View style={styles.filterSection}>
-        <ThemedText variant="h3" color={theme.textPrimary} style={styles.filterTitle}>
-          精准对接中心
-        </ThemedText>
+  const MatchingScene = () => {
+    // 模拟用户身份认证状态（从后端API获取）
+    const [identityStatus, setIdentityStatus] = React.useState<'none' | 'pending' | 'approved' | 'rejected'>('pending');
 
-        <View style={styles.filterContainer}>
-          <View style={styles.filterRow}>
-            <TouchableOpacity style={styles.filterButton}>
-              <ThemedText variant="body" color={theme.textSecondary}>需求类型</ThemedText>
-              <FontAwesome6 name="chevron-down" size={14} color={theme.textMuted} />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.filterButton}>
-              <ThemedText variant="body" color={theme.textSecondary}>合作模式</ThemedText>
-              <FontAwesome6 name="chevron-down" size={14} color={theme.textMuted} />
-            </TouchableOpacity>
-          </View>
-          <View style={styles.filterRow}>
-            <TouchableOpacity style={styles.filterButton}>
-              <ThemedText variant="body" color={theme.textSecondary}>行业</ThemedText>
-              <FontAwesome6 name="chevron-down" size={14} color={theme.textMuted} />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.filterButton}>
-              <ThemedText variant="body" color={theme.textSecondary}>地域</ThemedText>
-              <FontAwesome6 name="chevron-down" size={14} color={theme.textMuted} />
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.aiMatchButton}
-              onPress={() => Alert.alert('提示', '一键AI匹配功能')}
-            >
-              <FontAwesome6 name="brain" size={16} color={theme.buttonPrimaryText} />
-              <ThemedText variant="caption" color={theme.buttonPrimaryText}>一键AI匹配</ThemedText>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
+    // 处理发布对接需求
+    const handlePublishMatching = () => {
+      if (identityStatus !== 'approved') {
+        if (identityStatus === 'none') {
+          Alert.alert(
+            '需要身份认证',
+            '发布对接需求需要先完成身份认证',
+            [
+              { text: '取消', style: 'cancel' },
+              { text: '去认证', onPress: () => router.push('/identity-verification') }
+            ]
+          );
+        } else if (identityStatus === 'pending') {
+          Alert.alert(
+            '认证审核中',
+            '您的身份认证正在审核中，审核通过后即可发布对接需求',
+            [{ text: '知道了' }]
+          );
+        } else if (identityStatus === 'rejected') {
+          Alert.alert(
+            '认证未通过',
+            '您的身份认证未通过，请重新提交审核',
+            [
+              { text: '取消', style: 'cancel' },
+              { text: '重新提交', onPress: () => router.push('/identity-verification') }
+            ]
+          );
+        }
+        return;
+      }
 
-      {/* 匹配结果 */}
-      <ThemedText variant="bodyMedium" color={theme.textSecondary} style={styles.resultsTitle}>
-        推荐匹配结果（2）
-      </ThemedText>
+      // 已认证，跳转到发布对接需求页面
+      router.push('/create-matching');
+    };
 
-      {matchingResults.map((item) => (
-        <View key={item.id} style={styles.resultCard}>
-          <View style={styles.userInfo}>
-            <FontAwesome6 name="circle-user" size={48} color={theme.border} />
-            <View style={styles.userDetails}>
-              <View style={styles.userNameContainer}>
-                <ThemedText variant="bodyMedium" color={theme.textPrimary} style={{ fontWeight: '600' }}>
-                  {item.name}
-                </ThemedText>
-                {item.verified && (
-                  <FontAwesome6 name="circle-check" size={16} color={theme.success} />
-                )}
-              </View>
-              <ThemedText variant="caption" color={theme.textMuted}>
-                匹配度 {item.matchScore}%
-              </ThemedText>
+    return (
+      <ScrollView contentContainerStyle={styles.sceneContent}>
+        {/* 发布对接需求按钮 */}
+        <TouchableOpacity style={styles.publishButton} onPress={handlePublishMatching}>
+          <FontAwesome6 name="plus" size={20} color={theme.buttonPrimaryText} />
+          <ThemedText variant="bodyMedium" color={theme.buttonPrimaryText} style={{ fontWeight: '600' }}>
+            发布对接需求
+          </ThemedText>
+        </TouchableOpacity>
+
+        {/* 筛选区 */}
+        <View style={styles.filterSection}>
+          <ThemedText variant="h3" color={theme.textPrimary} style={styles.filterTitle}>
+            精准对接中心
+          </ThemedText>
+
+          <View style={styles.filterContainer}>
+            <View style={styles.filterRow}>
+              <TouchableOpacity style={styles.filterButton}>
+                <ThemedText variant="body" color={theme.textSecondary}>需求类型</ThemedText>
+                <FontAwesome6 name="chevron-down" size={14} color={theme.textMuted} />
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.filterButton}>
+                <ThemedText variant="body" color={theme.textSecondary}>合作模式</ThemedText>
+                <FontAwesome6 name="chevron-down" size={14} color={theme.textMuted} />
+              </TouchableOpacity>
+            </View>
+            <View style={styles.filterRow}>
+              <TouchableOpacity style={styles.filterButton}>
+                <ThemedText variant="body" color={theme.textSecondary}>行业</ThemedText>
+                <FontAwesome6 name="chevron-down" size={14} color={theme.textMuted} />
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.filterButton}>
+                <ThemedText variant="body" color={theme.textSecondary}>地域</ThemedText>
+                <FontAwesome6 name="chevron-down" size={14} color={theme.textMuted} />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.aiMatchButton}
+                onPress={() => Alert.alert('提示', '一键AI匹配功能')}
+              >
+                <FontAwesome6 name="brain" size={16} color={theme.buttonPrimaryText} />
+                <ThemedText variant="caption" color={theme.buttonPrimaryText}>一键AI匹配</ThemedText>
+              </TouchableOpacity>
             </View>
           </View>
-
-          <ThemedText variant="bodyMedium" color={theme.textPrimary}>
-            {item.needType}
-          </ThemedText>
-          <ThemedText variant="body" color={theme.textSecondary} style={styles.needDescription}>
-            {item.description}
-          </ThemedText>
-
-          <TouchableOpacity style={styles.connectButton}>
-            <ThemedText variant="bodyMedium" color={theme.buttonPrimaryText}>
-              立即对接
-            </ThemedText>
-          </TouchableOpacity>
         </View>
-      ))}
-    </ScrollView>
-  );
+
+        {/* 匹配结果 */}
+        <ThemedText variant="bodyMedium" color={theme.textSecondary} style={styles.resultsTitle}>
+          推荐匹配结果（2）
+        </ThemedText>
+
+        {matchingResults.map((item) => (
+          <View key={item.id} style={styles.resultCard}>
+            <View style={styles.userInfo}>
+              <FontAwesome6 name="circle-user" size={48} color={theme.border} />
+              <View style={styles.userDetails}>
+                <View style={styles.userNameContainer}>
+                  <ThemedText variant="bodyMedium" color={theme.textPrimary} style={{ fontWeight: '600' }}>
+                    {item.name}
+                  </ThemedText>
+                  {item.verified && (
+                    <FontAwesome6 name="circle-check" size={16} color={theme.success} />
+                  )}
+                </View>
+                <ThemedText variant="caption" color={theme.textMuted}>
+                  匹配度 {item.matchScore}%
+                </ThemedText>
+              </View>
+            </View>
+
+            <ThemedText variant="bodyMedium" color={theme.textPrimary}>
+              {item.needType}
+            </ThemedText>
+            <ThemedText variant="body" color={theme.textSecondary} style={styles.needDescription}>
+              {item.description}
+            </ThemedText>
+
+            <TouchableOpacity style={styles.connectButton}>
+              <ThemedText variant="bodyMedium" color={theme.buttonPrimaryText}>
+                立即对接
+              </ThemedText>
+            </TouchableOpacity>
+          </View>
+        ))}
+      </ScrollView>
+    );
+  };
 
   const renderScene = SceneMap({
     home: HomeScene,
@@ -476,7 +599,7 @@ export default function MatchingScreen() {
   const tabRoutes = [
     { key: 'home', title: '今日' },
     { key: 'incubator', title: '孵化舱' },
-    { key: 'matching', title: '对接中心' },
+    { key: 'matching', title: '对接' },
   ];
 
   const renderTabBar = (props: any) => (

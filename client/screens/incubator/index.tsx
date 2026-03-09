@@ -96,6 +96,25 @@ export default function IncubatorScreen() {
 第二年：预计营收 200-500 万
 第三年：预计营收 1000-2000 万
         `,
+        resourceAnalysis: `
+【核心资源需求】
+1. 技术资源：需要 2-3 名开发工程师（前端+后端+AI）
+2. 产品资源：需要 1 名产品经理负责需求规划
+3. 运营资源：需要 1-2 名运营人员负责用户增长
+4. 资金资源：种子轮 50-100 万，天使轮 200-500 万
+
+【潜在合作伙伴】
+技术平台：云服务商（阿里云、腾讯云）
+内容平台：知识付费平台（知乎、得到）
+流量平台：社交媒体（抖音、小红书）
+投资机构：天使投资人、VC机构
+
+【时间规划】
+第 1-3 个月：需求调研 + 原型设计
+第 4-6 个月：MVP 开发 + 小范围测试
+第 7-12 个月：产品迭代 + 市场推广
+第 13-24 个月：规模化运营 + 融资
+        `,
       });
       setShowResult(true);
       setIsAnalyzing(false);
@@ -147,16 +166,26 @@ export default function IncubatorScreen() {
     </View>
   );
 
+  const ResourceAnalysis = () => (
+    <View style={styles.tabContent}>
+      <ThemedText variant="body" color={theme.textPrimary} style={styles.reportText}>
+        {analysisResult.resourceAnalysis}
+      </ThemedText>
+    </View>
+  );
+
   const renderScene = SceneMap({
     report: FeasibilityReport,
     track: TrackAnalysis,
     business: BusinessModel,
+    resource: ResourceAnalysis,
   });
 
   const tabRoutes = [
     { key: 'report', title: '可行性报告' },
     { key: 'track', title: '赛道分析' },
     { key: 'business', title: '商业模式' },
+    { key: 'resource', title: '资源规划' },
   ];
 
   const renderTabBar = (props: any) => (
