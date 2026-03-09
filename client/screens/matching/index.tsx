@@ -124,6 +124,52 @@ export default function MatchingScreen() {
     },
   ];
 
+  // 用户名片数据（含介绍、咨询格式、费用）
+  const userCards = [
+    {
+      id: 1,
+      avatar: 'https://i.pravatar.cc/150?img=1',
+      name: '张三',
+      verified: true,
+      title: 'AI领域 CTO',
+      intro: '10年AI技术经验，曾主导多个大型AI项目，擅长自然语言处理和计算机视觉。',
+      consultFormat: 'hourly', // hourly | per_question
+      hourlyRate: 300,
+      perQuestionRate: 50,
+      tags: ['AI技术', 'NLP', '计算机视觉'],
+      consultCount: 128,
+      rating: 4.9,
+    },
+    {
+      id: 2,
+      avatar: 'https://i.pravatar.cc/150?img=2',
+      name: '李四',
+      verified: true,
+      title: '天使投资人',
+      intro: '专注AI赛道早期投资，已投资30+项目，累计投资金额超2亿元。',
+      consultFormat: 'per_question',
+      hourlyRate: 500,
+      perQuestionRate: 100,
+      tags: ['天使投资', 'AI赛道', '融资'],
+      consultCount: 256,
+      rating: 5.0,
+    },
+    {
+      id: 3,
+      avatar: 'https://i.pravatar.cc/150?img=3',
+      name: '王五',
+      verified: false,
+      title: '产品总监',
+      intro: '8年产品管理经验，擅长B2B SaaS产品规划和用户体验设计。',
+      consultFormat: 'hourly',
+      hourlyRate: 200,
+      perQuestionRate: 30,
+      tags: ['产品管理', 'B2B', 'SaaS'],
+      consultCount: 89,
+      rating: 4.7,
+    },
+  ];
+
   // 处理想法分析
   const handleAnalyze = () => {
     if (!idea.trim()) {
@@ -221,6 +267,109 @@ export default function MatchingScreen() {
     }, 3000);
   };
 
+  // 用户名片渲染
+  const renderUserCard = (item: any) => (
+    <View style={styles.userCard}>
+      <View style={styles.userCardHeader}>
+        <View style={styles.userCardAvatarContainer}>
+          <FontAwesome6 name="circle-user" size={48} color={theme.border} />
+        </View>
+        <View style={styles.userCardHeaderInfo}>
+          <View style={styles.userCardNameContainer}>
+            <ThemedText variant="h4" color={theme.textPrimary} style={{ fontWeight: '700' }}>
+              {item.name}
+            </ThemedText>
+            {item.verified && (
+              <FontAwesome6 name="circle-check" size={18} color={theme.success} />
+            )}
+          </View>
+          <ThemedText variant="body" color={theme.primary} style={styles.userCardTitle}>
+            {item.title}
+          </ThemedText>
+        </View>
+      </View>
+
+      <ThemedText variant="body" color={theme.textSecondary} style={styles.userCardIntro} numberOfLines={2}>
+        {item.intro}
+      </ThemedText>
+
+      <View style={styles.userCardTags}>
+        {item.tags.map((tag: string, idx: number) => (
+          <View key={idx} style={styles.userCardTag}>
+            <ThemedText variant="caption" color={theme.textSecondary}>
+              {tag}
+            </ThemedText>
+          </View>
+        ))}
+      </View>
+
+      <View style={styles.userCardConsultSection}>
+        <ThemedText variant="caption" color={theme.textMuted} style={styles.consultLabel}>
+          咨询格式
+        </ThemedText>
+        <View style={styles.consultFormats}>
+          <View style={[styles.consultFormat, item.consultFormat === 'hourly' && styles.consultFormatActive]}>
+            <FontAwesome6 name="clock" size={14} color={item.consultFormat === 'hourly' ? theme.buttonPrimaryText : theme.textMuted} />
+            <ThemedText variant="caption" color={item.consultFormat === 'hourly' ? theme.buttonPrimaryText : theme.textMuted}>
+              按小时
+            </ThemedText>
+          </View>
+          <View style={[styles.consultFormat, item.consultFormat === 'per_question' && styles.consultFormatActive]}>
+            <FontAwesome6 name="circle-question" size={14} color={item.consultFormat === 'per_question' ? theme.buttonPrimaryText : theme.textMuted} />
+            <ThemedText variant="caption" color={item.consultFormat === 'per_question' ? theme.buttonPrimaryText : theme.textMuted}>
+              按问题
+            </ThemedText>
+          </View>
+        </View>
+      </View>
+
+      <View style={styles.userCardFeeSection}>
+        <View style={styles.feeItem}>
+          <ThemedText variant="caption" color={theme.textMuted}>
+            按小时
+          </ThemedText>
+          <ThemedText variant="bodyMedium" color={theme.textPrimary} style={{ fontWeight: '600' }}>
+            ¥{item.hourlyRate}
+          </ThemedText>
+        </View>
+        <View style={styles.feeDivider} />
+        <View style={styles.feeItem}>
+          <ThemedText variant="caption" color={theme.textMuted}>
+            按问题
+          </ThemedText>
+          <ThemedText variant="bodyMedium" color={theme.textPrimary} style={{ fontWeight: '600' }}>
+            ¥{item.perQuestionRate}
+          </ThemedText>
+        </View>
+      </View>
+
+      <View style={styles.userCardFooter}>
+        <View style={styles.consultStats}>
+          <View style={styles.statItem}>
+            <FontAwesome6 name="comments" size={14} color={theme.textMuted} />
+            <ThemedText variant="caption" color={theme.textMuted}>
+              {item.consultCount}
+            </ThemedText>
+          </View>
+          <View style={styles.statItem}>
+            <FontAwesome6 name="star" size={14} color="#FFD93D" />
+            <ThemedText variant="caption" color={theme.textPrimary}>
+              {item.rating}
+            </ThemedText>
+          </View>
+        </View>
+        <TouchableOpacity
+          style={styles.userCardButton}
+          onPress={() => router.push('/consultations')}
+        >
+          <ThemedText variant="bodyMedium" color={theme.buttonPrimaryText} style={{ fontWeight: '600' }}>
+            立即咨询
+          </ThemedText>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+
   // 匹配卡片渲染
   const renderMatchingCard = ({ item }: any) => (
     <View style={styles.matchingCard}>
@@ -294,6 +443,21 @@ export default function MatchingScreen() {
             parallaxScrollingOffset: 50,
           }}
         />
+      </View>
+
+      {/* 推荐顾问 */}
+      <View style={styles.section}>
+        <View style={styles.sectionHeader}>
+          <ThemedText variant="h3" color={theme.textPrimary} style={styles.sectionTitle}>
+            推荐顾问
+          </ThemedText>
+          <TouchableOpacity>
+            <ThemedText variant="caption" color={theme.primary}>查看全部</ThemedText>
+          </TouchableOpacity>
+        </View>
+        <View style={styles.userCardsContainer}>
+          {userCards.map((item) => renderUserCard(item))}
+        </View>
       </View>
 
       {/* 创业进度看板 */}

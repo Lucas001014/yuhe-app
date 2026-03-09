@@ -58,15 +58,16 @@ export default function ProfileScreen() {
   // 加载用户信息
   const loadUserInfo = useCallback(async () => {
     try {
-      // 这里可以调用真实的 API
       const userId = await AsyncStorage.getItem('userId');
-      if (!userId) return;
 
-      // 使用模拟数据
+      // 使用模拟数据（无论是否登录都显示）
       setUserInfo(mockUserInfo);
       setPostStats(mockPostStats);
     } catch (error) {
       console.error('加载用户信息失败:', error);
+      // 加载失败时也显示模拟数据
+      setUserInfo(mockUserInfo);
+      setPostStats(mockPostStats);
     }
   }, []);
 

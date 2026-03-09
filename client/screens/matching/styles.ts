@@ -84,6 +84,109 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
     paddingVertical: 8,
     alignSelf: 'flex-start',
   },
+  // 用户名片
+  userCardsContainer: {
+    gap: 16,
+  },
+  userCard: {
+    backgroundColor: theme.backgroundDefault,
+    borderRadius: 16,
+    padding: 16,
+  },
+  userCardHeader: {
+    flexDirection: 'row',
+    marginBottom: 12,
+  },
+  userCardAvatarContainer: {
+    marginRight: 12,
+  },
+  userCardHeaderInfo: {
+    flex: 1,
+  },
+  userCardNameContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 4,
+  },
+  userCardTitle: {
+    fontSize: 14,
+  },
+  userCardIntro: {
+    lineHeight: 20,
+    marginBottom: 12,
+  },
+  userCardTags: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 16,
+  },
+  userCardTag: {
+    backgroundColor: theme.backgroundTertiary,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  userCardConsultSection: {
+    marginBottom: 12,
+  },
+  consultLabel: {
+    marginBottom: 8,
+    fontWeight: '600',
+  },
+  consultFormats: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  consultFormat: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: theme.backgroundTertiary,
+    borderRadius: 8,
+    paddingVertical: 10,
+  },
+  consultFormatActive: {
+    backgroundColor: theme.primary,
+  },
+  userCardFeeSection: {
+    flexDirection: 'row',
+    backgroundColor: theme.backgroundTertiary,
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 16,
+  },
+  feeItem: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  feeDivider: {
+    width: 1,
+    backgroundColor: theme.border,
+  },
+  userCardFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  consultStats: {
+    flexDirection: 'row',
+    gap: 16,
+  },
+  statItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  userCardButton: {
+    backgroundColor: theme.primary,
+    borderRadius: 8,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+  },
   // 进度看板
   progressCard: {
     backgroundColor: theme.backgroundDefault,
