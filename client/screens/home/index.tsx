@@ -406,8 +406,8 @@ export default function HomeScreen() {
             >
               <ThemedText
                 variant="small"
-                color={activeTab === tab.id ? theme.buttonPrimaryText : theme.textSecondary}
-                style={styles.tabText}
+                color={activeTab === tab.id ? theme.primary : theme.textSecondary}
+                style={[styles.tabText, activeTab === tab.id && styles.tabTextActive]}
               >
                 {tab.label}
               </ThemedText>

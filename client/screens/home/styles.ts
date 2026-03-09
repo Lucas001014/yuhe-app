@@ -29,11 +29,15 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
     marginRight: 8,
   },
   tabItemActive: {
-    borderBottomWidth: 2,
+    borderBottomWidth: 3,
     borderBottomColor: theme.primary,
   },
   tabText: {
-    fontWeight: '600',
+    fontWeight: '500',
+  },
+  tabTextActive: {
+    fontWeight: '700',
+    fontSize: 15,
   },
   scrollContent: {
     flexGrow: 1,
