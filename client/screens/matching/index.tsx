@@ -435,40 +435,6 @@ export default function MatchingScreen() {
           {userCards.map((item) => renderUserCard(item))}
         </View>
       </View>
-
-      {/* 实时动态 */}
-      <View style={styles.section}>
-        <View style={styles.sectionHeader}>
-          <ThemedText variant="h3" color={theme.textPrimary} style={styles.sectionTitle}>
-            实时动态
-          </ThemedText>
-          <TouchableOpacity style={styles.privacyToggle}>
-            <FontAwesome6 name="eye-slash" size={16} color={theme.textMuted} />
-            <ThemedText variant="caption" color={theme.textMuted}>隐私</ThemedText>
-          </TouchableOpacity>
-        </View>
-        {recentActivities.map((activity) => (
-          <View key={activity.id} style={styles.activityItem}>
-            <FontAwesome6 name="circle-user" size={40} color={theme.border} />
-            <View style={styles.activityContent}>
-              <View style={styles.activityHeader}>
-                <ThemedText variant="bodyMedium" color={theme.textPrimary} style={{ fontWeight: '600' }}>
-                  {activity.name}
-                </ThemedText>
-                <ThemedText variant="caption" color={theme.textMuted}>
-                  {activity.tag}
-                </ThemedText>
-              </View>
-              <ThemedText variant="body" color={theme.textSecondary} style={styles.activityText}>
-                {activity.content}
-              </ThemedText>
-              <ThemedText variant="caption" color={theme.textMuted}>
-                {activity.time}
-              </ThemedText>
-            </View>
-          </View>
-        ))}
-      </View>
     </ScrollView>
   );
 
@@ -943,10 +909,10 @@ export default function MatchingScreen() {
   });
 
   const tabRoutes = [
-    { key: 'home', title: '今日' },
+    { key: 'home', title: '顾问' },
     { key: 'incubator', title: '孵化舱' },
     { key: 'matching', title: '对接' },
-    { key: 'testimonials', title: '客户见证' },
+    { key: 'testimonials', title: '实时动态' },
   ];
 
   const renderTabBar = (props: any) => (
