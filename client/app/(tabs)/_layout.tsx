@@ -35,20 +35,20 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="create"
+        name="incubator"
         options={{
-          title: '发布',
+          title: '孵化舱',
           tabBarIcon: ({ color }) => (
-            <FontAwesome6 name="circle-plus" size={20} color={color} />
+            <FontAwesome6 name="lightbulb" size={20} color={color} />
           ),
         }}
       />
       <Tabs.Screen
-        name="messages"
+        name="matching"
         options={{
-          title: '消息',
+          title: '对接中心',
           tabBarIcon: ({ color }) => (
-            <FontAwesome6 name="comment-dots" size={20} color={color} />
+            <FontAwesome6 name="handshake" size={20} color={color} />
           ),
         }}
       />

@@ -1,354 +1,254 @@
 import { StyleSheet, Dimensions } from 'react-native';
 import { Spacing, BorderRadius, Theme } from '@/constants/theme';
 
-export const createStyles = (theme: Theme, width: number = Dimensions.get('window').width) => {
-  // 计算瀑布流卡片宽度（2列布局）
-  const masonryGap = 12;
-  const masonryPadding = 16;
-  const _cardWidth = (width - masonryPadding * 2 - masonryGap) / 2;
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
+export const createStyles = (theme: Theme) => {
   return StyleSheet.create({
     scrollContent: {
-      flexGrow: 1,
-      backgroundColor: theme.backgroundRoot,
-      paddingVertical: Spacing.md,
+      paddingBottom: 20,
     },
-    // 类别导航样式
-    categoryNav: {
-      backgroundColor: theme.backgroundDefault,
-      borderBottomWidth: 1,
-      borderBottomColor: theme.borderLight,
-      paddingBottom: Spacing.sm,
-    },
-    categoryScroll: {
+    // 顶部搜索栏
+    topBar: {
+      flexDirection: 'row',
+      alignItems: 'center',
       paddingHorizontal: Spacing.lg,
       paddingVertical: Spacing.md,
+      backgroundColor: theme.backgroundRoot,
     },
-    categoryItem: {
-      marginRight: Spacing.lg,
-      paddingHorizontal: Spacing.md,
-      paddingVertical: Spacing.sm,
-      borderRadius: BorderRadius.xl,
-      backgroundColor: theme.backgroundTertiary,
-      flexShrink: 0,
-    },
-    activeCategoryItem: {
-      backgroundColor: theme.primary,
-    },
-    // 瀑布流容器（2列布局）
-    masonryContainer: {
-      flexDirection: 'row',
-      paddingHorizontal: masonryPadding,
-      gap: masonryGap,
-      paddingBottom: Spacing['4xl'],
-    },
-    masonryColumn: {
+    searchContainer: {
       flex: 1,
-      gap: masonryGap,
-    },
-    // 瀑布流卡片
-    masonryCard: {
+      flexDirection: 'row',
+      alignItems: 'center',
       backgroundColor: theme.backgroundDefault,
       borderRadius: BorderRadius.lg,
-      overflow: 'hidden',
+      paddingHorizontal: Spacing.md,
+      height: 44,
+      marginRight: Spacing.md,
     },
-    masonryImageContainer: {
-      width: _cardWidth,
-      backgroundColor: theme.backgroundTertiary,
-      position: 'relative',
+    searchInput: {
+      flex: 1,
+      marginLeft: Spacing.sm,
+      fontSize: 14,
+      color: theme.textPrimary,
     },
-    masonryImage: {
-      width: _cardWidth,
-    },
-    masonryImagePlaceholder: {
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    videoIcon: {
+    aiHint: {
       position: 'absolute',
-      top: '50%',
-      left: '50%',
-      marginLeft: -12,
-      marginTop: -12,
-      width: 24,
-      height: 24,
-      borderRadius: 12,
-      backgroundColor: 'rgba(0, 0, 0, 0.5)',
-      justifyContent: 'center',
-      alignItems: 'center',
+      right: Spacing.md,
+      fontSize: 12,
     },
-    masonryTypeBadge: {
-      position: 'absolute',
-      top: 6,
-      right: 6,
-      paddingHorizontal: 6,
-      paddingVertical: 3,
-      borderRadius: BorderRadius.xs,
-    },
-    masonryMerchantBadge: {
-      position: 'absolute',
-      top: 6,
-      left: 6,
-      width: 18,
-      height: 18,
-      borderRadius: 9,
+    messageIcon: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
       backgroundColor: theme.backgroundDefault,
       justifyContent: 'center',
       alignItems: 'center',
+      position: 'relative',
     },
-    masonryResourceBadge: {
+    unreadBadge: {
       position: 'absolute',
-      bottom: 6,
-      right: 6,
-      width: 18,
-      height: 18,
-      borderRadius: 9,
-      backgroundColor: theme.primary,
-      justifyContent: 'center',
+      top: 8,
+      right: 8,
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+      backgroundColor: theme.error,
+    },
+    // 通用区块
+    section: {
+      paddingHorizontal: Spacing.lg,
+      marginTop: Spacing.lg,
+    },
+    sectionHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: Spacing.md,
+    },
+    sectionTitle: {
+      fontSize: 18,
+      fontWeight: '700',
+    },
+    // 精准匹配卡片
+    carouselContainer: {
+      marginTop: Spacing.md,
+    },
+    matchingCard: {
+      backgroundColor: theme.backgroundDefault,
+      borderRadius: BorderRadius.lg,
+      padding: Spacing.md,
+      height: 180,
+      justifyContent: 'space-between',
+      borderWidth: 1,
+      borderColor: theme.borderLight,
+    },
+    matchingCardHeader: {
+      alignItems: 'flex-start',
+    },
+    matchRateText: {
+      fontSize: 12,
+      fontWeight: '600',
+    },
+    matchingCardContent: {
+      flexDirection: 'row',
       alignItems: 'center',
     },
-    masonryContent: {
-      padding: Spacing.sm,
+    matchingCardAvatar: {
+      width: 48,
+      height: 48,
+      borderRadius: 24,
+      marginRight: Spacing.md,
     },
-    masonryTitle: {
+    matchingCardInfo: {
+      flex: 1,
+    },
+    matchingCardName: {
+      fontSize: 16,
+      fontWeight: '600',
       marginBottom: Spacing.xs,
-      height: 36,
-      lineHeight: 18,
     },
-    masonryFooter: {
+    tagBadge: {
+      backgroundColor: theme.primary + '20',
+      paddingHorizontal: Spacing.sm,
+      paddingVertical: 2,
+      borderRadius: 4,
+      marginRight: Spacing.xs,
+      marginTop: 2,
+    },
+    matchingCardActions: {
       flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
+      gap: Spacing.sm,
     },
-    masonryAuthor: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 4,
+    primaryButton: {
       flex: 1,
-    },
-    masonryAvatar: {
-      width: 16,
-      height: 16,
-      borderRadius: 8,
-    },
-    masonryLikes: {
-      flexDirection: 'row',
+      backgroundColor: theme.primary,
+      paddingVertical: Spacing.sm,
+      borderRadius: BorderRadius.md,
       alignItems: 'center',
     },
-    // 空状态
-    emptyContainer: {
+    secondaryButton: {
       flex: 1,
-      justifyContent: 'center',
+      backgroundColor: 'transparent',
+      borderWidth: 1,
+      borderColor: theme.primary,
+      paddingVertical: Spacing.sm,
+      borderRadius: BorderRadius.md,
       alignItems: 'center',
-      paddingVertical: Spacing['4xl'],
-      gap: Spacing.lg,
     },
-    emptyText: {
-      textAlign: 'center',
-    },
-    // 评论弹窗样式
-    modalOverlay: {
-      flex: 1,
-      backgroundColor: 'rgba(0, 0, 0, 0.5)',
-      justifyContent: 'flex-end',
-    },
-    modalContent: {
-      borderTopLeftRadius: BorderRadius.xl,
-      borderTopRightRadius: BorderRadius.xl,
+    // 创业进度
+    progressCard: {
+      backgroundColor: theme.backgroundDefault,
+      borderRadius: BorderRadius.lg,
       padding: Spacing.lg,
-      maxHeight: '80%',
+      borderWidth: 1,
+      borderColor: theme.borderLight,
     },
-    modalHeader: {
+    progressHeader: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      marginBottom: Spacing.lg,
-      paddingBottom: Spacing.md,
-      borderBottomWidth: 1,
-      borderBottomColor: theme.borderLight,
+      marginBottom: Spacing.md,
     },
-    commentsList: {
-      flex: 1,
-      marginBottom: Spacing.lg,
+    progressStage: {
+      fontSize: 16,
+      fontWeight: '600',
     },
-    commentItem: {
+    progressBar: {
+      height: 8,
+      backgroundColor: theme.backgroundTertiary,
+      borderRadius: 4,
+      marginBottom: Spacing.lg,
+      overflow: 'hidden',
+    },
+    progressFill: {
+      height: '100%',
+      backgroundColor: theme.primary,
+      borderRadius: 4,
+    },
+    resourceList: {
       flexDirection: 'row',
-      gap: Spacing.md,
-      marginBottom: Spacing.lg,
+      flexWrap: 'wrap',
+      gap: Spacing.sm,
     },
-    commentAvatar: {
+    resourceCard: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: theme.backgroundTertiary,
+      paddingHorizontal: Spacing.md,
+      paddingVertical: Spacing.sm,
+      borderRadius: BorderRadius.md,
+      gap: Spacing.sm,
+    },
+    resourceTitle: {
+      fontSize: 13,
+    },
+    // 实时动态
+    activityList: {
+      gap: Spacing.md,
+    },
+    activityCard: {
+      flexDirection: 'row',
+      backgroundColor: theme.backgroundDefault,
+      borderRadius: BorderRadius.lg,
+      padding: Spacing.md,
+      borderWidth: 1,
+      borderColor: theme.borderLight,
+    },
+    activityAvatar: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      marginRight: Spacing.md,
+    },
+    activityContent: {
+      flex: 1,
+    },
+    activityHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: Spacing.xs,
+      gap: Spacing.sm,
+    },
+    activityTag: {
+      backgroundColor: theme.primary + '20',
+      paddingHorizontal: Spacing.xs,
+      paddingVertical: 1,
+      borderRadius: 3,
+    },
+    activityText: {
+      fontSize: 14,
+      lineHeight: 20,
+      marginBottom: Spacing.xs,
+    },
+    privacyButton: {
       width: 32,
       height: 32,
       borderRadius: 16,
-    },
-    commentContent: {
-      flex: 1,
-      gap: Spacing.xs,
-    },
-    commentText: {
-      lineHeight: 20,
-    },
-    commentActions: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: Spacing.lg,
-    },
-    commentLike: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 4,
-    },
-    commentInput: {
-      borderWidth: 1,
-      borderColor: theme.border,
-      borderRadius: BorderRadius.md,
-      paddingHorizontal: Spacing.md,
-      paddingVertical: Spacing.md,
-      marginBottom: Spacing.md,
-    },
-    submitButton: {
-      backgroundColor: theme.primary,
-      borderRadius: BorderRadius.md,
-      paddingVertical: Spacing.md,
-      alignItems: 'center',
-    },
-    submitButtonText: {
-      color: theme.buttonPrimaryText,
-    },
-    cancelButton: {
       backgroundColor: theme.backgroundTertiary,
-      borderRadius: BorderRadius.md,
-      paddingVertical: Spacing.md,
+      justifyContent: 'center',
       alignItems: 'center',
+      marginLeft: Spacing.sm,
     },
-    cancelButtonText: {
-      color: theme.textSecondary,
-    },
-    commentInputContainer: {
+    // 快捷功能
+    quickActions: {
       flexDirection: 'row',
+      flexWrap: 'wrap',
       gap: Spacing.md,
     },
-    sendButton: {
-      backgroundColor: theme.primary,
-      borderRadius: BorderRadius.md,
-      paddingHorizontal: Spacing.xl,
-      paddingVertical: Spacing.md,
+    quickActionButton: {
+      width: (SCREEN_WIDTH - 64) / 4,
       alignItems: 'center',
-    },
-    // Tab组件所需样式
-    card: {
+      paddingVertical: Spacing.md,
       backgroundColor: theme.backgroundDefault,
       borderRadius: BorderRadius.lg,
-      overflow: 'hidden',
-      marginBottom: 12,
+      borderWidth: 1,
+      borderColor: theme.borderLight,
     },
-    cardImage: {
-      width: '100%',
-      minHeight: 100,
-      maxHeight: 400,
-    },
-    cardContent: {
-      padding: Spacing.md,
-    },
-    cardTitle: {
-      marginBottom: Spacing.sm,
-    },
-    typeTag: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      paddingVertical: Spacing.xs,
-      paddingHorizontal: Spacing.sm,
-      borderRadius: BorderRadius.xs,
-      backgroundColor: theme.backgroundTertiary,
-      alignSelf: 'flex-start',
-      marginBottom: Spacing.sm,
-    },
-    typeTagText: {
-      fontWeight: '600',
-    },
-    bountyTag: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 4,
-      paddingVertical: Spacing.xs,
-      paddingHorizontal: Spacing.sm,
-      borderRadius: BorderRadius.xs,
-      backgroundColor: `${theme.primary}15`,
-      alignSelf: 'flex-start',
-      marginBottom: Spacing.sm,
-    },
-    bountyTagText: {
-      fontWeight: '600',
-    },
-    price: {
-      fontWeight: '700',
-      marginBottom: Spacing.sm,
-    },
-    cardFooter: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
+    quickActionTitle: {
+      fontSize: 12,
       marginTop: Spacing.sm,
-    },
-    author: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 6,
-      flex: 1,
-    },
-    authorAvatar: {
-      width: 20,
-      height: 20,
-      borderRadius: 10,
-    },
-    stats: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 8,
-    },
-    statText: {
-      marginLeft: 2,
-    },
-    commentModal: {
-      flex: 1,
-      backgroundColor: 'rgba(0, 0, 0, 0.5)',
-      justifyContent: 'flex-end',
-    },
-    commentContainer: {
-      borderTopLeftRadius: BorderRadius.xl,
-      borderTopRightRadius: BorderRadius.xl,
-      padding: Spacing.lg,
-      maxHeight: '80%',
-    },
-    commentHeader: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginBottom: Spacing.lg,
-      paddingBottom: Spacing.md,
-      borderBottomWidth: 1,
-      borderBottomColor: theme.borderLight,
-    },
-    commentList: {
-      flex: 1,
-      marginBottom: Spacing.lg,
-    },
-    commentUser: {
-      fontWeight: '600',
-      marginBottom: 2,
-    },
-    commentSubmit: {
-      paddingHorizontal: Spacing.lg,
-      paddingVertical: Spacing.md,
-      borderRadius: BorderRadius.md,
-      marginLeft: Spacing.md,
+      textAlign: 'center',
     },
   });
-};
-
-// 导出卡片宽度供组件使用
-export const getCardWidth = (width: number = Dimensions.get('window').width) => {
-  const masonryPadding = 16;
-  const masonryGap = 12;
-  return (width - masonryPadding * 2 - masonryGap) / 2;
 };
