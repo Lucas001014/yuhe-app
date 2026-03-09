@@ -2,22 +2,6 @@ import { StyleSheet } from 'react-native';
 import { Theme } from '@/constants/theme';
 
 export const createStyles = (theme: Theme) => StyleSheet.create({
-  searchBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: theme.backgroundTertiary,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    margin: 16,
-    marginBottom: 8,
-  },
-  searchInput: {
-    flex: 1,
-    marginLeft: 12,
-    fontSize: 16,
-    color: theme.textPrimary,
-  },
   tabContainer: {
     borderBottomWidth: 1,
     borderBottomColor: theme.border,

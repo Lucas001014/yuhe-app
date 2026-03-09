@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { View, ScrollView, TouchableOpacity, TextInput, RefreshControl, Dimensions } from 'react-native';
+import { View, ScrollView, TouchableOpacity, RefreshControl, Dimensions } from 'react-native';
 import { FontAwesome6 } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
 import { ThemedText } from '@/components/ThemedText';
@@ -382,16 +382,6 @@ export default function HomeScreen() {
 
   return (
     <Screen backgroundColor={theme.backgroundRoot} statusBarStyle={isDark ? 'light' : 'dark'}>
-      {/* 顶部搜索栏 */}
-      <View style={styles.searchBar}>
-        <FontAwesome6 name="magnifying-glass" size={18} color={theme.textMuted} />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="搜索帖子、用户、话题..."
-          placeholderTextColor={theme.textMuted}
-        />
-      </View>
-
       {/* Tab 导航 */}
       <View style={styles.tabContainer}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
