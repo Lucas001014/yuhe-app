@@ -32,6 +32,7 @@ export default function MessagesScreen() {
 
   const [messages, setMessages] = useState<MessageItem[]>([]);
   const [loading, setLoading] = useState(false);
+  const [currentTab, setCurrentTab] = useState<'notifications' | 'chats'>('notifications');
 
   const API_BASE_URL = process.env.EXPO_PUBLIC_BACKEND_BASE_URL;
 
@@ -69,7 +70,7 @@ export default function MessagesScreen() {
     // TODO: 标记为已读
 
     if (message.type === 'chat') {
-      // 跳转到聊天页面
+      // 跳转到聊天列表
       router.push('/chat-list');
     } else if (message.type === 'follow') {
       // 跳转到关注列表
@@ -77,6 +78,14 @@ export default function MessagesScreen() {
     } else if (message.postId) {
       // 跳转到帖子详情
       router.push('/post-detail', { postId: message.postId });
+    }
+  };
+
+  // 切换 Tab
+  const handleTabChange = (tab: 'notifications' | 'chats') => {
+    setCurrentTab(tab);
+    if (tab === 'chats') {
+      router.push('/chat-list');
     }
   };
 
@@ -126,74 +135,108 @@ export default function MessagesScreen() {
         <ThemedText variant="h3" color={theme.textPrimary}>消息</ThemedText>
       </View>
 
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        refreshControl={
-          <RefreshControl
-            refreshing={loading}
-            onRefresh={loadMessages}
-          />
-        }
-      >
-        {messages.length === 0 ? (
-          <View style={styles.emptyContainer}>
-            <FontAwesome6 name="comment-dots" size={48} color={theme.textMuted} />
-            <ThemedText variant="body" color={theme.textMuted} style={styles.emptyText}>
-              {loading ? '加载中...' : '暂无消息'}
-            </ThemedText>
-          </View>
-        ) : (
-          <View style={styles.messagesList}>
-            {messages.map((message) => (
-              <TouchableOpacity
-                key={message.id}
-                style={[styles.messageItem, message.unread && styles.unreadItem]}
-                onPress={() => handleMessagePress(message)}
-              >
-                <View style={[styles.iconContainer, { backgroundColor: getTypeColor(message.type) }]}>
-                  <FontAwesome6
-                    name={getTypeIcon(message.type)}
-                    size={20}
-                    color={theme.buttonPrimaryText}
-                  />
-                </View>
+      {/* Tab 切换 */}
+      <View style={styles.tabContainer}>
+        <TouchableOpacity
+          style={[
+            styles.tabItem,
+            currentTab === 'notifications' && styles.tabItemActive,
+          ]}
+          onPress={() => setCurrentTab('notifications')}
+        >
+          <ThemedText
+            variant="bodyMedium"
+            color={currentTab === 'notifications' ? theme.primary : theme.textSecondary}
+          >
+            通知
+          </ThemedText>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[
+            styles.tabItem,
+            currentTab === 'chats' && styles.tabItemActive,
+          ]}
+          onPress={() => handleTabChange('chats')}
+        >
+          <ThemedText
+            variant="bodyMedium"
+            color={currentTab === 'chats' ? theme.primary : theme.textSecondary}
+          >
+            聊天
+          </ThemedText>
+        </TouchableOpacity>
+      </View>
 
-                <View style={styles.messageContent}>
-                  <View style={styles.messageHeader}>
-                    <ThemedText variant="bodyMedium" color={theme.textPrimary} style={styles.messageTitle}>
-                      {message.title}
-                    </ThemedText>
-                    <ThemedText variant="caption" color={theme.textMuted}>
-                      {message.time}
-                    </ThemedText>
+      {currentTab === 'notifications' ? (
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          refreshControl={
+            <RefreshControl
+              refreshing={loading}
+              onRefresh={loadMessages}
+            />
+          }
+        >
+          {messages.length === 0 ? (
+            <View style={styles.emptyContainer}>
+              <FontAwesome6 name="comment-dots" size={48} color={theme.textMuted} />
+              <ThemedText variant="body" color={theme.textMuted} style={styles.emptyText}>
+                {loading ? '加载中...' : '暂无消息'}
+              </ThemedText>
+            </View>
+          ) : (
+            <View style={styles.messagesList}>
+              {messages.map((message) => (
+                <TouchableOpacity
+                  key={message.id}
+                  style={[styles.messageItem, message.unread && styles.unreadItem]}
+                  onPress={() => handleMessagePress(message)}
+                >
+                  <View style={[styles.iconContainer, { backgroundColor: getTypeColor(message.type) }]}>
+                    <FontAwesome6
+                      name={getTypeIcon(message.type)}
+                      size={20}
+                      color={theme.buttonPrimaryText}
+                    />
                   </View>
 
-                  <ThemedText variant="body" color={theme.textSecondary} numberOfLines={2} style={styles.messageText}>
-                    {message.content}
-                  </ThemedText>
-
-                  {message.postTitle && (
-                    <ThemedText variant="caption" color={theme.textMuted} style={styles.postTitle}>
-                      {message.postTitle}
-                    </ThemedText>
-                  )}
-                </View>
-
-                <View style={styles.messageRight}>
-                  {message.unread && <View style={styles.unreadDot} />}
-                  {message.count !== undefined && message.count > 0 && (
-                    <View style={styles.countBadge}>
-                      <ThemedText variant="caption" color={theme.buttonPrimaryText}>
-                        {message.count > 99 ? '99+' : message.count}
+                  <View style={styles.messageContent}>
+                    <View style={styles.messageHeader}>
+                      <ThemedText variant="bodyMedium" color={theme.textPrimary} style={styles.messageTitle}>
+                        {message.title}
+                      </ThemedText>
+                      <ThemedText variant="caption" color={theme.textMuted}>
+                        {message.time}
                       </ThemedText>
                     </View>
-                  )}
-                </View>
-              </TouchableOpacity>
-            ))}
-          </View>
-        )}
-      </ScrollView>
+
+                    <ThemedText variant="body" color={theme.textSecondary} numberOfLines={2} style={styles.messageText}>
+                      {message.content}
+                    </ThemedText>
+
+                    {message.postTitle && (
+                      <ThemedText variant="caption" color={theme.textMuted} style={styles.postTitle}>
+                        {message.postTitle}
+                      </ThemedText>
+                    )}
+                  </View>
+
+                  <View style={styles.messageRight}>
+                    {message.unread && <View style={styles.unreadDot} />}
+                    {message.count !== undefined && message.count > 0 && (
+                      <View style={styles.countBadge}>
+                        <ThemedText variant="caption" color={theme.buttonPrimaryText}>
+                          {message.count > 99 ? '99+' : message.count}
+                        </ThemedText>
+                      </View>
+                    )}
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
+        </ScrollView>
+      ) : null}
     </Screen>
   );
 }

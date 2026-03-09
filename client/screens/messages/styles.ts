@@ -10,6 +10,22 @@ export const createStyles = (theme: Theme) => {
       borderBottomWidth: 1,
       borderBottomColor: theme.borderLight,
     },
+    tabContainer: {
+      flexDirection: 'row',
+      backgroundColor: theme.backgroundDefault,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.borderLight,
+    },
+    tabItem: {
+      flex: 1,
+      paddingVertical: 14,
+      alignItems: 'center',
+      position: 'relative',
+    },
+    tabItemActive: {
+      borderBottomWidth: 2,
+      borderBottomColor: theme.primary,
+    },
     scrollContent: {
       flexGrow: 1,
     },
