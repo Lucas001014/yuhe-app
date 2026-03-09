@@ -474,7 +474,7 @@ export default function MatchingScreen() {
   });
 
   const tabRoutes = [
-    { key: 'home', title: '首页' },
+    { key: 'home', title: '今日' },
     { key: 'incubator', title: '孵化舱' },
     { key: 'matching', title: '对接中心' },
   ];

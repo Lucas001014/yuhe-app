@@ -35,11 +35,11 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="messages"
+        name="matching"
         options={{
-          title: '消息',
+          title: '合作对接',
           tabBarIcon: ({ color }) => (
-            <FontAwesome6 name="comment-dots" size={20} color={color} />
+            <FontAwesome6 name="handshake" size={20} color={color} />
           ),
         }}
       />
@@ -68,11 +68,11 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="matching"
+        name="messages"
         options={{
-          title: '对接中心',
+          title: '消息',
           tabBarIcon: ({ color }) => (
-            <FontAwesome6 name="handshake" size={20} color={color} />
+            <FontAwesome6 name="comment-dots" size={20} color={color} />
           ),
         }}
       />

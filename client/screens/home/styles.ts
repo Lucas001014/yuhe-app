@@ -36,8 +36,7 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
     fontWeight: '600',
   },
   scrollContent: {
-    padding: 16,
-    paddingBottom: 100,
+    flexGrow: 1,
   },
   emptyContainer: {
     alignItems: 'center',
@@ -48,69 +47,79 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
     marginTop: 16,
     textAlign: 'center',
   },
-  postCard: {
+  // 瀑布流布局样式
+  columnsContainer: {
+    flexDirection: 'row',
+  },
+  column: {
+    flex: 1,
+  },
+  card: {
     backgroundColor: theme.backgroundDefault,
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 16,
+    borderRadius: 12,
+    overflow: 'hidden',
+    marginBottom: 0,
   },
-  postHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  imageWrapper: {
+    position: 'relative',
+    overflow: 'hidden',
+    backgroundColor: theme.backgroundTertiary,
+  },
+  imagePlaceholder: {
+    justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 12,
-  },
-  authorInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  authorDetails: {
-    marginLeft: 12,
+    backgroundColor: theme.backgroundTertiary,
   },
   typeTag: {
-    paddingHorizontal: 12,
+    position: 'absolute',
+    top: 8,
+    left: 8,
+    paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 12,
+    borderRadius: 8,
   },
-  postTitle: {
-    fontSize: 18,
+  cardContent: {
+    padding: 12,
+  },
+  cardTitle: {
+    fontSize: 14,
     fontWeight: '600',
-    marginBottom: 8,
+    marginBottom: 6,
   },
-  postContent: {
-    lineHeight: 24,
-    marginBottom: 12,
+  cardDescription: {
+    fontSize: 12,
+    lineHeight: 16,
+    marginBottom: 8,
   },
   tagsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginBottom: 12,
+    marginBottom: 8,
   },
   tag: {
     backgroundColor: theme.backgroundTertiary,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-    marginRight: 8,
-    marginBottom: 8,
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    borderRadius: 6,
+    marginRight: 6,
+    marginBottom: 4,
   },
   priceInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 8,
   },
-  postFooter: {
+  cardFooter: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
+    justifyContent: 'flex-start',
+    gap: 16,
     borderTopWidth: 1,
     borderTopColor: theme.border,
-    paddingTop: 12,
+    paddingTop: 8,
   },
   actionButton: {
     flexDirection: 'row',
     alignItems: 'center',
-  },
-  actionText: {
-    marginLeft: 4,
+    gap: 4,
   },
 });
