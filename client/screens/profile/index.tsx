@@ -54,6 +54,34 @@ export default function ProfileScreen() {
     }
   };
 
+  const handleLogout = async () => {
+    Alert.alert(
+      '退出登录',
+      '确定要退出登录吗？',
+      [
+        { text: '取消', style: 'cancel' },
+        {
+          text: '确定',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              // 清除用户信息
+              await AsyncStorage.removeItem('userId');
+              await AsyncStorage.removeItem('username');
+              await AsyncStorage.removeItem('avatar');
+              await AsyncStorage.removeItem('userInfo');
+              
+              // 跳转到登录页面
+              router.replace('/login');
+            } catch (error) {
+              Alert.alert('错误', '退出失败，请重试');
+            }
+          },
+        },
+      ]
+    );
+  };
+
   const handleMenuItemPress = (item: MenuItem) => {
     switch (item.id) {
       case 'progress':
@@ -79,33 +107,6 @@ export default function ProfileScreen() {
         break;
       case 'about':
         Alert.alert('关于我们', '遇合 v1.0.0\n书写属于自己的商业山河');
-        break;
-      case 'logout':
-        Alert.alert(
-          '退出登录',
-          '确定要退出登录吗？',
-          [
-            { text: '取消', style: 'cancel' },
-            {
-              text: '确定',
-              style: 'destructive',
-              onPress: async () => {
-                try {
-                  // 清除用户信息
-                  await AsyncStorage.removeItem('userId');
-                  await AsyncStorage.removeItem('username');
-                  await AsyncStorage.removeItem('avatar');
-                  await AsyncStorage.removeItem('userInfo');
-                  
-                  // 跳转到登录页面
-                  router.replace('/login');
-                } catch (error) {
-                  Alert.alert('错误', '退出失败，请重试');
-                }
-              },
-            },
-          ]
-        );
         break;
       default:
         break;
@@ -222,7 +223,7 @@ export default function ProfileScreen() {
         {/* 退出登录按钮 */}
         <TouchableOpacity
           style={styles.logoutButton}
-          onPress={() => handleMenuItemPress(menuItems.find(m => m.id === 'logout')!)}
+          onPress={handleLogout}
         >
           <FontAwesome6 name="right-from-bracket" size={20} color={theme.error} style={{ width: 24 }} />
           <ThemedText variant="bodyMedium" color={theme.error}>
