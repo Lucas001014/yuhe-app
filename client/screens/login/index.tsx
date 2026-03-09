@@ -1,15 +1,15 @@
-import React, { useState } from 'react';
-import { View, TextInput, TouchableOpacity, Alert } from 'react-native';
+import React, { useState, useMemo } from 'react';
+import { View, TextInput, TouchableOpacity, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { Screen } from '@/components/Screen';
 import { useTheme } from '@/hooks/useTheme';
+import { useSafeRouter } from '@/hooks/useSafeRouter';
 import { createStyles } from './styles';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useSafeRouter } from '@/hooks/useSafeRouter';
 
 export default function LoginScreen() {
-  const { theme } = useTheme();
+  const { theme, isDark } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const router = useSafeRouter();
 
@@ -67,8 +67,9 @@ export default function LoginScreen() {
 
       if (data.success) {
         await AsyncStorage.setItem('userId', String(data.user.id));
-        await AsyncStorage.setItem('userInfo', JSON.stringify(data.user));
-        router.replace('/(tabs)');
+        await AsyncStorage.setItem('username', data.user.username || '');
+        await AsyncStorage.setItem('avatar', data.user.avatar || '');
+        router.replace('/');
       } else {
         Alert.alert('失败', data.error || '登录失败');
       }
@@ -98,8 +99,9 @@ export default function LoginScreen() {
 
       if (data.success) {
         await AsyncStorage.setItem('userId', String(data.user.id));
-        await AsyncStorage.setItem('userInfo', JSON.stringify(data.user));
-        router.replace('/(tabs)');
+        await AsyncStorage.setItem('username', data.user.username || '');
+        await AsyncStorage.setItem('avatar', data.user.avatar || '');
+        router.replace('/');
       } else {
         Alert.alert('失败', data.error || '注册失败');
       }
@@ -111,89 +113,107 @@ export default function LoginScreen() {
   };
 
   return (
-    <Screen backgroundColor={theme.backgroundRoot} statusBarStyle="light">
-      <View style={styles.container}>
-        <ThemedView style={styles.header}>
-          <ThemedText variant="h1" color={theme.primary}>
-            遇合
+    <Screen backgroundColor={theme.backgroundRoot} statusBarStyle={isDark ? 'light' : 'dark'}>
+      <KeyboardAvoidingView
+        style={styles.container}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        {/* Logo 和 标题 */}
+        <View style={styles.header}>
+          <View style={styles.logoContainer}>
+            <ThemedText variant="display" color={theme.primary} style={styles.logo}>
+              遇合
+            </ThemedText>
+          </View>
+          <ThemedText variant="h2" color={theme.textPrimary} style={styles.title}>
+            {isLogin ? '欢迎回来' : '创建账号'}
           </ThemedText>
           <ThemedText variant="body" color={theme.textSecondary} style={styles.subtitle}>
-            {isLogin ? '书写属于自己的商业山河' : '加入我们，与更多创业者交流'}
+            {isLogin ? '登录继续您的创业之旅' : '加入我们，开启创业新篇章'}
           </ThemedText>
-        </ThemedView>
+        </View>
 
-        <ThemedView style={styles.form}>
+        {/* 表单 */}
+        <View style={styles.form}>
           <TextInput
-            style={[styles.input, { color: theme.textPrimary }]}
+            style={styles.input}
             placeholder="手机号"
             placeholderTextColor={theme.textMuted}
             value={phone}
             onChangeText={setPhone}
             keyboardType="phone-pad"
             maxLength={11}
+            autoCapitalize="none"
           />
 
           {!isLogin && (
-            <View style={styles.row}>
+            <View style={styles.codeContainer}>
               <TextInput
-                style={[styles.input, styles.codeInput, { color: theme.textPrimary }]}
+                style={styles.codeInput}
                 placeholder="验证码"
                 placeholderTextColor={theme.textMuted}
                 value={code}
                 onChangeText={setCode}
                 keyboardType="number-pad"
                 maxLength={6}
+                autoCapitalize="none"
               />
-              <TouchableOpacity style={styles.codeButton} onPress={handleSendCode}>
-                <ThemedText variant="small" color={theme.primary}>
-                  发送验证码
+              <TouchableOpacity
+                style={styles.codeButton}
+                onPress={handleSendCode}
+              >
+                <ThemedText variant="bodyMedium" color={theme.primary}>
+                  获取验证码
                 </ThemedText>
               </TouchableOpacity>
             </View>
           )}
 
           <TextInput
-            style={[styles.input, { color: theme.textPrimary }]}
+            style={styles.input}
             placeholder="密码"
             placeholderTextColor={theme.textMuted}
             value={password}
             onChangeText={setPassword}
             secureTextEntry
+            autoCapitalize="none"
           />
 
           {!isLogin && (
             <TextInput
-              style={[styles.input, { color: theme.textPrimary }]}
-              placeholder="用户名（可选）"
+              style={styles.input}
+              placeholder="用户名（选填）"
               placeholderTextColor={theme.textMuted}
               value={username}
               onChangeText={setUsername}
               maxLength={20}
+              autoCapitalize="none"
             />
           )}
 
           <TouchableOpacity
-            style={[styles.button, loading && styles.disabledButton]}
+            style={[styles.submitButton, loading && styles.disabledButton]}
             onPress={isLogin ? handleLogin : handleRegister}
             disabled={loading}
           >
-            <ThemedText variant="bodyMedium" color={theme.buttonPrimaryText}>
+            <ThemedText variant="bodyMedium" color={theme.buttonPrimaryText} style={{ fontWeight: '600' }}>
               {loading ? '处理中...' : (isLogin ? '登录' : '注册')}
             </ThemedText>
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.switchButton}
-            onPress={() => setIsLogin(!isLogin)}
+            onPress={() => {
+              setIsLogin(!isLogin);
+              setCode('');
+            }}
           >
-            <ThemedText variant="small" color={theme.primary}>
+            <ThemedText variant="body" color={theme.primary}>
               {isLogin ? '没有账号？立即注册' : '已有账号？立即登录'}
             </ThemedText>
           </TouchableOpacity>
-        </ThemedView>
-      </View>
+        </View>
+      </KeyboardAvoidingView>
     </Screen>
   );
 }
-
-import { useMemo } from 'react';

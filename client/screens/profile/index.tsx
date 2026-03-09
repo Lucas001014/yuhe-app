@@ -62,7 +62,7 @@ export default function ProfileScreen() {
         router.push('/matching');
         break;
       case 'incubator':
-        router.push('/incubator');
+        router.push('/matching');
         break;
       case 'resources':
         Alert.alert('我的资源库', '功能开发中...');

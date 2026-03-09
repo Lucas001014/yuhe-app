@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router';
-import { Platform } from 'react-native';
+import { Platform, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FontAwesome6 } from '@expo/vector-icons';
 import { useTheme } from '@/hooks/useTheme';
@@ -35,11 +35,35 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="incubator"
+        name="messages"
         options={{
-          title: '孵化舱',
+          title: '消息',
           tabBarIcon: ({ color }) => (
-            <FontAwesome6 name="lightbulb" size={20} color={color} />
+            <FontAwesome6 name="comment-dots" size={20} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="create"
+        options={{
+          title: '',
+          tabBarIcon: ({ color }) => (
+            <View style={{
+              width: 48,
+              height: 48,
+              borderRadius: 24,
+              backgroundColor: theme.primary,
+              justifyContent: 'center',
+              alignItems: 'center',
+              marginTop: Platform.OS === 'web' ? 0 : -24,
+              shadowColor: theme.primary,
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.3,
+              shadowRadius: 8,
+              elevation: 8,
+            }}>
+              <FontAwesome6 name="plus" size={24} color={theme.buttonPrimaryText} />
+            </View>
           ),
         }}
       />
