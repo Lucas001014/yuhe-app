@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { View, ScrollView, TouchableOpacity, Alert, Modal, Text, Pressable } from 'react-native';
 import { FontAwesome6 } from '@expo/vector-icons';
 import { ThemedText } from '@/components/ThemedText';
 import { Screen } from '@/components/Screen';
@@ -19,6 +19,9 @@ export default function ProfileScreen() {
   const { theme, isDark } = useTheme();
   const styles = createStyles(theme);
   const router = useSafeRouter();
+  
+  // 控制退出登录确认对话框
+  const [showLogoutModal, setShowLogoutModal] = React.useState(false);
 
   // 模拟用户信息
   const userInfo = {
@@ -54,32 +57,38 @@ export default function ProfileScreen() {
     }
   };
 
-  const handleLogout = async () => {
-    Alert.alert(
-      '退出登录',
-      '确定要退出登录吗？',
-      [
-        { text: '取消', style: 'cancel' },
-        {
-          text: '确定',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              // 清除用户信息
-              await AsyncStorage.removeItem('userId');
-              await AsyncStorage.removeItem('username');
-              await AsyncStorage.removeItem('avatar');
-              await AsyncStorage.removeItem('userInfo');
-              
-              // 跳转到登录页面
-              router.replace('/login');
-            } catch (error) {
-              Alert.alert('错误', '退出失败，请重试');
-            }
-          },
-        },
-      ]
-    );
+  const handleLogout = () => {
+    setShowLogoutModal(true);
+  };
+
+  const confirmLogout = async () => {
+    try {
+      console.log('开始退出登录...');
+      
+      // 清除用户信息
+      await AsyncStorage.removeItem('userId');
+      await AsyncStorage.removeItem('username');
+      await AsyncStorage.removeItem('avatar');
+      await AsyncStorage.removeItem('userInfo');
+      
+      console.log('用户信息已清除');
+      
+      // 关闭弹窗
+      setShowLogoutModal(false);
+      
+      // 跳转到登录页面
+      router.replace('/login');
+      
+      console.log('已跳转到登录页');
+    } catch (error) {
+      console.error('退出登录失败:', error);
+      setShowLogoutModal(false);
+      Alert.alert('错误', '退出失败，请重试');
+    }
+  };
+
+  const cancelLogout = () => {
+    setShowLogoutModal(false);
   };
 
   const handleMenuItemPress = (item: MenuItem) => {
@@ -231,6 +240,46 @@ export default function ProfileScreen() {
           </ThemedText>
         </TouchableOpacity>
       </ScrollView>
+      
+      {/* 退出登录确认弹窗 */}
+      <Modal
+        visible={showLogoutModal}
+        transparent
+        animationType="fade"
+        onRequestClose={cancelLogout}
+      >
+        <Pressable 
+          style={styles.modalOverlay}
+          onPress={cancelLogout}
+        >
+          <View style={styles.modalContent}>
+            <ThemedText variant="h4" color={theme.textPrimary} style={styles.modalTitle}>
+              退出登录
+            </ThemedText>
+            <ThemedText variant="bodyMedium" color={theme.textSecondary} style={styles.modalMessage}>
+              确定要退出登录吗？
+            </ThemedText>
+            <View style={styles.modalButtons}>
+              <Pressable 
+                style={[styles.modalButton, styles.cancelButton]} 
+                onPress={cancelLogout}
+              >
+                <ThemedText variant="bodyMedium" color={theme.textSecondary}>
+                  取消
+                </ThemedText>
+              </Pressable>
+              <Pressable 
+                style={[styles.modalButton, styles.confirmButton]} 
+                onPress={confirmLogout}
+              >
+                <ThemedText variant="bodyMedium" color={theme.buttonPrimaryText}>
+                  确定
+                </ThemedText>
+              </Pressable>
+            </View>
+          </View>
+        </Pressable>
+      </Modal>
     </Screen>
   );
 }
