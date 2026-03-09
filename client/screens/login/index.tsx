@@ -126,10 +126,10 @@ export default function LoginScreen() {
             </ThemedText>
           </View>
           <ThemedText variant="h2" color={theme.textPrimary} style={styles.title}>
-            {isLogin ? '欢迎回来' : '创建账号'}
+            {isLogin ? '' : ''}
           </ThemedText>
           <ThemedText variant="body" color={theme.textSecondary} style={styles.subtitle}>
-            {isLogin ? '登录继续您的创业之旅' : '加入我们，开启创业新篇章'}
+            书写属于自己的商业山河
           </ThemedText>
         </View>
 
