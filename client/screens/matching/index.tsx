@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { View, ScrollView, TouchableOpacity, TextInput, Alert, Dimensions } from 'react-native';
+import { View, ScrollView, TouchableOpacity, TextInput, Alert, Dimensions, Modal } from 'react-native';
 import { FontAwesome6 } from '@expo/vector-icons';
 import { ThemedText } from '@/components/ThemedText';
 import { Screen } from '@/components/Screen';
@@ -421,30 +421,6 @@ export default function MatchingScreen() {
         />
       </View>
 
-      {/* 精准匹配 */}
-      <View style={styles.section}>
-        <View style={styles.sectionHeader}>
-          <ThemedText variant="h3" color={theme.textPrimary} style={styles.sectionTitle}>
-            精准匹配
-          </ThemedText>
-          <TouchableOpacity>
-            <ThemedText variant="caption" color={theme.primary}>查看全部</ThemedText>
-          </TouchableOpacity>
-        </View>
-        <Carousel
-          data={matchingCards}
-          renderItem={renderMatchingCard}
-          width={SCREEN_WIDTH * 0.85}
-          style={styles.carousel}
-          loop={false}
-          mode="parallax"
-          modeConfig={{
-            parallaxScrollingScale: 0.9,
-            parallaxScrollingOffset: 50,
-          }}
-        />
-      </View>
-
       {/* 推荐顾问 */}
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
@@ -457,48 +433,6 @@ export default function MatchingScreen() {
         </View>
         <View style={styles.userCardsContainer}>
           {userCards.map((item) => renderUserCard(item))}
-        </View>
-      </View>
-
-      {/* 创业进度看板 */}
-      <View style={styles.section}>
-        <View style={styles.sectionHeader}>
-          <ThemedText variant="h3" color={theme.textPrimary} style={styles.sectionTitle}>
-            创业进度看板
-          </ThemedText>
-        </View>
-        <View style={styles.progressCard}>
-          <View style={styles.progressHeader}>
-            <View style={styles.stageBadge}>
-              <FontAwesome6 name="rocket" size={14} color={theme.primary} />
-              <ThemedText variant="caption" color={theme.primary} style={{ marginLeft: 4 }}>
-                {progressData.stage}
-              </ThemedText>
-            </View>
-          </View>
-          <View style={styles.progressBar}>
-            <View style={[styles.progressFill, { width: `${progressData.progress}%` }]} />
-          </View>
-          <ThemedText variant="caption" color={theme.textMuted} style={styles.progressText}>
-            完成度 {progressData.progress}%
-          </ThemedText>
-          <View style={styles.resourcesContainer}>
-            <ThemedText variant="body" color={theme.textPrimary} style={styles.resourcesTitle}>
-              推荐资源
-            </ThemedText>
-            {progressData.recommendedResources.map((resource) => (
-              <View key={resource.id} style={styles.resourceItem}>
-                <FontAwesome6
-                  name={resource.type === 'tool' ? 'screwdriver-wrench' : resource.type === 'course' ? 'graduation-cap' : 'file'}
-                  size={16}
-                  color={theme.primary}
-                />
-                <ThemedText variant="body" color={theme.textSecondary}>
-                  {resource.title}
-                </ThemedText>
-              </View>
-            ))}
-          </View>
         </View>
       </View>
 
@@ -754,16 +688,265 @@ export default function MatchingScreen() {
     );
   };
 
+  // 客户见证数据
+  const testimonialsData = [
+    {
+      id: 1,
+      consultant: {
+        id: 1,
+        username: '张三',
+        avatar: 'https://i.pravatar.cc/150?img=1',
+        verified: true,
+        title: 'AI领域 CTO',
+      },
+      consultation: {
+        id: 101,
+        type: 'hourly',
+        price: 300,
+        completedAt: '2024-01-15',
+      },
+      review: {
+        rating: 5,
+        content: '张三老师非常专业，对我的AI项目给出了很好的建议，解决了技术架构上的难题，非常感谢！',
+        createdAt: '2024-01-15',
+      },
+    },
+    {
+      id: 2,
+      consultant: {
+        id: 2,
+        username: '李四',
+        avatar: 'https://i.pravatar.cc/150?img=2',
+        verified: true,
+        title: '天使投资人',
+      },
+      consultation: {
+        id: 102,
+        type: 'per_question',
+        price: 100,
+        completedAt: '2024-01-10',
+      },
+      review: {
+        rating: 5,
+        content: '李四投资人很热情，详细解答了关于融资的各种问题，还给了我很多宝贵的建议。',
+        createdAt: '2024-01-10',
+      },
+    },
+    {
+      id: 3,
+      consultant: {
+        id: 3,
+        username: '王五',
+        avatar: 'https://i.pravatar.cc/150?img=3',
+        verified: false,
+        title: '产品总监',
+      },
+      consultation: {
+        id: 103,
+        type: 'hourly',
+        price: 200,
+        completedAt: '2024-01-05',
+      },
+      review: {
+        rating: 4,
+        content: '王五的产品经验很丰富，帮我梳理了产品规划，给出了一些不错的建议。',
+        createdAt: '2024-01-05',
+      },
+    },
+  ];
+
+  const TestimonialsScene = () => {
+    const [showReviewModal, setShowReviewModal] = useState(false);
+    const [selectedTestimonial, setSelectedTestimonial] = useState<any>(null);
+    const [rating, setRating] = useState(5);
+    const [reviewContent, setReviewContent] = useState('');
+
+    const renderStars = (currentRating: number) => {
+      return Array.from({ length: 5 }, (_, index) => (
+        <TouchableOpacity key={index} onPress={() => setRating(index + 1)}>
+          <FontAwesome6
+            name="star"
+            size={20}
+            color={index < currentRating ? '#FFD93D' : theme.border}
+            solid={index < currentRating}
+          />
+        </TouchableOpacity>
+      ));
+    };
+
+    const handleWriteReview = (testimonial: any) => {
+      setSelectedTestimonial(testimonial);
+      setRating(testimonial.review.rating);
+      setReviewContent(testimonial.review.content);
+      setShowReviewModal(true);
+    };
+
+    const submitReview = () => {
+      Alert.alert(
+        '评价成功',
+        '感谢您的评价！',
+        [{ text: '确定', onPress: () => setShowReviewModal(false) }]
+      );
+    };
+
+    return (
+      <ScrollView contentContainerStyle={styles.sceneContent}>
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <ThemedText variant="h3" color={theme.textPrimary} style={styles.sectionTitle}>
+              客户见证
+            </ThemedText>
+            <ThemedText variant="caption" color={theme.textMuted}>
+              共 {testimonialsData.length} 条评价
+            </ThemedText>
+          </View>
+
+          {testimonialsData.map((testimonial) => (
+            <View key={testimonial.id} style={styles.testimonialCard}>
+              <View style={styles.testimonialHeader}>
+                <View style={styles.consultantInfo}>
+                  <FontAwesome6 name="circle-user" size={48} color={theme.border} />
+                  <View style={styles.consultantDetails}>
+                    <View style={styles.consultantNameContainer}>
+                      <ThemedText variant="bodyMedium" color={theme.textPrimary} style={{ fontWeight: '600' }}>
+                        {testimonial.consultant.username}
+                      </ThemedText>
+                      {testimonial.consultant.verified && (
+                        <FontAwesome6 name="circle-check" size={16} color={theme.success} />
+                      )}
+                    </View>
+                    <ThemedText variant="caption" color={theme.primary}>
+                      {testimonial.consultant.title}
+                    </ThemedText>
+                  </View>
+                </View>
+                <View style={styles.stars}>{renderStars(testimonial.review.rating)}</View>
+              </View>
+
+              <ThemedText variant="body" color={theme.textSecondary} style={styles.testimonialContent}>
+                {testimonial.review.content}
+              </ThemedText>
+
+              <View style={styles.testimonialFooter}>
+                <View style={styles.consultationInfo}>
+                  <ThemedText variant="caption" color={theme.textMuted}>
+                    {testimonial.consultation.type === 'hourly' ? '按小时' : '按问题'}
+                  </ThemedText>
+                  <ThemedText variant="caption" color={theme.textMuted}>
+                    ¥{testimonial.consultation.price}
+                  </ThemedText>
+                  <ThemedText variant="caption" color={theme.textMuted}>
+                    {testimonial.consultation.completedAt}
+                  </ThemedText>
+                </View>
+                <TouchableOpacity
+                  style={styles.editReviewButton}
+                  onPress={() => handleWriteReview(testimonial)}
+                >
+                  <FontAwesome6 name="pen" size={14} color={theme.primary} />
+                  <ThemedText variant="caption" color={theme.primary}>
+                    编辑评价
+                  </ThemedText>
+                </TouchableOpacity>
+              </View>
+            </View>
+          ))}
+        </View>
+
+        {/* 编辑评价 Modal */}
+        <Modal
+          visible={showReviewModal}
+          transparent
+          animationType="slide"
+          onRequestClose={() => setShowReviewModal(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <View style={styles.modalHeader}>
+                <ThemedText variant="h3" color={theme.textPrimary}>
+                  编辑评价
+                </ThemedText>
+                <TouchableOpacity onPress={() => setShowReviewModal(false)}>
+                  <FontAwesome6 name="xmark" size={24} color={theme.textMuted} />
+                </TouchableOpacity>
+              </View>
+
+              {selectedTestimonial && (
+                <View style={styles.modalBody}>
+                  <View style={styles.consultantInfo}>
+                    <FontAwesome6 name="circle-user" size={48} color={theme.border} />
+                    <View style={styles.consultantDetails}>
+                      <View style={styles.consultantNameContainer}>
+                        <ThemedText variant="bodyMedium" color={theme.textPrimary} style={{ fontWeight: '600' }}>
+                          {selectedTestimonial.consultant.username}
+                        </ThemedText>
+                      </View>
+                      <ThemedText variant="caption" color={theme.primary}>
+                        {selectedTestimonial.consultant.title}
+                      </ThemedText>
+                    </View>
+                  </View>
+
+                  <View style={styles.ratingSection}>
+                    <ThemedText variant="bodyMedium" color={theme.textPrimary} style={styles.ratingLabel}>
+                      评分
+                    </ThemedText>
+                    <View style={styles.stars}>{renderStars(rating)}</View>
+                  </View>
+
+                  <ThemedText variant="bodyMedium" color={theme.textPrimary} style={styles.ratingLabel}>
+                    评价内容
+                  </ThemedText>
+                  <TextInput
+                    style={styles.reviewInput}
+                    placeholder="请输入您的评价..."
+                    placeholderTextColor={theme.textMuted}
+                    value={reviewContent}
+                    onChangeText={setReviewContent}
+                    multiline
+                    numberOfLines={4}
+                    textAlignVertical="top"
+                  />
+                </View>
+              )}
+
+              <View style={styles.modalFooter}>
+                <TouchableOpacity
+                  style={[styles.modalButton, styles.cancelButton]}
+                  onPress={() => setShowReviewModal(false)}
+                >
+                  <ThemedText variant="bodyMedium" color={theme.textSecondary}>
+                    取消
+                  </ThemedText>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.modalButton, styles.confirmButton]}
+                  onPress={submitReview}
+                >
+                  <ThemedText variant="bodyMedium" color={theme.buttonPrimaryText}>
+                    提交
+                  </ThemedText>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
+      </ScrollView>
+    );
+  };
+
   const renderScene = SceneMap({
     home: HomeScene,
     incubator: IncubatorScene,
     matching: MatchingScene,
+    testimonials: TestimonialsScene,
   });
 
   const tabRoutes = [
     { key: 'home', title: '今日' },
     { key: 'incubator', title: '孵化舱' },
     { key: 'matching', title: '对接' },
+    { key: 'testimonials', title: '客户见证' },
   ];
 
   const renderTabBar = (props: any) => (

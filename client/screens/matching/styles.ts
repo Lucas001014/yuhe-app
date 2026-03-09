@@ -455,6 +455,118 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
     paddingVertical: 14,
     alignItems: 'center',
   },
+  // 客户见证
+  testimonialCard: {
+    backgroundColor: theme.backgroundDefault,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 12,
+  },
+  testimonialHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 12,
+  },
+  testimonialContent: {
+    lineHeight: 20,
+    marginBottom: 12,
+  },
+  testimonialFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  consultationInfo: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  editReviewButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  // Modal 相关样式
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: theme.backgroundDefault,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    maxHeight: '80%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.borderLight,
+  },
+  modalBody: {
+    padding: 20,
+    gap: 16,
+  },
+  consultantInfo: {
+    flexDirection: 'row',
+    gap: 12,
+    alignItems: 'center',
+  },
+  consultantDetails: {
+    flex: 1,
+  },
+  consultantNameContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  modalFooter: {
+    flexDirection: 'row',
+    gap: 12,
+    padding: 20,
+    borderTopWidth: 1,
+    borderTopColor: theme.borderLight,
+  },
+  modalButton: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cancelButton: {
+    backgroundColor: theme.backgroundTertiary,
+  },
+  confirmButton: {
+    backgroundColor: theme.primary,
+  },
+  ratingSection: {
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 8,
+  },
+  ratingLabel: {
+    marginBottom: 8,
+    fontWeight: '600',
+  },
+  stars: {
+    flexDirection: 'row',
+    gap: 4,
+  },
+  reviewInput: {
+    backgroundColor: theme.backgroundTertiary,
+    borderRadius: 12,
+    padding: 16,
+    fontSize: 16,
+    color: theme.textPrimary,
+    minHeight: 120,
+    borderWidth: 1,
+    borderColor: theme.border,
+    textAlignVertical: 'top',
+  },
   // Tab 导航
   tabBar: {
     backgroundColor: 'transparent',
