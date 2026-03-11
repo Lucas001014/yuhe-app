@@ -303,4 +303,197 @@ router.post('/update-profile', async (req, res) => {
   }
 });
 
+/**
+ * 微信登录
+ * POST /api/v1/auth/wechat/login
+ * Body: { code: string }
+ */
+router.post('/wechat/login', async (req, res) => {
+  const { code } = req.body;
+
+  if (!code) {
+    return res.status(400).json({ error: '缺少code参数' });
+  }
+
+  try {
+    // 微信开放平台配置
+    const WECHAT_APPID = process.env.WECHAT_APPID || 'your_wechat_appid';
+    const WECHAT_SECRET = process.env.WECHAT_SECRET || 'your_wechat_secret';
+
+    // 1. 用code换取access_token和openid
+    const tokenResponse = await fetch(
+      `https://api.weixin.qq.com/sns/oauth2/access_token?appid=${WECHAT_APPID}&secret=${WECHAT_SECRET}&code=${code}&grant_type=authorization_code`
+    );
+
+    if (!tokenResponse.ok) {
+      throw new Error('微信API请求失败');
+    }
+
+    const tokenData = await tokenResponse.json();
+
+    if (tokenData.errcode) {
+      console.error('微信API错误:', tokenData);
+      return res.status(400).json({ error: `微信登录失败: ${tokenData.errmsg}` });
+    }
+
+    const { access_token, openid, unionid } = tokenData;
+
+    // 2. 获取用户信息
+    const userResponse = await fetch(
+      `https://api.weixin.qq.com/sns/userinfo?access_token=${access_token}&openid=${openid}`
+    );
+
+    if (!userResponse.ok) {
+      throw new Error('获取微信用户信息失败');
+    }
+
+    const wechatUser = await userResponse.json();
+
+    if (wechatUser.errcode) {
+      console.error('微信用户信息API错误:', wechatUser);
+      // 即使获取用户信息失败，只要有openid也可以继续
+    }
+
+    // 3. 查询用户是否已存在
+    const existingUser = await (req as any).db.query(
+      'SELECT * FROM users WHERE wechat_openid = $1',
+      [openid]
+    );
+
+    if (existingUser.rows.length > 0) {
+      // 用户已存在
+      const user = existingUser.rows[0];
+
+      // 检查是否已绑定手机号
+      if (!user.phone) {
+        return res.json({
+          success: true,
+          needBindPhone: true,
+          openid: openid,
+          unionid: unionid,
+          wechatUserInfo: {
+            nickname: wechatUser.nickname || user.wechat_nickname,
+            headimgurl: wechatUser.headimgurl || user.wechat_headimgurl
+          },
+          existingUserId: user.id
+        });
+      }
+
+      // 已绑定手机号，直接登录成功
+      res.json({
+        success: true,
+        message: '登录成功',
+        user: {
+          id: user.id,
+          phone: user.phone,
+          username: user.username,
+          avatar_url: user.avatar_url,
+          bio: user.bio,
+          balance: user.balance,
+          tags: user.tags,
+          created_at: user.created_at
+        }
+      });
+    } else {
+      // 新用户，需要绑定手机号
+      res.json({
+        success: true,
+        needBindPhone: true,
+        openid: openid,
+        unionid: unionid,
+        wechatUserInfo: {
+          nickname: wechatUser.nickname,
+          headimgurl: wechatUser.headimgurl
+        }
+      });
+    }
+  } catch (error) {
+    console.error('微信登录错误:', error);
+    res.status(500).json({ error: '微信登录失败，请稍后重试' });
+  }
+});
+
+/**
+ * 微信绑定手机号（注册/绑定现有账号）
+ * POST /api/v1/auth/wechat/bind-phone
+ * Body: { phone: string, code: string, openid: string, unionid?: string, wechatUserInfo?: object, existingUserId?: number }
+ */
+router.post('/wechat/bind-phone', async (req, res) => {
+  const { phone, code, openid, unionid, wechatUserInfo, existingUserId } = req.body;
+
+  // 验证必填字段
+  if (!phone || !code || !openid) {
+    return res.status(400).json({ error: '手机号、验证码和openid不能为空' });
+  }
+
+  // 验证验证码
+  const storedCode = verificationCodes.get(phone);
+  if (!storedCode || storedCode.code !== code || Date.now() > storedCode.expiresAt) {
+    return res.status(400).json({ error: '验证码不正确或已过期' });
+  }
+
+  // 清除已使用的验证码
+  verificationCodes.delete(phone);
+
+  try {
+    let user;
+
+    if (existingUserId) {
+      // 绑定到现有账号
+      const updateUserResult = await (req as any).db.query(
+        `UPDATE users
+         SET wechat_openid = $1, wechat_unionid = $2, wechat_nickname = $3, wechat_headimgurl = $4, updated_at = CURRENT_TIMESTAMP
+         WHERE id = $5
+         RETURNING id, phone, username, avatar_url, bio, balance, tags, created_at`,
+        [openid, unionid, wechatUserInfo?.nickname, wechatUserInfo?.headimgurl, existingUserId]
+      );
+
+      user = updateUserResult.rows[0];
+    } else {
+      // 创建新用户
+      const insertUserResult = await (req as any).db.query(
+        `INSERT INTO users (phone, username, avatar_url, wechat_openid, wechat_unionid, wechat_nickname, wechat_headimgurl, tags)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+         RETURNING id, phone, username, avatar_url, bio, balance, tags, created_at`,
+        [
+          phone,
+          wechatUserInfo?.nickname || `用户${phone.slice(-4)}`,
+          wechatUserInfo?.headimgurl,
+          openid,
+          unionid,
+          wechatUserInfo?.nickname,
+          wechatUserInfo?.headimgurl,
+          []
+        ]
+      );
+
+      user = insertUserResult.rows[0];
+    }
+
+    res.json({
+      success: true,
+      message: '绑定成功',
+      user: {
+        id: user.id,
+        phone: user.phone,
+        username: user.username,
+        avatar_url: user.avatar_url,
+        bio: user.bio,
+        balance: user.balance,
+        tags: user.tags,
+        created_at: user.created_at
+      }
+    });
+  } catch (error) {
+    console.error('绑定手机号错误:', error);
+
+    // 检查是否是唯一约束错误（手机号已存在或openid已存在）
+    if (error.code === '23505') {
+      return res.status(400).json({ error: '该手机号或微信账号已被使用' });
+    }
+
+    res.status(500).json({ error: '绑定手机号失败，请稍后重试' });
+  }
+});
+
 export default router;

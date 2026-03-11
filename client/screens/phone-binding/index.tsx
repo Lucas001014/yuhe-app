@@ -55,14 +55,44 @@ export default function PhoneBindingScreen() {
 
     setLoading(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/api/v1/auth/bind-phone`, {
+      // 根据provider选择不同的绑定接口
+      let endpoint = '';
+      let body: any = { phone, code };
+
+      if (provider === 'wechat') {
+        endpoint = '/wechat/bind-phone';
+        body.openid = params.openid;
+        body.unionid = params.unionid;
+        body.existingUserId = params.existingUserId;
+
+        // 解析微信用户信息
+        if (params.wechatUserInfo) {
+          try {
+            body.wechatUserInfo = JSON.parse(params.wechatUserInfo);
+          } catch (e) {
+            console.error('解析微信用户信息失败:', e);
+          }
+        }
+      } else {
+        // 默认使用手机号注册流程
+        endpoint = '/register';
+      }
+
+      /**
+       * 服务端接口：server/src/routes/auth.ts
+       * 微信绑定：POST /api/v1/auth/wechat/bind-phone
+       * Body 参数：
+       *   - phone: string
+       *   - code: string
+       *   - openid: string
+       *   - unionid?: string
+       *   - wechatUserInfo?: object
+       *   - existingUserId?: number
+       */
+      const response = await fetch(`${API_BASE_URL}/api/v1/auth${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          phone,
-          code,
-          provider: provider || 'wechat', // 默认微信
-        }),
+        body: JSON.stringify(body),
       });
 
       const data = await response.json();
@@ -70,7 +100,7 @@ export default function PhoneBindingScreen() {
       if (data.success) {
         await AsyncStorage.setItem('userId', String(data.user.id));
         await AsyncStorage.setItem('username', data.user.username || '');
-        await AsyncStorage.setItem('avatar', data.user.avatar || '');
+        await AsyncStorage.setItem('avatar', data.user.avatar_url || '');
         router.replace('/');
       } else {
         Alert.alert('失败', data.error || '绑定失败');

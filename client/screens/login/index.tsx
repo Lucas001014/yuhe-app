@@ -124,15 +124,38 @@ export default function LoginScreen() {
 
   // 社交登录处理
   const handleSocialLogin = async (provider: 'wechat' | 'alipay') => {
-    // TODO: 实际集成微信/支付宝 SDK
-    // 这里模拟社交登录成功，跳转到手机号绑定页面
-    Alert.alert(
-      '提示',
-      `${provider === 'wechat' ? '微信' : '支付宝'}登录功能需要集成对应SDK。\n当前版本使用手机号登录。`,
-      [
-        { text: '确定' }
-      ]
-    );
+    setLoading(true);
+
+    if (provider === 'wechat') {
+      try {
+        // 微信登录说明：
+        // 1. 需要安装: npx expo install react-native-wechat-lib
+        // 2. 需要在 app.config.ts 中配置微信 AppID
+        // 3. 需要 Development Build（不能使用 Expo Go）
+        // 4. 需要在微信开放平台申请移动应用
+
+        Alert.alert(
+          '微信登录说明',
+          '微信登录功能需要以下步骤：\n\n1. 安装库：npx expo install react-native-wechat-lib\n2. 配置 app.config.ts（添加微信AppID）\n3. 使用 Development Build 重新构建应用\n4. 在微信开放平台申请应用\n\n当前版本请使用手机号登录。',
+          [
+            { text: '确定' }
+          ]
+        );
+      } catch (error: any) {
+        console.error('微信登录错误:', error);
+        Alert.alert('登录失败', error.message || '微信登录失败');
+      }
+    } else if (provider === 'alipay') {
+      Alert.alert(
+        '提示',
+        '支付宝登录功能正在开发中，请使用手机号登录。',
+        [
+          { text: '确定' }
+        ]
+      );
+    }
+
+    setLoading(false);
   };
 
   return (
