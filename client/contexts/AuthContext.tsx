@@ -1,42 +1,92 @@
-// @ts-nocheck
-/**
- * 通用认证上下文
- *
- * 基于固定的 API 接口实现，可复用到其他项目
- * 其他项目使用时，只需修改 @api 的导入路径指向项目的 api 模块
- *
- * 注意：
- * - 如果需要登录/鉴权场景，请扩展本文件，完善 login/logout、token 管理、用户信息获取与刷新等逻辑
- * - 将示例中的占位实现替换为项目实际的接口调用与状态管理
- */
-import React, { createContext, useContext, ReactNode } from "react";
+import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-interface UserOut {
-
+interface User {
+  id: number;
+  username?: string;
+  avatar?: string;
+  phone?: string;
 }
 
 interface AuthContextType {
-  user: UserOut | null;
+  user: User | null;
   token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (token: string) => Promise<void>;
+  login: (userData: User) => Promise<void>;
   logout: () => Promise<void>;
-  updateUser: (userData: Partial<UserOut>) => void;
+  updateUser: (userData: Partial<User>) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const value: AuthContextType = {
-    user: null,
-    token: null,
-    isAuthenticated: false,
-    isLoading: false,
-    login: async (token: string) => {},
-    logout: async () => {},
-    updateUser: () => {},
+  const [user, setUser] = useState<User | null>(null);
+  const [token, setToken] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // 初始化时检查登录状态
+  useEffect(() => {
+    checkAuthStatus();
+  }, []);
+
+  const checkAuthStatus = async () => {
+    try {
+      const userId = await AsyncStorage.getItem('userId');
+      const username = await AsyncStorage.getItem('username');
+      const avatar = await AsyncStorage.getItem('avatar');
+      const authToken = await AsyncStorage.getItem('token');
+
+      if (userId) {
+        setUser({
+          id: parseInt(userId, 10),
+          username: username || undefined,
+          avatar: avatar || undefined,
+        });
+        setToken(authToken);
+      }
+    } catch (error) {
+      console.error('检查登录状态失败:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  const login = async (userData: User) => {
+    setUser(userData);
+    // token可以在这里设置，目前简化处理
+    await AsyncStorage.setItem('userId', String(userData.id));
+    if (userData.username) {
+      await AsyncStorage.setItem('username', userData.username);
+    }
+    if (userData.avatar) {
+      await AsyncStorage.setItem('avatar', userData.avatar);
+    }
+    setToken('mock-token'); // 简化处理，实际应该从后端获取
+  };
+
+  const logout = async () => {
+    setUser(null);
+    setToken(null);
+    await AsyncStorage.multiRemove(['userId', 'username', 'avatar', 'token']);
+  };
+
+  const updateUser = (userData: Partial<User>) => {
+    if (user) {
+      setUser({ ...user, ...userData });
+    }
+  };
+
+  const value: AuthContextType = {
+    user,
+    token,
+    isAuthenticated: !!user,
+    isLoading,
+    login,
+    logout,
+    updateUser,
+  };
+
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 

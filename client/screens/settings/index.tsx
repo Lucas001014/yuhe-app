@@ -16,6 +16,104 @@ interface UserInfo {
   email: string;
 }
 
+// 设置项组件
+interface SettingItemProps {
+  icon: string;
+  iconColor: string;
+  title: string;
+  value?: string;
+  onPress?: () => void;
+  rightComponent?: React.ReactNode;
+  theme: any;
+  styles: any;
+}
+
+function SettingItem({ 
+  icon, 
+  iconColor, 
+  title, 
+  value, 
+  onPress,
+  rightComponent,
+  theme,
+  styles,
+}: SettingItemProps) {
+  return (
+    <TouchableOpacity 
+      style={styles.settingItem} 
+      onPress={onPress}
+      disabled={!onPress && !rightComponent}
+      activeOpacity={rightComponent ? 1 : 0.7}
+    >
+      <View style={styles.settingItemLeft}>
+        <View style={[styles.settingIcon, { backgroundColor: `${iconColor}15` }]}>
+          <FontAwesome6 name={icon} size={18} color={iconColor} />
+        </View>
+        <ThemedText variant="bodyMedium" color={theme.textPrimary}>
+          {title}
+        </ThemedText>
+      </View>
+      
+      {rightComponent || (
+        <View style={styles.settingItemRight}>
+          {value && (
+            <ThemedText variant="body" color={theme.textMuted} style={styles.settingValue}>
+              {value}
+            </ThemedText>
+          )}
+          <FontAwesome6 
+            name="chevron-right" 
+            size={16} 
+            color={theme.textMuted} 
+          />
+        </View>
+      )}
+    </TouchableOpacity>
+  );
+}
+
+// 开关项组件
+interface SwitchSettingItemProps {
+  icon: string;
+  iconColor: string;
+  title: string;
+  value: boolean;
+  onToggle: (value: boolean) => void;
+  theme: any;
+  styles: any;
+}
+
+function SwitchSettingItem({
+  icon,
+  iconColor,
+  title,
+  value,
+  onToggle,
+  theme,
+  styles,
+}: SwitchSettingItemProps) {
+  return (
+    <View style={styles.settingItem}>
+      <View style={styles.settingItemLeft}>
+        <View style={[styles.settingIcon, { backgroundColor: `${iconColor}15` }]}>
+          <FontAwesome6 name={icon} size={18} color={iconColor} />
+        </View>
+        <ThemedText variant="bodyMedium" color={theme.textPrimary}>
+          {title}
+        </ThemedText>
+      </View>
+      
+      <Switch
+        value={value}
+        onValueChange={onToggle}
+        trackColor={{ false: theme.border, true: theme.primary }}
+        thumbColor={value ? '#FFFFFF' : '#FFFFFF'}
+        ios_backgroundColor={theme.border}
+      />
+    </View>
+  );
+}
+
 export default function SettingsScreen() {
   const { theme, isDark } = useTheme();
   const styles = createStyles(theme);
@@ -92,88 +190,6 @@ export default function SettingsScreen() {
     }));
   };
 
-  // 设置项组件
-  const SettingItem = ({ 
-    icon, 
-    iconColor, 
-    title, 
-    value, 
-    onPress,
-    rightComponent 
-  }: {
-    icon: string;
-    iconColor: string;
-    title: string;
-    value?: string;
-    onPress?: () => void;
-    rightComponent?: React.ReactNode;
-  }) => (
-    <TouchableOpacity 
-      style={styles.settingItem} 
-      onPress={onPress}
-      disabled={!onPress && !rightComponent}
-      activeOpacity={rightComponent ? 1 : 0.7}
-    >
-      <View style={styles.settingItemLeft}>
-        <View style={[styles.settingIcon, { backgroundColor: `${iconColor}15` }]}>
-          <FontAwesome6 name={icon} size={18} color={iconColor} />
-        </View>
-        <ThemedText variant="bodyMedium" color={theme.textPrimary}>
-          {title}
-        </ThemedText>
-      </View>
-      
-      {rightComponent || (
-        <View style={styles.settingItemRight}>
-          {value && (
-            <ThemedText variant="body" color={theme.textMuted} style={styles.settingValue}>
-              {value}
-            </ThemedText>
-          )}
-          <FontAwesome6 
-            name="chevron-right" 
-            size={16} 
-            color={theme.textMuted} 
-          />
-        </View>
-      )}
-    </TouchableOpacity>
-  );
-
-  // 开关项组件
-  const SwitchSettingItem = ({
-    icon,
-    iconColor,
-    title,
-    value,
-    onToggle,
-  }: {
-    icon: string;
-    iconColor: string;
-    title: string;
-    value: boolean;
-    onToggle: (value: boolean) => void;
-  }) => (
-    <View style={styles.settingItem}>
-      <View style={styles.settingItemLeft}>
-        <View style={[styles.settingIcon, { backgroundColor: `${iconColor}15` }]}>
-          <FontAwesome6 name={icon} size={18} color={iconColor} />
-        </View>
-        <ThemedText variant="bodyMedium" color={theme.textPrimary}>
-          {title}
-        </ThemedText>
-      </View>
-      
-      <Switch
-        value={value}
-        onValueChange={onToggle}
-        trackColor={{ false: theme.border, true: theme.primary }}
-        thumbColor={value ? '#FFFFFF' : '#FFFFFF'}
-        ios_backgroundColor={theme.border}
-      />
-    </View>
-  );
-
   if (!userInfo) {
     return (
       <Screen backgroundColor={theme.backgroundRoot} statusBarStyle={isDark ? 'light' : 'dark'}>
@@ -219,6 +235,8 @@ export default function SettingsScreen() {
             title="身份认证"
             value="查看认证状态"
             onPress={() => router.push('/identity-verification')}
+            theme={theme}
+            styles={styles}
           />
         </View>
 
@@ -234,6 +252,8 @@ export default function SettingsScreen() {
             title="手机号可见"
             value={privacySettings.showPhone}
             onToggle={() => updatePrivacySetting('showPhone')}
+            theme={theme}
+            styles={styles}
           />
           
           <SwitchSettingItem
@@ -242,6 +262,8 @@ export default function SettingsScreen() {
             title="邮箱可见"
             value={privacySettings.showEmail}
             onToggle={() => updatePrivacySetting('showEmail')}
+            theme={theme}
+            styles={styles}
           />
           
           <SwitchSettingItem
@@ -250,6 +272,8 @@ export default function SettingsScreen() {
             title="允许陌生人私信"
             value={privacySettings.allowStrangerMessage}
             onToggle={() => updatePrivacySetting('allowStrangerMessage')}
+            theme={theme}
+            styles={styles}
           />
         </View>
 
@@ -265,6 +289,8 @@ export default function SettingsScreen() {
             title="推送通知"
             value={notificationSettings.pushNotification}
             onToggle={() => updateNotificationSetting('pushNotification')}
+            theme={theme}
+            styles={styles}
           />
           
           <SwitchSettingItem
@@ -273,6 +299,8 @@ export default function SettingsScreen() {
             title="点赞通知"
             value={notificationSettings.likeNotification}
             onToggle={() => updateNotificationSetting('likeNotification')}
+            theme={theme}
+            styles={styles}
           />
           
           <SwitchSettingItem
@@ -281,6 +309,8 @@ export default function SettingsScreen() {
             title="评论通知"
             value={notificationSettings.commentNotification}
             onToggle={() => updateNotificationSetting('commentNotification')}
+            theme={theme}
+            styles={styles}
           />
           
           <SwitchSettingItem
@@ -289,6 +319,8 @@ export default function SettingsScreen() {
             title="系统通知"
             value={notificationSettings.systemNotification}
             onToggle={() => updateNotificationSetting('systemNotification')}
+            theme={theme}
+            styles={styles}
           />
         </View>
 
@@ -303,6 +335,8 @@ export default function SettingsScreen() {
             iconColor="#3B82F6"
             title="帮助与反馈"
             onPress={() => router.push('/help')}
+            theme={theme}
+            styles={styles}
           />
           
           <SettingItem
@@ -310,6 +344,8 @@ export default function SettingsScreen() {
             iconColor="#059669"
             title="用户协议"
             onPress={() => router.push('/user-agreement')}
+            theme={theme}
+            styles={styles}
           />
           
           <SettingItem
@@ -317,6 +353,8 @@ export default function SettingsScreen() {
             iconColor="#6B7280"
             title="隐私政策"
             onPress={() => router.push('/privacy-policy')}
+            theme={theme}
+            styles={styles}
           />
           
           <SettingItem
@@ -325,6 +363,8 @@ export default function SettingsScreen() {
             title="关于我们"
             value="版本 1.0.0"
             onPress={() => router.push('/about')}
+            theme={theme}
+            styles={styles}
           />
         </View>
 

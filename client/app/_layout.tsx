@@ -39,6 +39,9 @@ export default function RootLayout() {
             <Stack.Screen name="wallet" options={{ title: "钱包" }} />
             <Stack.Screen name="wallet-transactions" options={{ title: "交易记录" }} />
             <Stack.Screen name="wallet-withdraw" options={{ title: "提现" }} />
+            <Stack.Screen name="user-agreement" options={{ title: "用户协议" }} />
+            <Stack.Screen name="privacy-policy" options={{ title: "隐私政策" }} />
+            <Stack.Screen name="phone-binding" options={{ title: "绑定手机号" }} />
           </Stack>
           <Toast />
         </GestureHandlerRootView>

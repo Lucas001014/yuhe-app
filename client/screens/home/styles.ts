@@ -1,7 +1,15 @@
 import { StyleSheet } from 'react-native';
 import { Theme } from '@/constants/theme';
+import { Dimensions } from 'react-native';
 
-export const createStyles = (theme: Theme) => StyleSheet.create({
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
+// 计算卡片宽度
+export const getCardWidth = () => {
+  return (SCREEN_WIDTH - 32 - 8) / 2; // 两列布局，左右各16px间距，列间距8px
+};
+
+export const createStyles = (theme: Theme, width?: number) => StyleSheet.create({
   tabContainer: {
     borderBottomWidth: 1,
     borderBottomColor: theme.border,
@@ -66,6 +74,9 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 8,
   },
+  typeTagText: {
+    fontSize: 11,
+  },
   cardContent: {
     padding: 10,
   },
@@ -115,5 +126,112 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
+  },
+  // 悬赏Tab专用样式
+  cardImage: {
+    width: '100%',
+  },
+  bountyTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginBottom: 6,
+  },
+  bountyTagText: {
+    fontSize: 11,
+  },
+  price: {
+    fontSize: 12,
+    fontWeight: '600',
+    marginBottom: 6,
+  },
+  author: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  authorAvatar: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+  },
+  stats: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  statText: {
+    fontSize: 11,
+  },
+  // 瀑布流容器
+  masonryContainer: {
+    flexDirection: 'row',
+  },
+  masonryColumn: {
+    flex: 1,
+  },
+  // 评论Modal样式
+  commentModal: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  commentContainer: {
+    height: '70%',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 16,
+  },
+  commentHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.border,
+  },
+  commentList: {
+    flex: 1,
+  },
+  commentItem: {
+    flexDirection: 'row',
+    marginBottom: 12,
+  },
+  commentAvatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    marginRight: 10,
+  },
+  commentContent: {
+    flex: 1,
+  },
+  commentUser: {
+    fontSize: 12,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  commentInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: theme.border,
+  },
+  commentInput: {
+    flex: 1,
+    minHeight: 36,
+    maxHeight: 100,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    backgroundColor: theme.backgroundTertiary,
+    borderRadius: 18,
+    fontSize: 14,
+  },
+  commentSubmit: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 18,
   },
 });

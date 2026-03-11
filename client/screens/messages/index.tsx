@@ -6,6 +6,7 @@ import { ThemedText } from '@/components/ThemedText';
 import { Screen } from '@/components/Screen';
 import { useTheme } from '@/hooks/useTheme';
 import { useSafeRouter } from '@/hooks/useSafeRouter';
+import { useAuthGuard } from '@/hooks/useAuthGuard';
 import { Image } from 'expo-image';
 
 interface MessageItem {
@@ -40,6 +41,9 @@ export default function MessagesScreen() {
   const { theme, isDark } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const router = useSafeRouter();
+
+  // 权限控制
+  useAuthGuard('/messages');
 
   const [notifications, setNotifications] = useState<MessageItem[]>([]);
   const [chats, setChats] = useState<ChatMessage[]>([]);

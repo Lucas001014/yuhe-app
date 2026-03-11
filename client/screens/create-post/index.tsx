@@ -8,6 +8,7 @@ import { ThemedView } from '@/components/ThemedView';
 import { Screen } from '@/components/Screen';
 import { useTheme } from '@/hooks/useTheme';
 import { useSafeRouter } from '@/hooks/useSafeRouter';
+import { useAuthGuard } from '@/hooks/useAuthGuard';
 import { createStyles } from './styles';
 import { createFormDataFile } from '@/utils';
 import { Image } from 'expo-image';
@@ -16,6 +17,9 @@ export default function CreatePostScreen() {
   const { theme, isDark } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const router = useSafeRouter();
+
+  // 权限控制
+  useAuthGuard('/create-post');
 
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');

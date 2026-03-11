@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { View, TextInput, TouchableOpacity, Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import { FontAwesome6 } from '@expo/vector-icons';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { Screen } from '@/components/Screen';
@@ -17,7 +18,6 @@ export default function LoginScreen() {
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [code, setCode] = useState('');
-  const [username, setUsername] = useState('');
   const [loading, setLoading] = useState(false);
 
   const API_BASE_URL = process.env.EXPO_PUBLIC_BACKEND_BASE_URL;
@@ -55,6 +55,11 @@ export default function LoginScreen() {
       return;
     }
 
+    if (password.length < 8) {
+      Alert.alert('提示', '密码长度必须大于8位');
+      return;
+    }
+
     setLoading(true);
     try {
       const response = await fetch(`${API_BASE_URL}/api/v1/auth/login`, {
@@ -87,12 +92,17 @@ export default function LoginScreen() {
       return;
     }
 
+    if (password.length < 8) {
+      Alert.alert('提示', '密码长度必须大于8位');
+      return;
+    }
+
     setLoading(true);
     try {
       const response = await fetch(`${API_BASE_URL}/api/v1/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone, code, password, username }),
+        body: JSON.stringify({ phone, code, password }),
       });
 
       const data = await response.json();
@@ -110,6 +120,19 @@ export default function LoginScreen() {
     } finally {
       setLoading(false);
     }
+  };
+
+  // 社交登录处理
+  const handleSocialLogin = async (provider: 'wechat' | 'alipay') => {
+    // TODO: 实际集成微信/支付宝 SDK
+    // 这里模拟社交登录成功，跳转到手机号绑定页面
+    Alert.alert(
+      '提示',
+      `${provider === 'wechat' ? '微信' : '支付宝'}登录功能需要集成对应SDK。\n当前版本使用手机号登录。`,
+      [
+        { text: '确定' }
+      ]
+    );
   };
 
   return (
@@ -179,18 +202,6 @@ export default function LoginScreen() {
             autoCapitalize="none"
           />
 
-          {!isLogin && (
-            <TextInput
-              style={styles.input}
-              placeholder="用户名（选填）"
-              placeholderTextColor={theme.textMuted}
-              value={username}
-              onChangeText={setUsername}
-              maxLength={20}
-              autoCapitalize="none"
-            />
-          )}
-
           <TouchableOpacity
             style={[styles.submitButton, loading && styles.disabledButton]}
             onPress={isLogin ? handleLogin : handleRegister}
@@ -212,6 +223,39 @@ export default function LoginScreen() {
               {isLogin ? '没有账号？立即注册' : '已有账号？立即登录'}
             </ThemedText>
           </TouchableOpacity>
+
+          {/* 社交登录 */}
+          {isLogin && (
+            <View style={styles.socialLoginContainer}>
+              <View style={styles.divider}>
+                <View style={styles.dividerLine} />
+                <ThemedText variant="body" color={theme.textMuted} style={styles.dividerText}>
+                  或使用以下方式登录
+                </ThemedText>
+                <View style={styles.dividerLine} />
+              </View>
+
+              <View style={styles.socialButtons}>
+                <TouchableOpacity
+                  style={styles.socialButton}
+                  onPress={() => handleSocialLogin('wechat')}
+                >
+                  <FontAwesome6 name="weixin" size={28} color="#07C160" />
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.socialButton}
+                  onPress={() => handleSocialLogin('alipay')}
+                >
+                  <FontAwesome6 name="alipay" size={28} color="#1677FF" />
+                </TouchableOpacity>
+              </View>
+
+              <ThemedText variant="caption" color={theme.textMuted} style={styles.socialHint}>
+                微信/支付宝登录后需要绑定手机号
+              </ThemedText>
+            </View>
+          )}
         </View>
       </KeyboardAvoidingView>
     </Screen>

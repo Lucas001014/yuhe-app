@@ -276,7 +276,7 @@ export function ProductTab() {
 
     const gap = 12;
     const padding = 16;
-    const cardWidth = getCardWidth(width);
+    const cardWidth = getCardWidth();
 
     const leftColumn: Post[] = [];
     const rightColumn: Post[] = [];

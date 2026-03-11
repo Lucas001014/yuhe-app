@@ -5,6 +5,7 @@ import { ThemedText } from '@/components/ThemedText';
 import { Screen } from '@/components/Screen';
 import { useTheme } from '@/hooks/useTheme';
 import { useSafeRouter } from '@/hooks/useSafeRouter';
+import { useAuthGuard } from '@/hooks/useAuthGuard';
 import { createStyles } from './styles';
 import { TabView, SceneMap, TabBar } from 'react-native-tab-view';
 import Carousel from 'react-native-reanimated-carousel';
@@ -26,6 +27,9 @@ export default function MatchingScreen() {
   const { theme, isDark } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const router = useSafeRouter();
+
+  // 权限控制
+  useAuthGuard('/matching');
 
   // Tab 导航状态
   const [tabIndex, setTabIndex] = useState(0);
