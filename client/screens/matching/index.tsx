@@ -30,6 +30,17 @@ export default function MatchingScreen() {
   // Tab 导航状态
   const [tabIndex, setTabIndex] = useState(0);
 
+  // 顾问咨询格式状态
+  const [consultFormats, setConsultFormats] = useState<Record<number, 'hourly' | 'per_question'>>({});
+
+  // 切换咨询格式
+  const handleToggleConsultFormat = (userId: number) => {
+    setConsultFormats(prev => ({
+      ...prev,
+      [userId]: prev[userId] === 'hourly' ? 'per_question' : 'hourly'
+    }));
+  };
+
   // 想法孵化状态
   const [idea, setIdea] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -170,6 +181,15 @@ export default function MatchingScreen() {
     },
   ];
 
+  // 初始化咨询格式状态
+  React.useEffect(() => {
+    const initialFormats: Record<number, 'hourly' | 'per_question'> = {};
+    userCards.forEach(card => {
+      initialFormats[card.id] = card.consultFormat as 'hourly' | 'per_question';
+    });
+    setConsultFormats(initialFormats);
+  }, []);
+
   // 处理想法分析
   const handleAnalyze = () => {
     if (!idea.trim()) {
@@ -308,36 +328,42 @@ export default function MatchingScreen() {
           咨询格式
         </ThemedText>
         <View style={styles.consultFormats}>
-          <View style={[styles.consultFormat, item.consultFormat === 'hourly' && styles.consultFormatActive]}>
-            <FontAwesome6 name="clock" size={14} color={item.consultFormat === 'hourly' ? theme.buttonPrimaryText : theme.textMuted} />
-            <ThemedText variant="caption" color={item.consultFormat === 'hourly' ? theme.buttonPrimaryText : theme.textMuted}>
+          <TouchableOpacity
+            style={[styles.consultFormat, consultFormats[item.id] === 'hourly' && styles.consultFormatActive]}
+            onPress={() => handleToggleConsultFormat(item.id)}
+          >
+            <FontAwesome6 name="clock" size={14} color={consultFormats[item.id] === 'hourly' ? theme.buttonPrimaryText : theme.textMuted} />
+            <ThemedText variant="caption" color={consultFormats[item.id] === 'hourly' ? theme.buttonPrimaryText : theme.textMuted}>
               按小时
             </ThemedText>
-          </View>
-          <View style={[styles.consultFormat, item.consultFormat === 'per_question' && styles.consultFormatActive]}>
-            <FontAwesome6 name="circle-question" size={14} color={item.consultFormat === 'per_question' ? theme.buttonPrimaryText : theme.textMuted} />
-            <ThemedText variant="caption" color={item.consultFormat === 'per_question' ? theme.buttonPrimaryText : theme.textMuted}>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.consultFormat, consultFormats[item.id] === 'per_question' && styles.consultFormatActive]}
+            onPress={() => handleToggleConsultFormat(item.id)}
+          >
+            <FontAwesome6 name="circle-question" size={14} color={consultFormats[item.id] === 'per_question' ? theme.buttonPrimaryText : theme.textMuted} />
+            <ThemedText variant="caption" color={consultFormats[item.id] === 'per_question' ? theme.buttonPrimaryText : theme.textMuted}>
               按问题
             </ThemedText>
-          </View>
+          </TouchableOpacity>
         </View>
       </View>
 
       <View style={styles.userCardFeeSection}>
         <View style={styles.feeItem}>
-          <ThemedText variant="caption" color={theme.textMuted}>
+          <ThemedText variant="caption" color={consultFormats[item.id] === 'hourly' ? theme.primary : theme.textMuted}>
             按小时
           </ThemedText>
-          <ThemedText variant="bodyMedium" color={theme.textPrimary} style={{ fontWeight: '600' }}>
+          <ThemedText variant="bodyMedium" color={consultFormats[item.id] === 'hourly' ? theme.primary : theme.textPrimary} style={{ fontWeight: consultFormats[item.id] === 'hourly' ? '700' : '600' }}>
             ¥{item.hourlyRate}
           </ThemedText>
         </View>
         <View style={styles.feeDivider} />
         <View style={styles.feeItem}>
-          <ThemedText variant="caption" color={theme.textMuted}>
+          <ThemedText variant="caption" color={consultFormats[item.id] === 'per_question' ? theme.primary : theme.textMuted}>
             按问题
           </ThemedText>
-          <ThemedText variant="bodyMedium" color={theme.textPrimary} style={{ fontWeight: '600' }}>
+          <ThemedText variant="bodyMedium" color={consultFormats[item.id] === 'per_question' ? theme.primary : theme.textPrimary} style={{ fontWeight: consultFormats[item.id] === 'per_question' ? '700' : '600' }}>
             ¥{item.perQuestionRate}
           </ThemedText>
         </View>
@@ -363,7 +389,7 @@ export default function MatchingScreen() {
           onPress={() => router.push('/consultations')}
         >
           <ThemedText variant="bodyMedium" color={theme.buttonPrimaryText} style={{ fontWeight: '600' }}>
-            立即咨询
+            立即咨询 ¥{consultFormats[item.id] === 'per_question' ? item.perQuestionRate : item.hourlyRate}
           </ThemedText>
         </TouchableOpacity>
       </View>

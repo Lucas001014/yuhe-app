@@ -13,7 +13,7 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 interface Post {
   id: number;
-  type: 'normal' | 'qa_paid' | 'qa_bounty' | 'product';
+  type: 'normal' | 'qa_paid' | 'qa_bounty' | 'product' | 'local';
   title: string;
   content: string;
   imageUrl?: string;
@@ -31,13 +31,14 @@ interface Post {
   price?: number;
   productName?: string;
   productPrice?: number;
+  location?: string;
 }
 
 export default function HomeScreen() {
   const { theme, isDark } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const router = useSafeRouter();
-  const [activeTab, setActiveTab] = useState<'all' | 'normal' | 'qa_paid' | 'qa_bounty' | 'product'>('all');
+  const [activeTab, setActiveTab] = useState<'normal' | 'qa_paid' | 'qa_bounty' | 'product' | 'local'>('normal');
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -212,11 +213,11 @@ export default function HomeScreen() {
   );
 
   const tabs = [
-    { id: 'all', label: '全部' },
     { id: 'normal', label: '推荐' },
     { id: 'qa_paid', label: '知识库' },
     { id: 'qa_bounty', label: '悬赏' },
     { id: 'product', label: '产品' },
+    { id: 'local', label: '同城' },
   ];
 
   const getTypeLabel = (type: string) => {
@@ -229,6 +230,8 @@ export default function HomeScreen() {
         return '悬赏';
       case 'product':
         return '产品';
+      case 'local':
+        return '同城';
       default:
         return '';
     }
@@ -244,14 +247,40 @@ export default function HomeScreen() {
         return '#10B981';
       case 'product':
         return '#8B5CF6';
+      case 'local':
+        return '#EC4899';
       default:
         return theme.textMuted;
     }
   };
 
-  const filteredPosts = activeTab === 'all'
-    ? posts
-    : posts.filter(post => post.type === activeTab);
+  const filteredPosts = (() => {
+    if (activeTab === 'normal') {
+      // 推荐Tab：每10个帖子插入1次特殊类型
+      const normalPosts = posts.filter(post => post.type === 'normal');
+      const specialPosts = posts.filter(post => post.type !== 'normal' && post.type !== 'local');
+
+      const result: Post[] = [];
+      let specialIndex = 0;
+
+      normalPosts.forEach((post, index) => {
+        result.push(post);
+        // 每10个normal帖子后插入一个特殊类型帖子
+        if ((index + 1) % 10 === 0 && specialIndex < specialPosts.length) {
+          result.push(specialPosts[specialIndex]);
+          specialIndex++;
+        }
+      });
+
+      return result;
+    } else if (activeTab === 'local') {
+      // 同城Tab：显示所有类型的帖子，但优先显示有location信息的帖子
+      return posts.filter(post => post.location);
+    } else {
+      // 其他Tab：只显示对应类型的帖子
+      return posts.filter(post => post.type === activeTab);
+    }
+  })();
 
   // 布局常量
   const COLUMNS = 2;
@@ -300,11 +329,6 @@ export default function HomeScreen() {
               <FontAwesome6 name="image" size={32} color={theme.textMuted} />
             </View>
           )}
-          <View style={[styles.typeTag, { backgroundColor: getTypeColor(post.type) }]}>
-            <ThemedText variant="caption" color={theme.buttonPrimaryText}>
-              {getTypeLabel(post.type)}
-            </ThemedText>
-          </View>
         </View>
 
         {/* 内容区域 */}
@@ -315,6 +339,16 @@ export default function HomeScreen() {
           <ThemedText variant="caption" color={theme.textSecondary} numberOfLines={2} style={styles.cardDescription}>
             {post.content}
           </ThemedText>
+
+          {/* 位置信息 */}
+          {post.location && activeTab === 'local' && (
+            <View style={styles.locationInfo}>
+              <FontAwesome6 name="location-dot" size={12} color={theme.textMuted} />
+              <ThemedText variant="caption" color={theme.textMuted}>
+                {post.location}
+              </ThemedText>
+            </View>
+          )}
 
           {/* 标签 */}
           {post.tags.length > 0 && (
