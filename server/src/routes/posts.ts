@@ -63,7 +63,7 @@ router.get('/', async (req, res) => {
         ) FILTER (WHERE pi.user_id = $1), '[]') as user_interactions
       FROM posts p
       LEFT JOIN post_interactions pi ON p.id = pi.post_id AND pi.user_id = $1
-      WHERE p.status = 'approved'
+      WHERE p.status = 'published' AND p.audit_status = 'approved'
     `;
 
     const params: any[] = [];
@@ -147,36 +147,41 @@ router.post('/', async (req, res) => {
     // 调用审核接口
     const auditResult = await auditContent(content, images);
     const auditStatus = auditResult.passed ? 'approved' : 'rejected';
-    const auditTime = new Date();
+    const auditTime = auditResult.passed ? new Date() : null;
     const auditReason = auditResult.reason || null;
+    const status = auditResult.passed ? 'published' : 'draft';
 
     // 插入帖子
     const query = `
       INSERT INTO posts (
-        author_id, author_name, author_avatar, type, content_type,
-        title, content, category, tags, images, price,
-        status, audit_status, audit_time, audit_reason
+        author_id, type, title, content, images, tags,
+        post_type, media_type, image_urls,
+        status, audit_status, audit_time, audit_reason,
+        view_count, like_count, comment_count, collect_count, share_count
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
       RETURNING *
     `;
 
     const values = [
       userId,
-      username,
-      avatar,
-      type,
-      images.length > 0 ? 'image' : 'text',
+      type === 'normal' ? 'article' : type,
       title,
       content,
-      category,
-      tags,
       images,
-      price,
-      auditStatus, // 使用审核状态
+      tags,
+      'normal',
+      images.length > 0 ? 'image' : 'text',
+      images,
+      status,
       auditStatus,
       auditTime,
       auditReason,
+      0, // view_count
+      0, // like_count
+      0, // comment_count
+      0, // collect_count
+      0, // share_count
     ];
 
     const result = await client.query(query, values);
@@ -188,14 +193,16 @@ router.post('/', async (req, res) => {
       success: true,
       post: {
         ...post,
-        images: post.images || [],
+        images: post.images || post.image_urls || [],
         tags: post.tags || [],
-        aspectRatio: calculateAspectRatio(post.images),
-        likeCount: 0,
-        commentCount: 0,
-        forwardCount: 0,
-        collectCount: 0,
-        viewCount: 0,
+        aspectRatio: calculateAspectRatio(post.images || post.image_urls),
+        likeCount: post.like_count || 0,
+        commentCount: post.comment_count || 0,
+        forwardCount: post.share_count || 0,
+        collectCount: post.collect_count || 0,
+        viewCount: post.view_count || 0,
+        status: post.status,
+        auditStatus: post.audit_status,
       },
       message: auditStatus === 'approved' ? '发布成功' : `发布失败：${auditReason}`,
     });
@@ -279,7 +286,7 @@ router.get('/:id', async (req, res) => {
         ) FILTER (WHERE pi.user_id = $2), '[]') as user_interactions
       FROM posts p
       LEFT JOIN post_interactions pi ON p.id = pi.post_id AND pi.user_id = $2
-      WHERE p.id = $1 AND p.status = 'approved'
+      WHERE p.id = $1 AND p.status = 'published' AND p.audit_status = 'approved'
       GROUP BY p.id
     `;
 

@@ -3,6 +3,7 @@ import cors from "cors";
 import { Pool } from 'pg';
 import authRouter from './routes/auth';
 import postsRouter from './routes/posts';
+import uploadRouter from './routes/upload';
 import transactionsRouter from './routes/transactions';
 import adminRouter from './routes/admin';
 import orderRouter from './routes/order';
@@ -21,11 +22,11 @@ const port = process.env.PORT || 9091;
 // 数据库连接
 let pool;
 try {
-  // 尝试使用环境变量中的连接信息
-  const connectionString = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+  // 使用环境变量中的连接信息
+  const connectionString = process.env.PGDATABASE_URL || process.env.DATABASE_URL || process.env.POSTGRES_URL;
   if (connectionString) {
     pool = new Pool({ connectionString });
-    console.log('使用 DATABASE_URL 连接数据库');
+    console.log('使用环境变量连接数据库');
   } else {
     // 使用默认配置
     pool = new Pool({
@@ -68,6 +69,7 @@ app.get('/api/v1/health', (req, res) => {
 // 路由
 app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/posts', postsRouter);
+app.use('/api/v1/upload', uploadRouter);
 app.use('/api/v1/transactions', transactionsRouter);
 app.use('/api/v1/admin', adminRouter);
 app.use('/api/v1/order', orderRouter);
