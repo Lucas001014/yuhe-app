@@ -12,7 +12,7 @@ export default function PhoneBindingScreen() {
   const { theme, isDark } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const router = useSafeRouter();
-  const { provider } = useSafeSearchParams<{ provider?: string }>();
+  const params = useSafeSearchParams();
 
   const [phone, setPhone] = useState('');
   const [code, setCode] = useState('');
@@ -55,29 +55,7 @@ export default function PhoneBindingScreen() {
 
     setLoading(true);
     try {
-      // 根据provider选择不同的绑定接口
-      let endpoint = '';
-      let body: any = { phone, code };
-
-      if (provider === 'wechat') {
-        endpoint = '/wechat/bind-phone';
-        body.openid = params.openid;
-        body.unionid = params.unionid;
-        body.existingUserId = params.existingUserId;
-
-        // 解析微信用户信息
-        if (params.wechatUserInfo) {
-          try {
-            body.wechatUserInfo = JSON.parse(params.wechatUserInfo);
-          } catch (e) {
-            console.error('解析微信用户信息失败:', e);
-          }
-        }
-      } else {
-        // 默认使用手机号注册流程
-        endpoint = '/register';
-      }
-
+      // 微信绑定接口
       /**
        * 服务端接口：server/src/routes/auth.ts
        * 微信绑定：POST /api/v1/auth/wechat/bind-phone
@@ -89,10 +67,17 @@ export default function PhoneBindingScreen() {
        *   - wechatUserInfo?: object
        *   - existingUserId?: number
        */
-      const response = await fetch(`${API_BASE_URL}/api/v1/auth${endpoint}`, {
+      const response = await fetch(`${API_BASE_URL}/api/v1/auth/wechat/bind-phone`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
+        body: JSON.stringify({
+          phone,
+          code,
+          openid: params.openid || '',
+          unionid: params.unionid || '',
+          existingUserId: params.existingUserId || undefined,
+          wechatUserInfo: params.wechatUserInfo ? JSON.parse(params.wechatUserInfo as string) : undefined,
+        }),
       });
 
       const data = await response.json();
@@ -112,8 +97,6 @@ export default function PhoneBindingScreen() {
     }
   };
 
-  const providerName = provider === 'alipay' ? '支付宝' : '微信';
-
   return (
     <Screen backgroundColor={theme.backgroundRoot} statusBarStyle={isDark ? 'light' : 'dark'}>
       <KeyboardAvoidingView
@@ -125,7 +108,7 @@ export default function PhoneBindingScreen() {
             绑定手机号
           </ThemedText>
           <ThemedText variant="body" color={theme.textSecondary} style={styles.subtitle}>
-            使用{providerName}登录后，需要绑定手机号以完善账号信息
+            使用微信登录后，需要绑定手机号以完善账号信息
           </ThemedText>
         </View>
 
