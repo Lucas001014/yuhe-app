@@ -72,6 +72,7 @@ export default function HomeScreen() {
     try {
       setLoading(true);
       const userId = await AsyncStorage.getItem('userId');
+      const userAvatar = await AsyncStorage.getItem('avatar'); // 获取当前用户头像
       setCurrentUserId(userId);
 
       /**
@@ -87,24 +88,28 @@ export default function HomeScreen() {
       const data = await response.json();
 
       if (data.success) {
-        const processedPosts = data.posts.map((p: any) => ({
-          id: p.id,
-          type: p.type || 'normal',
-          title: p.title,
-          content: p.content,
-          images: p.images || [],
-          aspectRatio: p.aspectRatio || generateAspectRatio(),
-          author_id: p.author_id,
-          authorName: p.username || p.authorName || '用户',
-          authorAvatar: p.avatar || p.authorAvatar || 'https://i.pravatar.cc/150',
-          tags: p.tags || [],
-          like_count: p.like_count || 0,
-          comment_count: p.comment_count || 0,
-          share_count: p.share_count || 0,
-          created_at: p.created_at,
-          isLiked: p.isLiked || false,
-          isCollected: p.isCollected || false,
-        }));
+        const processedPosts = data.posts.map((p: any) => {
+          // 如果是当前用户发的帖子，使用最新的头像
+          const isMyPost = userId && p.author_id === parseInt(userId);
+          return {
+            id: p.id,
+            type: p.type || 'normal',
+            title: p.title,
+            content: p.content,
+            images: p.images || [],
+            aspectRatio: p.aspectRatio || generateAspectRatio(),
+            author_id: p.author_id,
+            authorName: p.username || p.authorName || '用户',
+            authorAvatar: isMyPost && userAvatar ? userAvatar : (p.avatar || p.authorAvatar || 'https://i.pravatar.cc/150'),
+            tags: p.tags || [],
+            like_count: p.like_count || 0,
+            comment_count: p.comment_count || 0,
+            share_count: p.share_count || 0,
+            created_at: p.created_at,
+            isLiked: p.isLiked || false,
+            isCollected: p.isCollected || false,
+          };
+        });
         setPosts(processedPosts);
       }
     } catch (error) {
@@ -231,6 +236,16 @@ export default function HomeScreen() {
     const imageUrl = post.images && post.images.length > 0 ? post.images[0] : null;
     const imgHeight = imageUrl ? COLUMN_WIDTH / post.aspectRatio : 0;
 
+    // 点击头像跳转到用户主页
+    const handleAvatarPress = () => {
+      // 如果是自己，跳转到"我的"页面；否则跳转到用户主页
+      if (currentUserId && post.author_id === parseInt(currentUserId)) {
+        router.navigate('/profile');
+      } else {
+        router.push('/user-profile', { userId: post.author_id.toString() });
+      }
+    };
+
     return (
       <TouchableOpacity
         key={post.id}
@@ -259,14 +274,17 @@ export default function HomeScreen() {
             {post.content}
           </ThemedText>
 
-          {/* 用户头像 - 右下角 */}
-          <View style={styles.authorAvatarContainer}>
+          {/* 用户头像 - 右下角（可点击） */}
+          <TouchableOpacity
+            style={styles.authorAvatarContainer}
+            onPress={handleAvatarPress}
+          >
             <Image
               source={{ uri: post.authorAvatar }}
               style={styles.authorAvatar}
               contentFit="cover"
             />
-          </View>
+          </TouchableOpacity>
 
           {/* 标签 */}
           {post.tags && post.tags.length > 0 && (
