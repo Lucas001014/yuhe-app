@@ -309,6 +309,58 @@
                 transform: translateY(0);
             }
         }
+        /* 下载弹窗样式 */
+        .download-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+        .download-modal.show {
+            display: flex;
+        }
+        .download-modal-content {
+            background: white;
+            padding: 40px;
+            border-radius: 16px;
+            text-align: center;
+            max-width: 400px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        }
+        .download-modal-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+        .download-modal-title {
+            font-size: 24px;
+            color: #1677FF;
+            margin-bottom: 15px;
+        }
+        .download-modal-text {
+            color: #666;
+            margin-bottom: 25px;
+            line-height: 1.6;
+        }
+        .download-modal-btn {
+            background: #1677FF;
+            color: white;
+            border: none;
+            padding: 12px 40px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .download-modal-btn:hover {
+            background: #4096FF;
+            transform: translateY(-2px);
+        }
     </style>
 </head>
 <body>
@@ -330,7 +382,7 @@
         <h1>遇合 - 书写属于自己的商业山河</h1>
         <p>创业者专属社交平台，分享创业经验、实现知识价值、对接商业资源</p>
         <div class="hero-buttons">
-            <a href="#" class="btn btn-primary">下载应用</a>
+            <a href="javascript:void(0)" class="btn btn-primary" onclick="showDownloadModal()">下载应用</a>
             <a href="#features" class="btn btn-secondary">了解更多</a>
         </div>
     </section>
@@ -435,5 +487,30 @@
             </div>
         </div>
     </footer>
+
+    <!-- 下载弹窗 -->
+    <div class="download-modal" id="downloadModal">
+        <div class="download-modal-content">
+            <div class="download-modal-icon">🚀</div>
+            <h3 class="download-modal-title">应用即将上线</h3>
+            <p class="download-modal-text">遇合 App 正在紧锣密鼓开发中，<br>即将登陆各大应用商店，敬请期待！</p>
+            <button class="download-modal-btn" onclick="hideDownloadModal()">我知道了</button>
+        </div>
+    </div>
+
+    <script>
+        function showDownloadModal() {
+            document.getElementById('downloadModal').classList.add('show');
+        }
+        function hideDownloadModal() {
+            document.getElementById('downloadModal').classList.remove('show');
+        }
+        // 点击弹窗外部关闭
+        document.getElementById('downloadModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                hideDownloadModal();
+            }
+        });
+    </script>
 </body>
 </html>
