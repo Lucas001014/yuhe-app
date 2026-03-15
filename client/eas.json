@@ -13,7 +13,8 @@
       "workingDirectory": "./client",
       "ios": {
         "simulator": false
-      }
+      },
+      "pnpm": "9.0.0"
     },
     "production": {
       "workingDirectory": "./client",
@@ -22,7 +23,8 @@
       },
       "android": {
         "autoIncrement": true
-      }
+      },
+      "pnpm": "9.0.0"
     }
   },
   "submit": {

@@ -11,7 +11,8 @@
       "distribution": "internal",
       "ios": {
         "simulator": false
-      }
+      },
+      "pnpm": "9.0.0"
     },
     "production": {
       "ios": {
@@ -19,7 +20,8 @@
       },
       "android": {
         "autoIncrement": true
-      }
+      },
+      "pnpm": "9.0.0"
     }
   },
   "submit": {
