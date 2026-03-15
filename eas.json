@@ -5,18 +5,15 @@
   "build": {
     "development": {
       "developmentClient": true,
-      "distribution": "internal",
-      "workingDirectory": "./client"
+      "distribution": "internal"
     },
     "preview": {
       "distribution": "internal",
-      "workingDirectory": "./client",
       "ios": {
         "simulator": false
       }
     },
     "production": {
-      "workingDirectory": "./client",
       "ios": {
         "autoIncrement": true
       },
