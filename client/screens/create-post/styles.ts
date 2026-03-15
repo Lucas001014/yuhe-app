@@ -115,5 +115,26 @@ export const createStyles = (theme: Theme) => {
       marginLeft: Spacing.sm,
       flex: 1,
     },
+    imagesContainer: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      marginBottom: Spacing.lg,
+      gap: Spacing.sm,
+    },
+    imagePreview: {
+      width: 100,
+      height: 100,
+      borderRadius: BorderRadius.md,
+    },
+    submitButton: {
+      backgroundColor: theme.primary,
+      paddingVertical: Spacing.lg,
+      borderRadius: BorderRadius.lg,
+      alignItems: 'center',
+      marginTop: Spacing.xl,
+    },
+    submitButtonDisabled: {
+      opacity: 0.6,
+    },
   });
 };
