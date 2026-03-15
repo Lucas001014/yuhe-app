@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { View, ScrollView, TouchableOpacity, RefreshControl, Dimensions } from 'react-native';
+import { View, ScrollView, TouchableOpacity, RefreshControl, Dimensions, Alert } from 'react-native';
 import { FontAwesome6 } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
 import { ThemedText } from '@/components/ThemedText';
@@ -8,30 +8,27 @@ import { useTheme } from '@/hooks/useTheme';
 import { useSafeRouter } from '@/hooks/useSafeRouter';
 import { Image } from 'expo-image';
 import { createStyles } from './styles';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 interface Post {
   id: number;
-  type: 'normal' | 'qa_paid' | 'qa_bounty' | 'product' | 'local';
-  title: string;
+  type: string;
+  title: string | null;
   content: string;
-  imageUrl?: string;
+  images: string[];
   aspectRatio: number;
-  author: {
-    id: number;
-    name: string;
-    avatar: string;
-  };
+  author_id: number;
+  authorName: string;
+  authorAvatar: string;
   tags: string[];
-  likes: number;
-  comments: number;
-  shares: number;
-  createdAt: string;
-  price?: number;
-  productName?: string;
-  productPrice?: number;
-  location?: string;
+  like_count: number;
+  comment_count: number;
+  share_count: number;
+  created_at: string;
+  isLiked: boolean;
+  isCollected: boolean;
 }
 
 export default function HomeScreen() {
@@ -41,142 +38,18 @@ export default function HomeScreen() {
   const [activeTab, setActiveTab] = useState<'normal' | 'qa_paid' | 'qa_bounty' | 'product' | 'local'>('normal');
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   const API_BASE_URL = process.env.EXPO_PUBLIC_BACKEND_BASE_URL;
 
-  // 生成随机宽高比
+  // 生成随机宽高比 (0.5~2.0)
   const generateAspectRatio = (): number => {
-    const seed = Math.random();
-    if (seed < 0.2) {
-      return 1.6 + Math.random() * 0.2; // 扁图
-    } else if (seed < 0.7) {
-      return 0.75 + Math.random() * 0.4; // 常规图
-    } else {
-      return 0.5 + Math.random() * 0.1; // 长图
-    }
+    return 0.5 + Math.random() * 1.5;
   };
-
-  // 模拟帖子数据
-  const mockPosts: Post[] = [
-    {
-      id: 1,
-      type: 'normal',
-      title: '创业初期的团队搭建经验分享',
-      content: '在创业初期，如何快速搭建一个高效的团队？我从0到1搭建了5人技术团队，总结了一些经验...',
-      imageUrl: 'https://images.unsplash.com/photo-1551434678-e076c223a692?w=400&h=300&fit=crop',
-      aspectRatio: generateAspectRatio(),
-      author: {
-        id: 1,
-        name: '张三',
-        avatar: 'https://i.pravatar.cc/150?img=1',
-      },
-      tags: ['创业', '团队管理', '经验分享'],
-      likes: 128,
-      comments: 32,
-      shares: 15,
-      createdAt: '2小时前',
-    },
-    {
-      id: 2,
-      type: 'qa_paid',
-      title: '如何选择适合创业项目的云服务？',
-      content: '正在做SaaS产品，需要选择云服务提供商，请教各位大神的经验...',
-      imageUrl: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=400&h=500&fit=crop',
-      aspectRatio: generateAspectRatio(),
-      author: {
-        id: 2,
-        name: '李四',
-        avatar: 'https://i.pravatar.cc/150?img=2',
-      },
-      tags: ['技术', '云计算', '问答'],
-      likes: 45,
-      comments: 12,
-      shares: 5,
-      createdAt: '5小时前',
-      price: 9.9,
-    },
-    {
-      id: 3,
-      type: 'qa_bounty',
-      title: '悬赏：寻找电商数据分析专家',
-      content: '需要一位有经验的电商数据分析专家，帮助分析用户行为数据，优化转化率...',
-      imageUrl: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=400&h=250&fit=crop',
-      aspectRatio: generateAspectRatio(),
-      author: {
-        id: 3,
-        name: '王五',
-        avatar: 'https://i.pravatar.cc/150?img=3',
-      },
-      tags: ['悬赏', '数据分析', '电商'],
-      likes: 67,
-      comments: 28,
-      shares: 8,
-      createdAt: '1天前',
-      price: 500,
-    },
-    {
-      id: 4,
-      type: 'product',
-      title: '智能客服系统',
-      content: '基于AI技术的智能客服系统，支持多语言、多渠道接入，帮助企业提升客服效率...',
-      imageUrl: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=400&fit=crop',
-      aspectRatio: generateAspectRatio(),
-      author: {
-        id: 4,
-        name: '赵六',
-        avatar: 'https://i.pravatar.cc/150?img=4',
-      },
-      tags: ['AI', '产品', '客服'],
-      likes: 89,
-      comments: 45,
-      shares: 22,
-      createdAt: '2天前',
-      productName: '智能客服系统',
-      productPrice: 9999,
-    },
-    {
-      id: 5,
-      type: 'normal',
-      title: '从0到1的创业融资经验',
-      content: '分享我从小团队到获得A轮融资的完整过程，包括BP制作、路演技巧...',
-      imageUrl: 'https://images.unsplash.com/photo-1553729459-efe14ef6055d?w=400&h=600&fit=crop',
-      aspectRatio: generateAspectRatio(),
-      author: {
-        id: 5,
-        name: '钱七',
-        avatar: 'https://i.pravatar.cc/150?img=5',
-      },
-      tags: ['融资', '创业', '经验'],
-      likes: 156,
-      comments: 43,
-      shares: 28,
-      createdAt: '3天前',
-    },
-    {
-      id: 6,
-      type: 'product',
-      title: '企业级CRM系统',
-      content: '专为中小企业设计的客户关系管理系统，功能强大，操作简单...',
-      imageUrl: 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=400&h=280&fit=crop',
-      aspectRatio: generateAspectRatio(),
-      author: {
-        id: 6,
-        name: '孙八',
-        avatar: 'https://i.pravatar.cc/150?img=6',
-      },
-      tags: ['CRM', '企业服务', 'SaaS'],
-      likes: 72,
-      comments: 28,
-      shares: 15,
-      createdAt: '4天前',
-      productName: '企业级CRM系统',
-      productPrice: 4999,
-    },
-  ];
 
   // 贪心分配算法
   const distributeItems = (items: Post[], columnWidth: number) => {
-    const FOOTER_HEIGHT = 120; // 标题+头像+互动区域高度
+    const FOOTER_HEIGHT = 120;
     const columnArrays: Post[][] = Array.from({ length: 2 }, () => []);
     const columnHeights: number[] = [0, 0];
 
@@ -196,14 +69,48 @@ export default function HomeScreen() {
   const loadPosts = useCallback(async () => {
     try {
       setLoading(true);
-      setPosts(mockPosts);
+      const userId = await AsyncStorage.getItem('userId');
+      setCurrentUserId(userId);
+
+      /**
+       * 服务端文件：server/src/routes/posts.ts
+       * 接口：GET /api/v1/posts
+       * Query 参数：type?: string, userId?: number
+       */
+      const url = userId
+        ? `${API_BASE_URL}/api/v1/posts?userId=${userId}`
+        : `${API_BASE_URL}/api/v1/posts`;
+
+      const response = await fetch(url);
+      const data = await response.json();
+
+      if (data.success) {
+        const processedPosts = data.posts.map((p: any) => ({
+          id: p.id,
+          type: p.type || 'normal',
+          title: p.title,
+          content: p.content,
+          images: p.images || [],
+          aspectRatio: p.aspectRatio || generateAspectRatio(),
+          author_id: p.author_id,
+          authorName: '用户',
+          authorAvatar: 'https://i.pravatar.cc/150',
+          tags: p.tags || [],
+          like_count: p.like_count || 0,
+          comment_count: p.comment_count || 0,
+          share_count: p.share_count || 0,
+          created_at: p.created_at,
+          isLiked: p.isLiked || false,
+          isCollected: p.isCollected || false,
+        }));
+        setPosts(processedPosts);
+      }
     } catch (error) {
       console.error('加载帖子失败:', error);
-      setPosts(mockPosts);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [API_BASE_URL]);
 
   // 页面聚焦时刷新数据
   useFocusEffect(
@@ -220,67 +127,13 @@ export default function HomeScreen() {
     { id: 'local', label: '同城' },
   ];
 
-  const getTypeLabel = (type: string) => {
-    switch (type) {
-      case 'normal':
-        return '推荐';
-      case 'qa_paid':
-        return '知识库';
-      case 'qa_bounty':
-        return '悬赏';
-      case 'product':
-        return '产品';
-      case 'local':
-        return '同城';
-      default:
-        return '';
-    }
-  };
-
-  const getTypeColor = (type: string) => {
-    switch (type) {
-      case 'normal':
-        return '#4F46E5';
-      case 'qa_paid':
-        return '#F59E0B';
-      case 'qa_bounty':
-        return '#10B981';
-      case 'product':
-        return '#8B5CF6';
-      case 'local':
-        return '#EC4899';
-      default:
-        return theme.textMuted;
-    }
-  };
-
-  const filteredPosts = (() => {
+  // 过滤帖子
+  const filteredPosts = useMemo(() => {
     if (activeTab === 'normal') {
-      // 推荐Tab：每10个帖子插入1次特殊类型
-      const normalPosts = posts.filter(post => post.type === 'normal');
-      const specialPosts = posts.filter(post => post.type !== 'normal' && post.type !== 'local');
-
-      const result: Post[] = [];
-      let specialIndex = 0;
-
-      normalPosts.forEach((post, index) => {
-        result.push(post);
-        // 每10个normal帖子后插入一个特殊类型帖子
-        if ((index + 1) % 10 === 0 && specialIndex < specialPosts.length) {
-          result.push(specialPosts[specialIndex]);
-          specialIndex++;
-        }
-      });
-
-      return result;
-    } else if (activeTab === 'local') {
-      // 同城Tab：显示所有类型的帖子，但优先显示有location信息的帖子
-      return posts.filter(post => post.location);
-    } else {
-      // 其他Tab：只显示对应类型的帖子
-      return posts.filter(post => post.type === activeTab);
+      return posts;
     }
-  })();
+    return posts.filter(post => post.type === activeTab);
+  }, [posts, activeTab]);
 
   // 布局常量
   const COLUMNS = 2;
@@ -294,32 +147,100 @@ export default function HomeScreen() {
     [filteredPosts, COLUMN_WIDTH]
   );
 
+  // 跳转帖子详情
   const handlePostPress = (post: Post) => {
-    router.push('/post-detail', { postId: post.id });
+    router.push('/post-detail', { postId: post.id.toString() });
   };
 
-  const handleLike = (postId: number) => {
-    setPosts(posts.map(post =>
-      post.id === postId
-        ? { ...post, likes: post.likes + 1 }
-        : post
-    ));
+  // 点赞
+  const handleLike = async (post: Post) => {
+    if (!currentUserId) {
+      Alert.alert('提示', '请先登录');
+      return;
+    }
+
+    try {
+      /**
+       * 服务端文件：server/src/routes/posts.ts
+       * 接口：POST /api/v1/posts/:id/like
+       * Body 参数：userId: number, action: 'like' | 'unlike'
+       */
+      const response = await fetch(`${API_BASE_URL}/api/v1/posts/${post.id}/like`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: parseInt(currentUserId),
+          action: post.isLiked ? 'unlike' : 'like'
+        }),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        setPosts(posts.map(p =>
+          p.id === post.id
+            ? { ...p, isLiked: data.isLiked, like_count: data.likeCount }
+            : p
+        ));
+      }
+    } catch (error) {
+      console.error('点赞失败:', error);
+    }
   };
 
+  // 转发
+  const handleShare = async (post: Post) => {
+    if (!currentUserId) {
+      Alert.alert('提示', '请先登录');
+      return;
+    }
+
+    try {
+      /**
+       * 服务端文件：server/src/routes/social.ts
+       * 接口：POST /api/v1/social/share
+       * Body 参数：postId: number, userId: number, shareTo?: string
+       */
+      const response = await fetch(`${API_BASE_URL}/api/v1/social/share`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          postId: post.id,
+          userId: parseInt(currentUserId),
+          shareTo: 'timeline'
+        }),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        Alert.alert('成功', '转发成功');
+        setPosts(posts.map(p =>
+          p.id === post.id
+            ? { ...p, share_count: p.share_count + 1 }
+            : p
+        ));
+      }
+    } catch (error) {
+      console.error('转发失败:', error);
+    }
+  };
+
+  // 渲染帖子卡片
   const renderPostCard = (post: Post) => {
     const imgHeight = COLUMN_WIDTH / post.aspectRatio;
+    const imageUrl = post.images && post.images.length > 0 ? post.images[0] : null;
 
     return (
       <TouchableOpacity
         key={post.id}
         style={styles.card}
         onPress={() => handlePostPress(post)}
+        activeOpacity={0.9}
       >
         {/* 图片 */}
         <View style={[styles.imageWrapper, { height: imgHeight }]}>
-          {post.imageUrl ? (
+          {imageUrl ? (
             <Image
-              source={{ uri: post.imageUrl }}
+              source={{ uri: imageUrl }}
               style={{ width: '100%', height: '100%' }}
               contentFit="cover"
               transition={200}
@@ -334,24 +255,14 @@ export default function HomeScreen() {
         {/* 内容区域 */}
         <View style={styles.cardContent}>
           <ThemedText variant="body" color={theme.textPrimary} numberOfLines={2} style={styles.cardTitle}>
-            {post.title}
+            {post.title || '无标题'}
           </ThemedText>
           <ThemedText variant="caption" color={theme.textSecondary} numberOfLines={2} style={styles.cardDescription}>
             {post.content}
           </ThemedText>
 
-          {/* 位置信息 */}
-          {post.location && activeTab === 'local' && (
-            <View style={styles.locationInfo}>
-              <FontAwesome6 name="location-dot" size={12} color={theme.textMuted} />
-              <ThemedText variant="caption" color={theme.textMuted}>
-                {post.location}
-              </ThemedText>
-            </View>
-          )}
-
           {/* 标签 */}
-          {post.tags.length > 0 && (
+          {post.tags && post.tags.length > 0 && (
             <View style={styles.tagsContainer}>
               {post.tags.slice(0, 2).map((tag, idx) => (
                 <View key={idx} style={styles.tag}>
@@ -363,51 +274,37 @@ export default function HomeScreen() {
             </View>
           )}
 
-          {/* 价格信息 */}
-          {post.type === 'qa_paid' && post.price && (
-            <View style={styles.priceInfo}>
-              <FontAwesome6 name="sack-dollar" size={12} color={theme.warning} />
-              <ThemedText variant="caption" color={theme.warning} style={{ fontWeight: '600' }}>
-                ¥{post.price}
-              </ThemedText>
-            </View>
-          )}
-
-          {post.type === 'qa_bounty' && post.price && (
-            <View style={styles.priceInfo}>
-              <FontAwesome6 name="trophy" size={12} color={theme.success} />
-              <ThemedText variant="caption" color={theme.success} style={{ fontWeight: '600' }}>
-                悬赏 ¥{post.price}
-              </ThemedText>
-            </View>
-          )}
-
-          {post.type === 'product' && post.productPrice && (
-            <View style={styles.priceInfo}>
-              <FontAwesome6 name="tag" size={12} color={theme.accent} />
-              <ThemedText variant="caption" color={theme.accent} style={{ fontWeight: '600' }}>
-                ¥{post.productPrice}
-              </ThemedText>
-            </View>
-          )}
-
           {/* 底部互动 */}
           <View style={styles.cardFooter}>
             <TouchableOpacity
               style={styles.actionButton}
-              onPress={() => handleLike(post.id)}
+              onPress={() => handleLike(post)}
             >
-              <FontAwesome6 name="heart" size={12} color={theme.textSecondary} />
-              <ThemedText variant="caption" color={theme.textMuted}>
-                {post.likes}
+              <FontAwesome6
+                name="heart"
+                size={12}
+                color={post.isLiked ? theme.error : theme.textSecondary}
+                solid={post.isLiked}
+              />
+              <ThemedText variant="caption" color={post.isLiked ? theme.error : theme.textMuted}>
+                {post.like_count}
               </ThemedText>
             </TouchableOpacity>
             <View style={styles.actionButton}>
               <FontAwesome6 name="comment" size={12} color={theme.textSecondary} />
               <ThemedText variant="caption" color={theme.textMuted}>
-                {post.comments}
+                {post.comment_count}
               </ThemedText>
             </View>
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={() => handleShare(post)}
+            >
+              <FontAwesome6 name="share-nodes" size={12} color={theme.textSecondary} />
+              <ThemedText variant="caption" color={theme.textMuted}>
+                {post.share_count}
+              </ThemedText>
+            </TouchableOpacity>
           </View>
         </View>
       </TouchableOpacity>

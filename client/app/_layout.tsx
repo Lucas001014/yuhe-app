@@ -29,6 +29,8 @@ export default function RootLayout() {
             <Stack.Screen name="(tabs)" options={{ title: "" }} />
             <Stack.Screen name="login" options={{ title: "登录" }} />
             <Stack.Screen name="post-detail" options={{ title: "帖子详情" }} />
+            <Stack.Screen name="user-profile" options={{ title: "个人主页" }} />
+            <Stack.Screen name="chat" options={{ title: "私信" }} />
             <Stack.Screen name="admin" options={{ title: "管理控制台" }} />
             <Stack.Screen name="chat-list" options={{ title: "私信" }} />
             <Stack.Screen name="follow-list" options={{ title: "关注列表" }} />
