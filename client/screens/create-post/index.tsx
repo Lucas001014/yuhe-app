@@ -184,16 +184,20 @@ export default function CreatePostScreen() {
       const data = await response.json();
 
       if (data.success) {
+        // 清空所有表单内容
+        setTitle('');
+        setContent('');
+        setImages([]);
+        
         if (data.post?.audit_status === 'approved') {
           showSuccess('发布成功', '您的帖子已成功发布！', () => {
-            setTitle('');
-            setContent('');
-            setImages([]);
-            router.back();
+            // 跳转到首页
+            router.replace('/');
           });
         } else {
           showSuccess('已提交', data.message || '帖子已提交，等待审核', () => {
-            router.back();
+            // 跳转到首页
+            router.replace('/');
           });
         }
       } else {

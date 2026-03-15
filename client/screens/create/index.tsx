@@ -139,14 +139,18 @@ export default function CreateScreen() {
       return;
     }
 
-    if (postType === 'qa_paid' && !price) {
-      showError('提示', '请设置问答价格');
-      return;
+    if (postType === 'qa_paid') {
+      if (!price || parseFloat(price) < 1) {
+        showError('提示', '知识库帖子需要设置价格，最低1元');
+        return;
+      }
     }
 
-    if (postType === 'qa_bounty' && !price) {
-      showError('提示', '请设置悬赏金额');
-      return;
+    if (postType === 'qa_bounty') {
+      if (!price || parseFloat(price) < 1) {
+        showError('提示', '悬赏帖子需要设置悬赏金额，最低1元');
+        return;
+      }
     }
 
     if (postType === 'product' && (!productName || !productPrice)) {
@@ -224,19 +228,27 @@ export default function CreateScreen() {
       const data = await response.json();
 
       if (data.success) {
+        // 清空所有表单内容
+        setTitle('');
+        setContent('');
+        setImages([]);
+        setTags('');
+        setPrice('');
+        setPostType('normal');
+        setProductName('');
+        setProductPrice('');
+        setProductDescription('');
+        setContactInfo('');
+        
         if (data.post?.audit_status === 'approved') {
           showSuccess('发布成功', '您的帖子已成功发布！', () => {
-            // 清空表单
-            setTitle('');
-            setContent('');
-            setImages([]);
-            setTags('');
-            setPrice('');
-            router.back();
+            // 跳转到首页
+            router.replace('/');
           });
         } else {
           showSuccess('已提交', data.message || '帖子已提交，等待审核', () => {
-            router.back();
+            // 跳转到首页
+            router.replace('/');
           });
         }
       } else {
@@ -427,12 +439,15 @@ export default function CreateScreen() {
               </ThemedText>
               <TextInput
                 style={styles.input}
-                placeholder={postType === 'qa_paid' ? '设置查看价格（元）' : '设置悬赏金额（元）'}
+                placeholder={postType === 'qa_paid' ? '设置查看价格，最低1元' : '设置悬赏金额，最低1元'}
                 placeholderTextColor={theme.textMuted}
                 value={price}
                 onChangeText={setPrice}
                 keyboardType="decimal-pad"
               />
+              <ThemedText variant="caption" color={theme.textMuted} style={{ marginTop: 4 }}>
+                {postType === 'qa_paid' ? '用户需付费查看您的回答' : '悬赏金额将奖励给回答者'}
+              </ThemedText>
             </View>
           )}
 
