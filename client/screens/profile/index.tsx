@@ -11,6 +11,7 @@ import { createStyles } from './styles';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
+import { createFormDataFile } from '@/utils';
 
 interface UserInfo {
   id: number;
@@ -46,39 +47,78 @@ export default function ProfileScreen() {
   const [newName, setNewName] = useState('');
   const [showAccountSwitchModal, setShowAccountSwitchModal] = useState(false);
   const [savedAccounts, setSavedAccounts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  // 模拟用户信息
-  const mockUserInfo: UserInfo = {
-    id: 1,
-    username: '张三',
-    avatar: 'https://i.pravatar.cc/150?img=68',
-    verified: true,
-    identityVerified: false,
-    identityStatus: 'pending', // 待审核
-  };
-
-  // 模拟发帖统计
-  const mockPostStats: PostStats = {
-    myPosts: 12,
-    likedPosts: 45,
-    collectedPosts: 23,
-  };
+  const API_BASE_URL = process.env.EXPO_PUBLIC_BACKEND_BASE_URL;
 
   // 加载用户信息
   const loadUserInfo = useCallback(async () => {
     try {
       const userId = await AsyncStorage.getItem('userId');
+      if (!userId) {
+        // 未登录，使用默认数据
+        const defaultUserInfo: UserInfo = {
+          id: 1,
+          username: '游客',
+          avatar: 'https://i.pravatar.cc/150?img=68',
+          verified: false,
+          identityVerified: false,
+          identityStatus: 'none',
+        };
+        setUserInfo(defaultUserInfo);
+        setPostStats({ myPosts: 0, likedPosts: 0, collectedPosts: 0 });
+        return;
+      }
 
-      // 使用模拟数据（无论是否登录都显示）
-      setUserInfo(mockUserInfo);
-      setPostStats(mockPostStats);
+      /**
+       * 服务端文件：server/src/routes/auth.ts
+       * 接口：GET /api/v1/auth/me
+       * Query 参数：userId: number
+       */
+      const response = await fetch(`${API_BASE_URL}/api/v1/auth/me?userId=${userId}`);
+      const data = await response.json();
+
+      if (data.success && data.user) {
+        setUserInfo({
+          id: data.user.id,
+          username: data.user.username || '用户',
+          avatar: data.user.avatar_url || 'https://i.pravatar.cc/150?img=68',
+          verified: false,
+          identityVerified: false,
+          identityStatus: 'none',
+        });
+        // 保存到 AsyncStorage 供其他页面使用
+        await AsyncStorage.setItem('username', data.user.username || '用户');
+        await AsyncStorage.setItem('avatar', data.user.avatar_url || 'https://i.pravatar.cc/150?img=68');
+      } else {
+        // 使用默认数据
+        const defaultUserInfo: UserInfo = {
+          id: parseInt(userId),
+          username: '用户',
+          avatar: 'https://i.pravatar.cc/150?img=68',
+          verified: false,
+          identityVerified: false,
+          identityStatus: 'none',
+        };
+        setUserInfo(defaultUserInfo);
+      }
+
+      setPostStats({ myPosts: 0, likedPosts: 0, collectedPosts: 0 });
     } catch (error) {
       console.error('加载用户信息失败:', error);
-      // 加载失败时也显示模拟数据
-      setUserInfo(mockUserInfo);
-      setPostStats(mockPostStats);
+      const userId = await AsyncStorage.getItem('userId');
+      const defaultUserInfo: UserInfo = {
+        id: userId ? parseInt(userId) : 1,
+        username: '用户',
+        avatar: 'https://i.pravatar.cc/150?img=68',
+        verified: false,
+        identityVerified: false,
+        identityStatus: 'none',
+      };
+      setUserInfo(defaultUserInfo);
+      setPostStats({ myPosts: 0, likedPosts: 0, collectedPosts: 0 });
     }
-  }, []);
+  }, [API_BASE_URL]);
 
   // 页面聚焦时刷新数据
   useFocusEffect(
@@ -114,19 +154,75 @@ export default function ProfileScreen() {
       });
 
       if (!result.canceled && result.assets && result.assets[0]) {
-        const newAvatar = result.assets[0].uri;
-        
-        // 更新本地状态
-        setUserInfo({ ...userInfo!, avatar: newAvatar });
-        
-        // 保存到 AsyncStorage
-        await AsyncStorage.setItem('avatar', newAvatar);
-        
+        const localUri = result.assets[0].uri;
+        setLoading(true);
+
+        // 1. 上传图片到对象存储
+        const filename = localUri.split('/').pop() || 'avatar.jpg';
+        const match = /\.(\w+)$/.exec(filename);
+        const ext = match ? match[1] : 'jpg';
+        const mimeType = `image/${ext}`;
+
+        const formData = new FormData();
+        const file = await createFormDataFile(localUri, filename, mimeType);
+        formData.append('file', file as any);
+
+        /**
+         * 服务端文件：server/src/routes/upload.ts
+         * 接口：POST /api/v1/upload
+         * Body: multipart/form-data with 'file' field
+         */
+        const uploadResponse = await fetch(`${API_BASE_URL}/api/v1/upload`, {
+          method: 'POST',
+          body: formData,
+        });
+
+        const uploadData = await uploadResponse.json();
+
+        if (!uploadData.success) {
+          throw new Error(uploadData.error || '上传失败');
+        }
+
+        const avatarUrl = uploadData.url;
+
+        // 2. 更新后端用户信息
+        const userId = await AsyncStorage.getItem('userId');
+        if (!userId) {
+          Alert.alert('错误', '请先登录');
+          return;
+        }
+
+        /**
+         * 服务端文件：server/src/routes/auth.ts
+         * 接口：POST /api/v1/auth/update-profile
+         * Body: { userId: number, avatar_url?: string }
+         */
+        const updateResponse = await fetch(`${API_BASE_URL}/api/v1/auth/update-profile`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: parseInt(userId),
+            avatar_url: avatarUrl,
+          }),
+        });
+
+        const updateData = await updateResponse.json();
+
+        if (!updateData.success) {
+          throw new Error(updateData.error || '更新失败');
+        }
+
+        // 3. 更新本地状态和 AsyncStorage
+        setUserInfo({ ...userInfo!, avatar: avatarUrl });
+        await AsyncStorage.setItem('avatar', avatarUrl);
+
         Alert.alert('成功', '头像更换成功');
       }
     } catch (error) {
       console.error('更换头像失败:', error);
       Alert.alert('错误', '更换头像失败，请重试');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -143,6 +239,34 @@ export default function ProfileScreen() {
     }
 
     try {
+      setLoading(true);
+      const userId = await AsyncStorage.getItem('userId');
+      if (!userId) {
+        Alert.alert('错误', '请先登录');
+        return;
+      }
+
+      /**
+       * 服务端文件：server/src/routes/auth.ts
+       * 接口：POST /api/v1/auth/update-profile
+       * Body: { userId: number, username?: string }
+       */
+      const response = await fetch(`${API_BASE_URL}/api/v1/auth/update-profile`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: parseInt(userId),
+          username: newName.trim(),
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!data.success) {
+        throw new Error(data.error || '修改失败');
+      }
+
+      // 更新本地状态和 AsyncStorage
       setUserInfo({ ...userInfo!, username: newName.trim() });
       await AsyncStorage.setItem('username', newName.trim());
       setShowChangeNameModal(false);
@@ -150,6 +274,8 @@ export default function ProfileScreen() {
     } catch (error) {
       console.error('修改用户名失败:', error);
       Alert.alert('错误', '修改失败，请重试');
+    } finally {
+      setLoading(false);
     }
   };
 
