@@ -50,12 +50,14 @@ export default function HomeScreen() {
   // 贪心分配算法
   const distributeItems = (items: Post[], columnWidth: number) => {
     const FOOTER_HEIGHT = 120;
+    const TEXT_ONLY_HEIGHT = 80; // 纯文字帖子的额外高度
     const columnArrays: Post[][] = Array.from({ length: 2 }, () => []);
     const columnHeights: number[] = [0, 0];
 
     items.forEach((item) => {
-      const imgHeight = columnWidth / item.aspectRatio;
-      const totalItemHeight = imgHeight + FOOTER_HEIGHT;
+      const hasImage = item.images && item.images.length > 0;
+      const imgHeight = hasImage ? columnWidth / item.aspectRatio : 0;
+      const totalItemHeight = imgHeight + FOOTER_HEIGHT + (hasImage ? 0 : TEXT_ONLY_HEIGHT);
 
       const shortestIndex = columnHeights[0] <= columnHeights[1] ? 0 : 1;
       columnArrays[shortestIndex].push(item);
@@ -226,8 +228,8 @@ export default function HomeScreen() {
 
   // 渲染帖子卡片
   const renderPostCard = (post: Post) => {
-    const imgHeight = COLUMN_WIDTH / post.aspectRatio;
     const imageUrl = post.images && post.images.length > 0 ? post.images[0] : null;
+    const imgHeight = imageUrl ? COLUMN_WIDTH / post.aspectRatio : 0;
 
     return (
       <TouchableOpacity
@@ -236,28 +238,24 @@ export default function HomeScreen() {
         onPress={() => handlePostPress(post)}
         activeOpacity={0.9}
       >
-        {/* 图片 */}
-        <View style={[styles.imageWrapper, { height: imgHeight }]}>
-          {imageUrl ? (
+        {/* 图片 - 仅当有图片时显示 */}
+        {imageUrl && (
+          <View style={[styles.imageWrapper, { height: imgHeight }]}>
             <Image
               source={{ uri: imageUrl }}
               style={{ width: '100%', height: '100%' }}
               contentFit="cover"
               transition={200}
             />
-          ) : (
-            <View style={[styles.imagePlaceholder, { height: imgHeight }]}>
-              <FontAwesome6 name="image" size={32} color={theme.textMuted} />
-            </View>
-          )}
-        </View>
+          </View>
+        )}
 
         {/* 内容区域 */}
         <View style={styles.cardContent}>
           <ThemedText variant="body" color={theme.textPrimary} numberOfLines={2} style={styles.cardTitle}>
             {post.title || '无标题'}
           </ThemedText>
-          <ThemedText variant="caption" color={theme.textSecondary} numberOfLines={2} style={styles.cardDescription}>
+          <ThemedText variant="caption" color={theme.textSecondary} numberOfLines={imageUrl ? 2 : 4} style={styles.cardDescription}>
             {post.content}
           </ThemedText>
 
