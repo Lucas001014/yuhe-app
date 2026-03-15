@@ -1,5 +1,8 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Dimensions } from 'react-native';
 import { Spacing, BorderRadius, Theme } from '@/constants/theme';
+
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+const AVATAR_CROP_SIZE = SCREEN_WIDTH * 0.75;
 
 export const createStyles = (theme: Theme) => {
   return StyleSheet.create({
@@ -245,6 +248,119 @@ export const createStyles = (theme: Theme) => {
     avatarPreviewHint: {
       marginBottom: Spacing.lg,
       textAlign: 'center',
+    },
+    // 头像裁剪
+    avatarCropModalContainer: {
+      flex: 1,
+      backgroundColor: '#000000',
+    },
+    avatarCropHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: Spacing.lg,
+      paddingTop: SCREEN_HEIGHT * 0.06,
+      paddingBottom: Spacing.lg,
+    },
+    avatarCropButton: {
+      paddingHorizontal: Spacing.md,
+      paddingVertical: Spacing.sm,
+      minWidth: 60,
+      alignItems: 'center',
+    },
+    avatarCropConfirmButton: {
+      backgroundColor: '#6366F1',
+      borderRadius: BorderRadius.md,
+      paddingHorizontal: Spacing.lg,
+    },
+    avatarCropArea: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      overflow: 'hidden',
+    },
+    avatarCropImage: {
+      width: SCREEN_WIDTH,
+      height: SCREEN_WIDTH,
+    },
+    avatarCropCircle: {
+      position: 'absolute',
+      width: AVATAR_CROP_SIZE,
+      height: AVATAR_CROP_SIZE,
+      borderRadius: AVATAR_CROP_SIZE / 2,
+      borderWidth: 2,
+      borderColor: 'rgba(255, 255, 255, 0.5)',
+      overflow: 'hidden',
+    },
+    avatarCropGrid: {
+      flex: 1,
+      width: '100%',
+      height: '100%',
+    },
+    avatarCropGridLine: {
+      position: 'absolute',
+      backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    },
+    avatarCropGridLineH: {
+      left: 0,
+      right: 0,
+      height: 1,
+      top: '25%',
+    },
+    avatarCropGridLineV: {
+      top: 0,
+      bottom: 0,
+      width: 1,
+      left: '25%',
+    },
+    avatarCropMask: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+    },
+    avatarCropMaskTop: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: (SCREEN_HEIGHT - AVATAR_CROP_SIZE) / 2 - 60,
+      backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    },
+    avatarCropMaskMiddle: {
+      position: 'absolute',
+      top: (SCREEN_HEIGHT - AVATAR_CROP_SIZE) / 2 - 60,
+      left: 0,
+      right: 0,
+      height: AVATAR_CROP_SIZE,
+      flexDirection: 'row',
+    },
+    avatarCropMaskLeft: {
+      width: (SCREEN_WIDTH - AVATAR_CROP_SIZE) / 2,
+      height: AVATAR_CROP_SIZE,
+      backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    },
+    avatarCropMaskCircle: {
+      width: AVATAR_CROP_SIZE,
+      height: AVATAR_CROP_SIZE,
+    },
+    avatarCropMaskRight: {
+      flex: 1,
+      height: AVATAR_CROP_SIZE,
+      backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    },
+    avatarCropMaskBottom: {
+      position: 'absolute',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      flex: 1,
+      backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    },
+    avatarCropHint: {
+      paddingVertical: Spacing.xl,
+      alignItems: 'center',
     },
   });
 };

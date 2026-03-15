@@ -1,5 +1,5 @@
-import React, { useState, useMemo, useCallback } from 'react';
-import { View, ScrollView, TouchableOpacity, Alert, Modal, Pressable, TextInput, TouchableWithoutFeedback, Keyboard } from 'react-native';
+import React, { useState, useMemo, useCallback, useRef } from 'react';
+import { View, ScrollView, TouchableOpacity, Alert, Modal, Pressable, TextInput, TouchableWithoutFeedback, Keyboard, Dimensions, PanResponder, Animated } from 'react-native';
 import { FontAwesome6 } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
 import { ThemedText } from '@/components/ThemedText';
@@ -50,8 +50,84 @@ export default function ProfileScreen() {
   const [loading, setLoading] = useState(false);
   const [showAvatarPreviewModal, setShowAvatarPreviewModal] = useState(false);
   const [avatarPreviewUri, setAvatarPreviewUri] = useState<string | null>(null);
+  
+  // 头像裁剪相关状态
+  const avatarScale = useRef(new Animated.Value(1)).current;
+  const avatarTranslateX = useRef(new Animated.Value(0)).current;
+  const avatarTranslateY = useRef(new Animated.Value(0)).current;
+  const lastScale = useRef(1);
+  const lastTranslateX = useRef(0);
+  const lastTranslateY = useRef(0);
+  
+  // 手势状态
+  const isDragging = useRef(false);
+  const initialTouchDistance = useRef(0);
+  const initialTouchCenter = useRef({ x: 0, y: 0 });
 
   const API_BASE_URL = process.env.EXPO_PUBLIC_BACKEND_BASE_URL;
+  const { width: SCREEN_WIDTH } = Dimensions.get('window');
+  const AVATAR_CROP_SIZE = SCREEN_WIDTH * 0.75; // 裁剪区域大小
+  
+  // 手势处理
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: () => true,
+      onPanResponderGrant: (evt) => {
+        const touches = evt.nativeEvent.touches;
+        if (touches.length === 2) {
+          // 双指触摸 - 准备缩放
+          initialTouchDistance.current = Math.sqrt(
+            Math.pow(touches[0].pageX - touches[1].pageX, 2) +
+            Math.pow(touches[0].pageY - touches[1].pageY, 2)
+          );
+          initialTouchCenter.current = {
+            x: (touches[0].pageX + touches[1].pageX) / 2,
+            y: (touches[0].pageY + touches[1].pageY) / 2,
+          };
+        } else if (touches.length === 1) {
+          // 单指触摸 - 准备拖拽
+          isDragging.current = true;
+        }
+      },
+      onPanResponderMove: (evt, gestureState) => {
+        const touches = evt.nativeEvent.touches;
+        
+        if (touches.length === 2) {
+          // 双指缩放
+          const currentDistance = Math.sqrt(
+            Math.pow(touches[0].pageX - touches[1].pageX, 2) +
+            Math.pow(touches[0].pageY - touches[1].pageY, 2)
+          );
+          
+          if (initialTouchDistance.current > 0) {
+            const scale = lastScale.current * (currentDistance / initialTouchDistance.current);
+            const clampedScale = Math.max(0.5, Math.min(3, scale));
+            avatarScale.setValue(clampedScale);
+          }
+        } else if (touches.length === 1 && isDragging.current) {
+          // 单指拖拽
+          const newX = lastTranslateX.current + gestureState.dx;
+          const newY = lastTranslateY.current + gestureState.dy;
+          avatarTranslateX.setValue(newX);
+          avatarTranslateY.setValue(newY);
+        }
+      },
+      onPanResponderRelease: (evt) => {
+        const touches = evt.nativeEvent.touches;
+        
+        if (touches.length === 0 && isDragging.current) {
+          // 单指拖拽结束
+          lastTranslateX.current += evt.nativeEvent.changedTouches[0]?.pageX - initialTouchCenter.current.x || 0;
+          lastTranslateY.current += evt.nativeEvent.changedTouches[0]?.pageY - initialTouchCenter.current.y || 0;
+          isDragging.current = false;
+        }
+      },
+      onPanResponderTerminate: () => {
+        isDragging.current = false;
+      },
+    })
+  ).current;
 
   // 加载用户信息
   const loadUserInfo = useCallback(async () => {
@@ -150,13 +226,19 @@ export default function ProfileScreen() {
 
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ['images'],
-        allowsEditing: true,
-        aspect: [1, 1],
+        allowsEditing: false, // 关闭系统裁剪，使用自定义裁剪
         quality: 0.8,
       });
 
       if (!result.canceled && result.assets && result.assets[0]) {
         const localUri = result.assets[0].uri;
+        // 重置裁剪状态
+        avatarScale.setValue(1);
+        avatarTranslateX.setValue(0);
+        avatarTranslateY.setValue(0);
+        lastScale.current = 1;
+        lastTranslateX.current = 0;
+        lastTranslateY.current = 0;
         // 显示预览弹窗
         setAvatarPreviewUri(localUri);
         setShowAvatarPreviewModal(true);
@@ -661,50 +743,70 @@ export default function ProfileScreen() {
       <Modal
         visible={showAvatarPreviewModal}
         transparent
-        animationType="fade"
+        animationType="slide"
         onRequestClose={cancelChangeAvatar}
       >
-        <TouchableWithoutFeedback onPress={cancelChangeAvatar}>
-          <View style={styles.modalOverlay}>
-            <TouchableWithoutFeedback>
-              <View style={[styles.modalContent, styles.avatarPreviewContent]}>
-                <ThemedText variant="h4" color={theme.textPrimary} style={styles.modalTitle}>
-                  确认头像
-                </ThemedText>
-                <View style={styles.avatarPreviewContainer}>
-                  {avatarPreviewUri && (
-                    <Image
-                      source={{ uri: avatarPreviewUri }}
-                      style={styles.avatarPreviewImage}
-                      contentFit="cover"
-                    />
-                  )}
-                </View>
-                <ThemedText variant="caption" color={theme.textMuted} style={styles.avatarPreviewHint}>
-                  确认使用此头像吗？
-                </ThemedText>
-                <View style={styles.modalButtons}>
-                  <Pressable 
-                    style={[styles.modalButton, styles.cancelButton]} 
-                    onPress={cancelChangeAvatar}
-                  >
-                    <ThemedText variant="bodyMedium" color={theme.textSecondary}>
-                      取消
-                    </ThemedText>
-                  </Pressable>
-                  <Pressable 
-                    style={[styles.modalButton, styles.confirmButton]} 
-                    onPress={confirmChangeAvatar}
-                  >
-                    <ThemedText variant="bodyMedium" color={theme.buttonPrimaryText}>
-                      确认
-                    </ThemedText>
-                  </Pressable>
-                </View>
-              </View>
-            </TouchableWithoutFeedback>
+        <View style={styles.avatarCropModalContainer}>
+          {/* 顶部工具栏 */}
+          <View style={styles.avatarCropHeader}>
+            <TouchableOpacity onPress={cancelChangeAvatar} style={styles.avatarCropButton}>
+              <ThemedText variant="bodyMedium" color="#FFFFFF">取消</ThemedText>
+            </TouchableOpacity>
+            <ThemedText variant="h4" color="#FFFFFF">调整头像</ThemedText>
+            <TouchableOpacity onPress={confirmChangeAvatar} style={[styles.avatarCropButton, styles.avatarCropConfirmButton]}>
+              <ThemedText variant="bodyMedium" color="#FFFFFF">确认</ThemedText>
+            </TouchableOpacity>
           </View>
-        </TouchableWithoutFeedback>
+
+          {/* 裁剪区域 */}
+          <View style={styles.avatarCropArea} {...panResponder.panHandlers}>
+            {avatarPreviewUri && (
+              <Animated.Image
+                source={{ uri: avatarPreviewUri }}
+                style={[
+                  styles.avatarCropImage,
+                  {
+                    transform: [
+                      { scale: avatarScale },
+                      { translateX: avatarTranslateX },
+                      { translateY: avatarTranslateY },
+                    ],
+                  },
+                ]}
+                resizeMode="cover"
+              />
+            )}
+            
+            {/* 圆形裁剪框 */}
+            <View style={styles.avatarCropCircle} pointerEvents="none">
+              {/* 网格线 */}
+              <View style={styles.avatarCropGrid} pointerEvents="none">
+                <View style={[styles.avatarCropGridLine, styles.avatarCropGridLineH]} />
+                <View style={[styles.avatarCropGridLine, styles.avatarCropGridLineH, { top: '50%' }]} />
+                <View style={[styles.avatarCropGridLine, styles.avatarCropGridLineV]} />
+                <View style={[styles.avatarCropGridLine, styles.avatarCropGridLineV, { left: '50%' }]} />
+              </View>
+            </View>
+            
+            {/* 遮罩层 */}
+            <View style={styles.avatarCropMask} pointerEvents="none">
+              <View style={styles.avatarCropMaskTop} />
+              <View style={styles.avatarCropMaskMiddle}>
+                <View style={styles.avatarCropMaskLeft} />
+                <View style={styles.avatarCropMaskCircle} />
+                <View style={styles.avatarCropMaskRight} />
+              </View>
+              <View style={styles.avatarCropMaskBottom} />
+            </View>
+          </View>
+
+          {/* 提示文字 */}
+          <View style={styles.avatarCropHint}>
+            <ThemedText variant="caption" color="rgba(255,255,255,0.8)">
+              拖拽图片调整位置，双指缩放调整大小
+            </ThemedText>
+          </View>
+        </View>
       </Modal>
 
       {/* 账号切换弹窗 */}
