@@ -11,6 +11,15 @@ import * as ImagePicker from 'expo-image-picker';
 import { Image } from 'expo-image';
 import { createFormDataFile } from '@/utils';
 
+// 验证错误状态类型
+interface ValidationErrors {
+  title: boolean;
+  content: boolean;
+  price: boolean;
+  productName: boolean;
+  productPrice: boolean;
+}
+
 export default function CreateScreen() {
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
@@ -20,7 +29,6 @@ export default function CreateScreen() {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [price, setPrice] = useState('');
-  const [tags, setTags] = useState('');
   const [images, setImages] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [uploadingImages, setUploadingImages] = useState(false);
@@ -29,12 +37,21 @@ export default function CreateScreen() {
   const [productPrice, setProductPrice] = useState('');
   const [productDescription, setProductDescription] = useState('');
   const [contactInfo, setContactInfo] = useState('');
+  const [validationErrors, setValidationErrors] = useState<ValidationErrors>({
+    title: false,
+    content: false,
+    price: false,
+    productName: false,
+    productPrice: false,
+  });
 
   const API_BASE_URL = process.env.EXPO_PUBLIC_BACKEND_BASE_URL;
 
-  // 显示错误弹窗
-  const showError = (title: string, message: string) => {
-    Alert.alert(title, message, [{ text: '确定', style: 'default' }]);
+  // 清除验证错误
+  const clearValidationError = (field: keyof ValidationErrors) => {
+    if (validationErrors[field]) {
+      setValidationErrors(prev => ({ ...prev, [field]: false }));
+    }
   };
 
   // 显示成功弹窗
@@ -47,10 +64,9 @@ export default function CreateScreen() {
   // 选择图片
   const handlePickImages = async () => {
     try {
-      // 请求相册权限
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== 'granted') {
-        showError('权限不足', '需要相册权限才能选择图片，请在设置中开启');
+        Alert.alert('权限不足', '需要相册权限才能选择图片，请在设置中开启');
         return;
       }
 
@@ -62,15 +78,11 @@ export default function CreateScreen() {
       });
 
       if (!result.canceled && result.assets) {
-        if (images.length + result.assets.length > 9) {
-          showError('图片过多', '最多只能上传9张图片');
-          return;
-        }
         setImages([...images, ...result.assets.map(asset => asset.uri)]);
       }
     } catch (error: any) {
       console.error('选择图片失败:', error);
-      showError('选择图片失败', error?.message || '未知错误，请重试');
+      Alert.alert('选择图片失败', error?.message || '未知错误，请重试');
     }
   };
 
@@ -116,45 +128,58 @@ export default function CreateScreen() {
     return uploadedUrls;
   };
 
+  // 验证表单
+  const validateForm = (): boolean => {
+    const errors: ValidationErrors = {
+      title: false,
+      content: false,
+      price: false,
+      productName: false,
+      productPrice: false,
+    };
+
+    let isValid = true;
+
+    // 验证标题
+    if (!title.trim() || title.trim().length < 2) {
+      errors.title = true;
+      isValid = false;
+    }
+
+    // 验证内容
+    if (!content.trim() || content.length < 10) {
+      errors.content = true;
+      isValid = false;
+    }
+
+    // 验证价格（知识库/悬赏）
+    if (postType === 'qa_paid' || postType === 'qa_bounty') {
+      if (!price || parseFloat(price) < 1) {
+        errors.price = true;
+        isValid = false;
+      }
+    }
+
+    // 验证产品信息
+    if (postType === 'product') {
+      if (!productName.trim()) {
+        errors.productName = true;
+        isValid = false;
+      }
+      if (!productPrice || parseFloat(productPrice) <= 0) {
+        errors.productPrice = true;
+        isValid = false;
+      }
+    }
+
+    setValidationErrors(errors);
+    return isValid;
+  };
+
   // 发布帖子
   const handlePublish = async () => {
-    // 前端验证
-    if (!title.trim()) {
-      showError('提示', '请输入标题');
-      return;
-    }
-
-    if (title.trim().length < 2) {
-      showError('提示', '标题至少需要2个字符');
-      return;
-    }
-
-    if (!content.trim()) {
-      showError('提示', '请输入内容');
-      return;
-    }
-
-    if (content.length < 10) {
-      showError('提示', '内容至少需要10个字符');
-      return;
-    }
-
-    if (postType === 'qa_paid') {
-      if (!price || parseFloat(price) < 1) {
-        showError('提示', '知识库帖子需要设置价格，最低1元');
-        return;
-      }
-    }
-
-    if (postType === 'qa_bounty') {
-      if (!price || parseFloat(price) < 1) {
-        showError('提示', '悬赏帖子需要设置悬赏金额，最低1元');
-        return;
-      }
-    }
-
-    if (postType === 'product' && (!productName || !productPrice)) {
-      showError('提示', '请填写产品名称和价格');
+    // 验证表单
+    if (!validateForm()) {
       return;
     }
 
@@ -164,7 +189,7 @@ export default function CreateScreen() {
     const avatar = await AsyncStorage.getItem('avatar');
 
     if (!userId) {
-      showError('未登录', '请先登录后再发布帖子');
+      Alert.alert('未登录', '请先登录后再发布帖子');
       router.replace('/login');
       return;
     }
@@ -179,7 +204,7 @@ export default function CreateScreen() {
         try {
           uploadedImages = await uploadImages(images);
         } catch (uploadError: any) {
-          showError('图片上传失败', uploadError?.message || '请检查网络后重试');
+          Alert.alert('图片上传失败', uploadError?.message || '请检查网络后重试');
           setLoading(false);
           setUploadingImages(false);
           return;
@@ -188,8 +213,6 @@ export default function CreateScreen() {
       }
 
       // 构建请求体
-      const tagArray = tags.split(',').map(tag => tag.trim()).filter(tag => tag);
-
       const payload: any = {
         userId: parseInt(userId),
         username,
@@ -198,7 +221,7 @@ export default function CreateScreen() {
         content: content.trim(),
         title: title.trim(),
         images: uploadedImages,
-        tags: tagArray.length > 0 ? tagArray : [],
+        tags: [],
         category: 'general',
         price: 0,
       };
@@ -232,27 +255,31 @@ export default function CreateScreen() {
         setTitle('');
         setContent('');
         setImages([]);
-        setTags('');
         setPrice('');
         setPostType('normal');
         setProductName('');
         setProductPrice('');
         setProductDescription('');
         setContactInfo('');
+        setValidationErrors({
+          title: false,
+          content: false,
+          price: false,
+          productName: false,
+          productPrice: false,
+        });
         
         if (data.post?.audit_status === 'approved') {
           showSuccess('发布成功', '您的帖子已成功发布！', () => {
-            // 跳转到首页
             router.replace('/');
           });
         } else {
           showSuccess('已提交', data.message || '帖子已提交，等待审核', () => {
-            // 跳转到首页
             router.replace('/');
           });
         }
       } else {
-        showError('发布失败', data.error || data.message || '未知错误，请重试');
+        Alert.alert('发布失败', data.error || data.message || '未知错误，请重试');
       }
     } catch (error: any) {
       console.error('发布帖子失败:', error);
@@ -266,7 +293,7 @@ export default function CreateScreen() {
         errorMessage = error.message;
       }
       
-      showError('错误', errorMessage);
+      Alert.alert('错误', errorMessage);
     } finally {
       setLoading(false);
       setUploadingImages(false);
@@ -282,7 +309,7 @@ export default function CreateScreen() {
       case 'qa_bounty':
         return '悬赏';
       case 'product':
-        return '热点讨论';
+        return '产品';
     }
   };
 
@@ -299,6 +326,12 @@ export default function CreateScreen() {
       default:
         return theme.textMuted;
     }
+  };
+
+  // 错误边框样式
+  const errorBorderStyle = {
+    borderWidth: 2,
+    borderColor: '#EF4444',
   };
 
   return (
@@ -351,13 +384,21 @@ export default function CreateScreen() {
               标题
             </ThemedText>
             <TextInput
-              style={styles.input}
-              placeholder="输入标题（必填）"
+              style={[styles.input, validationErrors.title && errorBorderStyle]}
+              placeholder="输入标题（至少2个字符）"
               placeholderTextColor={theme.textMuted}
               value={title}
-              onChangeText={setTitle}
+              onChangeText={(text) => {
+                setTitle(text);
+                clearValidationError('title');
+              }}
               maxLength={100}
             />
+            {validationErrors.title && (
+              <ThemedText variant="caption" color="#EF4444" style={{ marginTop: 4 }}>
+                标题至少需要2个字符
+              </ThemedText>
+            )}
             <ThemedText variant="caption" color={theme.textMuted} style={{ marginTop: 4 }}>
               {title.length}/100
             </ThemedText>
@@ -369,16 +410,24 @@ export default function CreateScreen() {
               内容
             </ThemedText>
             <TextInput
-              style={styles.textarea}
+              style={[styles.textarea, validationErrors.content && errorBorderStyle]}
               placeholder="分享你的想法...（至少10个字符）"
               placeholderTextColor={theme.textMuted}
               value={content}
-              onChangeText={setContent}
+              onChangeText={(text) => {
+                setContent(text);
+                clearValidationError('content');
+              }}
               multiline
               numberOfLines={8}
               maxLength={10000}
               textAlignVertical="top"
             />
+            {validationErrors.content && (
+              <ThemedText variant="caption" color="#EF4444" style={{ marginTop: 4 }}>
+                内容至少需要10个字符
+              </ThemedText>
+            )}
             <ThemedText variant="caption" color={theme.textMuted} style={{ marginTop: 4 }}>
               {content.length}/10000（最少10字符）
             </ThemedText>
@@ -413,22 +462,8 @@ export default function CreateScreen() {
             )}
             
             <ThemedText variant="caption" color={theme.textMuted}>
-              最多上传9张图片，当前已选 {images.length} 张
+              已选 {images.length} 张图片
             </ThemedText>
-          </View>
-
-          {/* 标签 */}
-          <View style={styles.section}>
-            <ThemedText variant="bodyMedium" color={theme.textPrimary} style={styles.sectionTitle}>
-              标签
-            </ThemedText>
-            <TextInput
-              style={styles.input}
-              placeholder="用逗号分隔，如：创业,经验,分享"
-              placeholderTextColor={theme.textMuted}
-              value={tags}
-              onChangeText={setTags}
-            />
           </View>
 
           {/* 价格设置（根据类型显示） */}
@@ -438,13 +473,21 @@ export default function CreateScreen() {
                 {postType === 'qa_paid' ? '问答价格' : '悬赏金额'}
               </ThemedText>
               <TextInput
-                style={styles.input}
+                style={[styles.input, validationErrors.price && errorBorderStyle]}
                 placeholder={postType === 'qa_paid' ? '设置查看价格，最低1元' : '设置悬赏金额，最低1元'}
                 placeholderTextColor={theme.textMuted}
                 value={price}
-                onChangeText={setPrice}
+                onChangeText={(text) => {
+                  setPrice(text);
+                  clearValidationError('price');
+                }}
                 keyboardType="decimal-pad"
               />
+              {validationErrors.price && (
+                <ThemedText variant="caption" color="#EF4444" style={{ marginTop: 4 }}>
+                  {postType === 'qa_paid' ? '知识库需要设置价格，最低1元' : '悬赏需要设置金额，最低1元'}
+                </ThemedText>
+              )}
               <ThemedText variant="caption" color={theme.textMuted} style={{ marginTop: 4 }}>
                 {postType === 'qa_paid' ? '用户需付费查看您的回答' : '悬赏金额将奖励给回答者'}
               </ThemedText>
@@ -458,7 +501,7 @@ export default function CreateScreen() {
                 产品信息
               </ThemedText>
               <TouchableOpacity
-                style={styles.productInfoBox}
+                style={[styles.productInfoBox, (validationErrors.productName || validationErrors.productPrice) && errorBorderStyle]}
                 onPress={() => setShowProductModal(true)}
               >
                 <View>
@@ -473,6 +516,11 @@ export default function CreateScreen() {
                 </View>
                 <FontAwesome6 name="chevron-right" size={16} color={theme.textMuted} />
               </TouchableOpacity>
+              {(validationErrors.productName || validationErrors.productPrice) && (
+                <ThemedText variant="caption" color="#EF4444" style={{ marginTop: 4 }}>
+                  请填写完整的产品名称和价格
+                </ThemedText>
+              )}
             </View>
           )}
 
@@ -514,52 +562,68 @@ export default function CreateScreen() {
                   <FontAwesome6 name="xmark" size={20} color={theme.textPrimary} />
                 </TouchableOpacity>
               </View>
-              <View style={styles.modalBody}>
-                <ThemedText variant="body" color={theme.textPrimary} style={styles.formLabel}>
+              
+              <ScrollView style={styles.modalBody}>
+                <ThemedText variant="body" color={theme.textSecondary} style={{ marginBottom: 8 }}>
                   产品名称
                 </ThemedText>
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, validationErrors.productName && errorBorderStyle]}
                   placeholder="输入产品名称"
                   placeholderTextColor={theme.textMuted}
                   value={productName}
-                  onChangeText={setProductName}
+                  onChangeText={(text) => {
+                    setProductName(text);
+                    clearValidationError('productName');
+                  }}
                 />
-                <ThemedText variant="body" color={theme.textPrimary} style={[styles.formLabel, { marginTop: 16 }]}>
+                
+                <ThemedText variant="body" color={theme.textSecondary} style={{ marginBottom: 8, marginTop: 16 }}>
                   产品价格
                 </ThemedText>
                 <TextInput
-                  style={styles.input}
-                  placeholder="输入价格"
+                  style={[styles.input, validationErrors.productPrice && errorBorderStyle]}
+                  placeholder="输入产品价格"
                   placeholderTextColor={theme.textMuted}
                   value={productPrice}
-                  onChangeText={setProductPrice}
+                  onChangeText={(text) => {
+                    setProductPrice(text);
+                    clearValidationError('productPrice');
+                  }}
                   keyboardType="decimal-pad"
                 />
-                <ThemedText variant="body" color={theme.textPrimary} style={[styles.formLabel, { marginTop: 16 }]}>
-                  产品描述
+                
+                <ThemedText variant="body" color={theme.textSecondary} style={{ marginBottom: 8, marginTop: 16 }}>
+                  产品描述（选填）
                 </ThemedText>
                 <TextInput
-                  style={[styles.input, { height: 80, textAlignVertical: 'top', paddingTop: 12 }]}
-                  placeholder="描述你的产品"
+                  style={[styles.textarea, { height: 100 }]}
+                  placeholder="输入产品描述"
                   placeholderTextColor={theme.textMuted}
                   value={productDescription}
                   onChangeText={setProductDescription}
                   multiline
+                  textAlignVertical="top"
                 />
-              </View>
+                
+                <ThemedText variant="body" color={theme.textSecondary} style={{ marginBottom: 8, marginTop: 16 }}>
+                  联系方式（选填）
+                </ThemedText>
+                <TextInput
+                  style={styles.input}
+                  placeholder="输入联系方式"
+                  placeholderTextColor={theme.textMuted}
+                  value={contactInfo}
+                  onChangeText={setContactInfo}
+                />
+              </ScrollView>
+              
               <View style={styles.modalFooter}>
                 <TouchableOpacity
-                  style={[styles.modalButton, styles.cancelButton]}
+                  style={[styles.modalButton, { backgroundColor: theme.primary }]}
                   onPress={() => setShowProductModal(false)}
                 >
-                  <ThemedText variant="body" color={theme.textPrimary}>取消</ThemedText>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.modalButton, styles.confirmButton]}
-                  onPress={() => setShowProductModal(false)}
-                >
-                  <ThemedText variant="body" color={theme.buttonPrimaryText}>确定</ThemedText>
+                  <ThemedText variant="bodyMedium" color={theme.buttonPrimaryText}>确定</ThemedText>
                 </TouchableOpacity>
               </View>
             </View>

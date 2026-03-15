@@ -11,6 +11,12 @@ import { createStyles } from './styles';
 import { createFormDataFile } from '@/utils';
 import { Image } from 'expo-image';
 
+// 验证错误状态类型
+interface ValidationErrors {
+  title: boolean;
+  content: boolean;
+}
+
 export default function CreatePostScreen() {
   const { theme, isDark } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
@@ -21,12 +27,18 @@ export default function CreatePostScreen() {
   const [images, setImages] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [uploadingImages, setUploadingImages] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<ValidationErrors>({
+    title: false,
+    content: false,
+  });
 
   const API_BASE_URL = process.env.EXPO_PUBLIC_BACKEND_BASE_URL;
 
-  // 显示错误弹窗
-  const showError = (title: string, message: string) => {
-    Alert.alert(title, message, [{ text: '确定', style: 'default' }]);
+  // 清除验证错误
+  const clearValidationError = (field: keyof ValidationErrors) => {
+    if (validationErrors[field]) {
+      setValidationErrors(prev => ({ ...prev, [field]: false }));
+    }
   };
 
   // 显示成功弹窗
@@ -42,7 +54,7 @@ export default function CreatePostScreen() {
       const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
       if (!permissionResult.granted) {
-        showError('权限不足', '需要相册权限才能选择图片，请在设置中开启');
+        Alert.alert('权限不足', '需要相册权限才能选择图片，请在设置中开启');
         return;
       }
 
@@ -50,22 +62,18 @@ export default function CreatePostScreen() {
         mediaTypes: ['images'],
         allowsEditing: false,
         quality: 0.8,
-        selectionLimit: 9 - images.length,
+        selectionLimit: 0, // 不限制数量
       });
 
       if (!result.canceled && result.assets) {
         const newImages = result.assets.map(asset => asset.uri);
-        if (images.length + newImages.length > 9) {
-          showError('图片过多', '最多只能上传9张图片');
-          return;
-        }
         setImages([...images, ...newImages]);
       }
     } catch (error: any) {
       console.error('选择图片失败:', error);
-      showError('选择图片失败', error?.message || '未知错误，请重试');
+      Alert.alert('选择图片失败', error?.message || '未知错误，请重试');
     }
-  }, [images.length]);
+  }, [images]);
 
   // 删除图片
   const handleRemoveImage = useCallback((index: number) => {
@@ -107,27 +115,35 @@ export default function CreatePostScreen() {
     return uploadedUrls;
   };
 
-  // 发布帖子
-  const handlePublish = useCallback(async () => {
-    // 验证标题
-    if (!title.trim()) {
-      showError('提示', '请输入标题');
-      return;
-    }
+  // 验证表单
+  const validateForm = (): boolean => {
+    const errors: ValidationErrors = {
+      title: false,
+      content: false,
+    };
 
-    if (title.trim().length < 2) {
-      showError('提示', '标题至少需要2个字符');
-      return;
+    let isValid = true;
+
+    // 验证标题
+    if (!title.trim() || title.trim().length < 2) {
+      errors.title = true;
+      isValid = false;
     }
 
     // 验证内容
-    if (!content.trim()) {
-      showError('提示', '请输入内容');
-      return;
+    if (!content.trim() || content.length < 10) {
+      errors.content = true;
+      isValid = false;
     }
 
-    if (content.length < 10) {
-      showError('提示', '内容至少需要10个字符');
+    setValidationErrors(errors);
+    return isValid;
+  };
+
+  // 发布帖子
+  const handlePublish = useCallback(async () => {
+    // 验证表单
+    if (!validateForm()) {
       return;
     }
 
@@ -137,7 +153,7 @@ export default function CreatePostScreen() {
     const avatar = await AsyncStorage.getItem('avatar');
 
     if (!userId) {
-      showError('未登录', '请先登录后再发布帖子');
+      Alert.alert('未登录', '请先登录后再发布帖子');
       router.replace('/login');
       return;
     }
@@ -152,7 +168,7 @@ export default function CreatePostScreen() {
         try {
           uploadedImages = await uploadImages(images);
         } catch (uploadError: any) {
-          showError('图片上传失败', uploadError?.message || '请检查网络后重试');
+          Alert.alert('图片上传失败', uploadError?.message || '请检查网络后重试');
           setLoading(false);
           setUploadingImages(false);
           return;
@@ -188,20 +204,22 @@ export default function CreatePostScreen() {
         setTitle('');
         setContent('');
         setImages([]);
+        setValidationErrors({
+          title: false,
+          content: false,
+        });
         
         if (data.post?.audit_status === 'approved') {
           showSuccess('发布成功', '您的帖子已成功发布！', () => {
-            // 跳转到首页
             router.replace('/');
           });
         } else {
           showSuccess('已提交', data.message || '帖子已提交，等待审核', () => {
-            // 跳转到首页
             router.replace('/');
           });
         }
       } else {
-        showError('发布失败', data.error || data.message || '未知错误，请重试');
+        Alert.alert('发布失败', data.error || data.message || '未知错误，请重试');
       }
     } catch (error: any) {
       console.error('发布帖子失败:', error);
@@ -215,12 +233,18 @@ export default function CreatePostScreen() {
         errorMessage = error.message;
       }
       
-      showError('错误', errorMessage);
+      Alert.alert('错误', errorMessage);
     } finally {
       setLoading(false);
       setUploadingImages(false);
     }
   }, [title, content, images, API_BASE_URL, router]);
+
+  // 错误边框样式
+  const errorBorderStyle = {
+    borderWidth: 2,
+    borderColor: '#EF4444',
+  };
 
   return (
     <Screen backgroundColor={theme.backgroundRoot} statusBarStyle={isDark ? 'light' : 'dark'}>
@@ -239,29 +263,45 @@ export default function CreatePostScreen() {
         <ScrollView contentContainerStyle={styles.scrollContent}>
           {/* 标题输入 */}
           <TextInput
-            style={[styles.input, styles.titleInput]}
-            placeholder="输入标题..."
+            style={[styles.input, styles.titleInput, validationErrors.title && errorBorderStyle]}
+            placeholder="输入标题...（至少2个字符）"
             placeholderTextColor={theme.textMuted}
             value={title}
-            onChangeText={setTitle}
+            onChangeText={(text) => {
+              setTitle(text);
+              clearValidationError('title');
+            }}
             maxLength={100}
           />
+          {validationErrors.title && (
+            <ThemedText variant="caption" color="#EF4444" style={{ marginHorizontal: 16, marginBottom: 8 }}>
+              标题至少需要2个字符
+            </ThemedText>
+          )}
           <ThemedText variant="caption" color={theme.textMuted} style={{ marginHorizontal: 16, marginBottom: 8 }}>
             {title.length}/100
           </ThemedText>
 
           {/* 内容输入 */}
           <TextInput
-            style={[styles.input, styles.contentInput]}
+            style={[styles.input, styles.contentInput, validationErrors.content && errorBorderStyle]}
             placeholder="分享你的想法...（至少10个字符）"
             placeholderTextColor={theme.textMuted}
             value={content}
-            onChangeText={setContent}
+            onChangeText={(text) => {
+              setContent(text);
+              clearValidationError('content');
+            }}
             multiline
             numberOfLines={10}
             maxLength={10000}
             textAlignVertical="top"
           />
+          {validationErrors.content && (
+            <ThemedText variant="caption" color="#EF4444" style={{ marginHorizontal: 16, marginBottom: 8 }}>
+              内容至少需要10个字符
+            </ThemedText>
+          )}
           <ThemedText variant="caption" color={theme.textMuted} style={{ marginHorizontal: 16, marginBottom: 16 }}>
             {content.length}/10000（最少10字符）
           </ThemedText>
@@ -284,14 +324,12 @@ export default function CreatePostScreen() {
           )}
 
           {/* 添加图片按钮 */}
-          {images.length < 9 && (
-            <TouchableOpacity style={styles.addImageButton} onPress={handlePickImage}>
-              <FontAwesome6 name="image" size={24} color={theme.textMuted} />
-              <ThemedText variant="body" color={theme.textMuted} style={{ marginLeft: 8 }}>
-                添加图片 ({images.length}/9)
-              </ThemedText>
-            </TouchableOpacity>
-          )}
+          <TouchableOpacity style={styles.addImageButton} onPress={handlePickImage}>
+            <FontAwesome6 name="image" size={24} color={theme.textMuted} />
+            <ThemedText variant="body" color={theme.textMuted} style={{ marginLeft: 8 }}>
+              添加图片 ({images.length}张)
+            </ThemedText>
+          </TouchableOpacity>
 
           {/* 发布按钮 */}
           <TouchableOpacity
