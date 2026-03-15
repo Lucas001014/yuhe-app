@@ -1,15 +1,28 @@
 {
-  "name": "expo-express-monorepo",
+  "name": "yuhe-app",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "scripts": {
     "dev": "bash .cozeproj/scripts/dev_run.sh",
     "build": "bash .cozeproj/scripts/prod_build.sh",
     "start": "bash .cozeproj/scripts/prod_run.sh",
     "preinstall": "npx only-allow pnpm"
   },
-  "dependencies": {},
-  "devDependencies": {},
+  "dependencies": {
+    "expo": "~54.0.0",
+    "expo-router": "~4.0.0",
+    "expo-splash-screen": "~0.30.0",
+    "expo-image-picker": "~16.0.0",
+    "expo-camera": "~16.0.0",
+    "expo-av": "~15.0.0",
+    "expo-location": "~18.0.0",
+    "react": "18.3.1",
+    "react-native": "0.77.1"
+  },
+  "devDependencies": {
+    "@types/react": "~18.3.0",
+    "typescript": "~5.3.0"
+  },
   "packageManager": "pnpm@9.0.0",
   "engines": {
     "pnpm": ">=9.0.0"
