@@ -126,6 +126,47 @@ export const createStyles = (theme: Theme) => {
       height: 100,
       borderRadius: BorderRadius.md,
     },
+    imagePreviewContainer: {
+      position: 'relative',
+    },
+    section: {
+      marginBottom: Spacing.lg,
+    },
+    sectionHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: Spacing.sm,
+    },
+    addButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.xs,
+    },
+    attachmentsContainer: {
+      marginTop: Spacing.sm,
+      marginBottom: Spacing.sm,
+    },
+    attachmentItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: Spacing.md,
+      backgroundColor: theme.backgroundTertiary,
+      borderRadius: BorderRadius.lg,
+      marginBottom: Spacing.sm,
+    },
+    attachmentIcon: {
+      width: 40,
+      height: 40,
+      borderRadius: 10,
+      backgroundColor: theme.primary + '20',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    attachmentInfo: {
+      flex: 1,
+      marginLeft: Spacing.md,
+    },
     submitButton: {
       backgroundColor: theme.primary,
       paddingVertical: Spacing.lg,

@@ -1,7 +1,8 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { View, ScrollView, TouchableOpacity, TextInput, Alert, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
+import { View, ScrollView, TouchableOpacity, TextInput, Alert, KeyboardAvoidingView, Platform, ActivityIndicator, StyleSheet, Modal } from 'react-native';
 import { FontAwesome6 } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
+import * as DocumentPicker from 'expo-document-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ThemedText } from '@/components/ThemedText';
 import { Screen } from '@/components/Screen';
@@ -10,6 +11,19 @@ import { useSafeRouter } from '@/hooks/useSafeRouter';
 import { createStyles } from './styles';
 import { createFormDataFile } from '@/utils';
 import { Image } from 'expo-image';
+
+// 附件类型
+type AttachmentType = 'photo' | 'video' | 'document';
+
+// 附件数据结构
+interface Attachment {
+  id: string;
+  uri: string;
+  type: AttachmentType;
+  name: string;
+  size?: number;
+  mimeType?: string;
+}
 
 // 验证错误状态类型
 interface ValidationErrors {
@@ -24,9 +38,10 @@ export default function CreatePostScreen() {
 
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
-  const [images, setImages] = useState<string[]>([]);
+  const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [loading, setLoading] = useState(false);
-  const [uploadingImages, setUploadingImages] = useState(false);
+  const [uploadingFiles, setUploadingFiles] = useState(false);
+  const [showAttachmentSheet, setShowAttachmentSheet] = useState(false);
   const [validationErrors, setValidationErrors] = useState<ValidationErrors>({
     title: false,
     content: false,
@@ -48,47 +63,113 @@ export default function CreatePostScreen() {
     ]);
   };
 
-  // 选择图片
-  const handlePickImage = useCallback(async () => {
-    try {
-      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+  // 生成唯一ID
+  const generateId = () => `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
-      if (!permissionResult.granted) {
-        Alert.alert('权限不足', '需要相册权限才能选择图片，请在设置中开启');
+  // 格式化文件大小
+  const formatFileSize = (bytes?: number): string => {
+    if (!bytes) return '';
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
+  // 获取附件图标
+  const getAttachmentIcon = (type: AttachmentType): string => {
+    switch (type) {
+      case 'photo': return 'image';
+      case 'video': return 'video';
+      case 'document': return 'file-lines';
+    }
+  };
+
+  // 添加照片
+  const handleAddPhoto = async () => {
+    setShowAttachmentSheet(false);
+    try {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('权限不足', '需要相册权限才能选择照片，请在设置中开启');
         return;
       }
 
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ['images'],
-        allowsEditing: false,
+        allowsMultipleSelection: true,
         quality: 0.8,
-        selectionLimit: 0, // 不限制数量
+        allowsEditing: false,
       });
 
       if (!result.canceled && result.assets) {
-        const newImages = result.assets.map(asset => asset.uri);
-        setImages([...images, ...newImages]);
+        const newAttachments: Attachment[] = result.assets.map(asset => ({
+          id: generateId(),
+          uri: asset.uri,
+          type: 'photo' as AttachmentType,
+          name: asset.fileName || `photo_${Date.now()}.jpg`,
+          size: asset.fileSize,
+          mimeType: asset.mimeType,
+        }));
+        setAttachments([...attachments, ...newAttachments]);
       }
     } catch (error: any) {
-      console.error('选择图片失败:', error);
-      Alert.alert('选择图片失败', error?.message || '未知错误，请重试');
+      console.error('选择照片失败:', error);
+      Alert.alert('选择照片失败', error?.message || '未知错误，请重试');
     }
-  }, [images]);
+  };
 
-  // 删除图片
-  const handleRemoveImage = useCallback((index: number) => {
-    setImages(images.filter((_, i) => i !== index));
-  }, [images]);
+  // 添加视频
+  const handleAddVideo = async () => {
+    setShowAttachmentSheet(false);
+    try {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('权限不足', '需要相册权限才能选择视频，请在设置中开启');
+        return;
+      }
 
-  // 上传图片到对象存储
-  const uploadImages = async (imageUris: string[]): Promise<string[]> => {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['videos'],
+        allowsMultipleSelection: true,
+        quality: 0.8,
+        allowsEditing: false,
+      });
+
+      if (!result.canceled && result.assets) {
+        const newAttachments: Attachment[] = result.assets.map(asset => ({
+          id: generateId(),
+          uri: asset.uri,
+          type: 'video' as AttachmentType,
+          name: asset.fileName || `video_${Date.now()}.mp4`,
+          size: asset.fileSize,
+          mimeType: asset.mimeType,
+        }));
+        setAttachments([...attachments, ...newAttachments]);
+      }
+    } catch (error: any) {
+      console.error('选择视频失败:', error);
+      Alert.alert('选择视频失败', error?.message || '未知错误，请重试');
+    }
+  };
+
+  // 删除附件
+  const handleRemoveAttachment = useCallback((id: string) => {
+    setAttachments(attachments.filter(a => a.id !== id));
+  }, [attachments]);
+
+  // 上传附件到对象存储
+  const uploadAttachments = async (attachmentList: Attachment[]): Promise<string[]> => {
     const uploadedUrls: string[] = [];
     
-    for (let i = 0; i < imageUris.length; i++) {
+    for (let i = 0; i < attachmentList.length; i++) {
       try {
-        const imageUri = imageUris[i];
+        const attachment = attachmentList[i];
         const formData = new FormData();
-        const file = await createFormDataFile(imageUri, `image_${Date.now()}_${i}.jpg`, 'image/jpeg');
+        
+        let mimeType = attachment.mimeType || 'application/octet-stream';
+        if (attachment.type === 'photo') mimeType = attachment.mimeType || 'image/jpeg';
+        if (attachment.type === 'video') mimeType = attachment.mimeType || 'video/mp4';
+        
+        const file = await createFormDataFile(attachment.uri, attachment.name, mimeType);
         formData.append('file', file as any);
 
         const uploadResponse = await fetch(`${API_BASE_URL}/api/v1/upload`, {
@@ -107,8 +188,8 @@ export default function CreatePostScreen() {
           throw new Error(uploadData.error || '上传失败');
         }
       } catch (error: any) {
-        console.error(`上传第 ${i + 1} 张图片失败:`, error);
-        throw new Error(`第 ${i + 1} 张图片上传失败: ${error?.message || '未知错误'}`);
+        console.error(`上传第 ${i + 1} 个附件失败:`, error);
+        throw new Error(`第 ${i + 1} 个附件上传失败: ${error?.message || '未知错误'}`);
       }
     }
 
@@ -124,13 +205,11 @@ export default function CreatePostScreen() {
 
     let isValid = true;
 
-    // 验证标题
     if (!title.trim() || title.trim().length < 2) {
       errors.title = true;
       isValid = false;
     }
 
-    // 验证内容
     if (!content.trim() || content.length < 10) {
       errors.content = true;
       isValid = false;
@@ -142,12 +221,10 @@ export default function CreatePostScreen() {
 
   // 发布帖子
   const handlePublish = useCallback(async () => {
-    // 验证表单
     if (!validateForm()) {
       return;
     }
 
-    // 检查登录状态
     const userId = await AsyncStorage.getItem('userId');
     const username = await AsyncStorage.getItem('username');
     const avatar = await AsyncStorage.getItem('avatar');
@@ -161,22 +238,20 @@ export default function CreatePostScreen() {
     setLoading(true);
 
     try {
-      // 上传图片
-      let uploadedImages: string[] = [];
-      if (images.length > 0) {
-        setUploadingImages(true);
+      let uploadedAttachmentUrls: string[] = [];
+      if (attachments.length > 0) {
+        setUploadingFiles(true);
         try {
-          uploadedImages = await uploadImages(images);
+          uploadedAttachmentUrls = await uploadAttachments(attachments);
         } catch (uploadError: any) {
-          Alert.alert('图片上传失败', uploadError?.message || '请检查网络后重试');
+          Alert.alert('附件上传失败', uploadError?.message || '请检查网络后重试');
           setLoading(false);
-          setUploadingImages(false);
+          setUploadingFiles(false);
           return;
         }
-        setUploadingImages(false);
+        setUploadingFiles(false);
       }
 
-      // 创建帖子
       const response = await fetch(`${API_BASE_URL}/api/v1/posts`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -186,7 +261,15 @@ export default function CreatePostScreen() {
           avatar,
           title: title.trim(),
           content: content.trim(),
-          images: uploadedImages,
+          images: uploadedAttachmentUrls.filter((_, i) => attachments[i]?.type === 'photo'),
+          videos: uploadedAttachmentUrls.filter((_, i) => attachments[i]?.type === 'video'),
+          documents: uploadedAttachmentUrls.filter((_, i) => attachments[i]?.type === 'document'),
+          attachments: attachments.map((a, i) => ({
+            url: uploadedAttachmentUrls[i],
+            type: a.type,
+            name: a.name,
+            size: a.size,
+          })),
           type: 'normal',
           category: 'general',
           tags: [],
@@ -200,10 +283,9 @@ export default function CreatePostScreen() {
       const data = await response.json();
 
       if (data.success) {
-        // 清空所有表单内容
         setTitle('');
         setContent('');
-        setImages([]);
+        setAttachments([]);
         setValidationErrors({
           title: false,
           content: false,
@@ -236,9 +318,9 @@ export default function CreatePostScreen() {
       Alert.alert('错误', errorMessage);
     } finally {
       setLoading(false);
-      setUploadingImages(false);
+      setUploadingFiles(false);
     }
-  }, [title, content, images, API_BASE_URL, router]);
+  }, [title, content, attachments, API_BASE_URL, router]);
 
   // 错误边框样式
   const errorBorderStyle = {
@@ -306,30 +388,72 @@ export default function CreatePostScreen() {
             {content.length}/10000（最少10字符）
           </ThemedText>
 
-          {/* 图片预览 */}
-          {images.length > 0 && (
-            <View style={styles.imagesContainer}>
-              {images.map((uri, index) => (
-                <View key={index} style={styles.imageWrapper}>
-                  <Image source={{ uri }} style={styles.imagePreview} contentFit="cover" />
-                  <TouchableOpacity
-                    style={styles.removeButton}
-                    onPress={() => handleRemoveImage(index)}
-                  >
-                    <FontAwesome6 name="xmark" size={12} color="#fff" />
-                  </TouchableOpacity>
-                </View>
-              ))}
+          {/* 附件上传 */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <ThemedText variant="bodyMedium" color={theme.textPrimary}>
+                附件
+              </ThemedText>
+              <TouchableOpacity style={styles.addButton} onPress={() => setShowAttachmentSheet(true)}>
+                <FontAwesome6 name="plus" size={14} color={theme.primary} />
+                <ThemedText variant="body" color={theme.primary}>添加附件</ThemedText>
+              </TouchableOpacity>
             </View>
-          )}
-
-          {/* 添加图片按钮 */}
-          <TouchableOpacity style={styles.addImageButton} onPress={handlePickImage}>
-            <FontAwesome6 name="image" size={24} color={theme.textMuted} />
-            <ThemedText variant="body" color={theme.textMuted} style={{ marginLeft: 8 }}>
-              添加图片 ({images.length}张)
+            
+            {/* 附件列表 */}
+            {attachments.length > 0 && (
+              <View style={styles.attachmentsContainer}>
+                {attachments.map((attachment) => (
+                  <View key={attachment.id} style={styles.attachmentItem}>
+                    <View style={styles.attachmentIcon}>
+                      <FontAwesome6 
+                        name={getAttachmentIcon(attachment.type)} 
+                        size={20} 
+                        color={theme.primary} 
+                      />
+                    </View>
+                    <View style={styles.attachmentInfo}>
+                      <ThemedText variant="body" color={theme.textPrimary} numberOfLines={1}>
+                        {attachment.name}
+                      </ThemedText>
+                      {attachment.size && (
+                        <ThemedText variant="caption" color={theme.textMuted}>
+                          {formatFileSize(attachment.size)}
+                        </ThemedText>
+                      )}
+                    </View>
+                    <TouchableOpacity
+                      style={styles.removeButton}
+                      onPress={() => handleRemoveAttachment(attachment.id)}
+                    >
+                      <FontAwesome6 name="xmark" size={12} color="#fff" />
+                    </TouchableOpacity>
+                  </View>
+                ))}
+              </View>
+            )}
+            
+            {/* 照片预览 */}
+            {attachments.filter(a => a.type === 'photo').length > 0 && (
+              <View style={styles.imagesContainer}>
+                {attachments.filter(a => a.type === 'photo').map((attachment) => (
+                  <View key={attachment.id} style={styles.imagePreviewContainer}>
+                    <Image source={{ uri: attachment.uri }} style={styles.imagePreview} contentFit="cover" />
+                    <TouchableOpacity
+                      style={styles.removeButton}
+                      onPress={() => handleRemoveAttachment(attachment.id)}
+                    >
+                      <FontAwesome6 name="xmark" size={12} color="#fff" />
+                    </TouchableOpacity>
+                  </View>
+                ))}
+              </View>
+            )}
+            
+            <ThemedText variant="caption" color={theme.textMuted}>
+              已选 {attachments.length} 个附件
             </ThemedText>
-          </TouchableOpacity>
+          </View>
 
           {/* 发布按钮 */}
           <TouchableOpacity
@@ -341,7 +465,7 @@ export default function CreatePostScreen() {
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                 <ActivityIndicator size="small" color={theme.buttonPrimaryText} />
                 <ThemedText variant="bodyMedium" color={theme.buttonPrimaryText}>
-                  {uploadingImages ? '上传图片中...' : '发布中...'}
+                  {uploadingFiles ? '上传附件中...' : '发布中...'}
                 </ThemedText>
               </View>
             ) : (
@@ -351,7 +475,108 @@ export default function CreatePostScreen() {
             )}
           </TouchableOpacity>
         </ScrollView>
+
+        {/* 附件选择弹窗 */}
+        <Modal
+          visible={showAttachmentSheet}
+          transparent
+          animationType="slide"
+          onRequestClose={() => setShowAttachmentSheet(false)}
+        >
+          <TouchableOpacity 
+            style={attachmentStyles.overlay}
+            activeOpacity={1}
+            onPress={() => setShowAttachmentSheet(false)}
+          >
+            <TouchableOpacity 
+              style={[attachmentStyles.sheetContainer, { backgroundColor: theme.backgroundDefault }]}
+              activeOpacity={1}
+            >
+              <View style={attachmentStyles.sheetHeader}>
+                <ThemedText variant="h4" color={theme.textPrimary}>添加附件</ThemedText>
+                <TouchableOpacity onPress={() => setShowAttachmentSheet(false)}>
+                  <FontAwesome6 name="xmark" size={20} color={theme.textPrimary} />
+                </TouchableOpacity>
+              </View>
+              
+              <TouchableOpacity style={attachmentStyles.sheetOption} onPress={handleAddPhoto}>
+                <View style={[attachmentStyles.optionIcon, { backgroundColor: '#4F46E520' }]}>
+                  <FontAwesome6 name="image" size={24} color="#4F46E5" />
+                </View>
+                <View style={attachmentStyles.optionContent}>
+                  <ThemedText variant="bodyMedium" color={theme.textPrimary}>添加照片</ThemedText>
+                  <ThemedText variant="caption" color={theme.textMuted}>从相册选择照片</ThemedText>
+                </View>
+                <FontAwesome6 name="chevron-right" size={16} color={theme.textMuted} />
+              </TouchableOpacity>
+              
+              <TouchableOpacity style={attachmentStyles.sheetOption} onPress={handleAddVideo}>
+                <View style={[attachmentStyles.optionIcon, { backgroundColor: '#10B98120' }]}>
+                  <FontAwesome6 name="video" size={24} color="#10B981" />
+                </View>
+                <View style={attachmentStyles.optionContent}>
+                  <ThemedText variant="bodyMedium" color={theme.textPrimary}>添加视频</ThemedText>
+                  <ThemedText variant="caption" color={theme.textMuted}>从相册选择视频</ThemedText>
+                </View>
+                <FontAwesome6 name="chevron-right" size={16} color={theme.textMuted} />
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={[attachmentStyles.cancelButton, { borderTopColor: theme.border }]}
+                onPress={() => setShowAttachmentSheet(false)}
+              >
+                <ThemedText variant="bodyMedium" color={theme.textSecondary}>取消</ThemedText>
+              </TouchableOpacity>
+            </TouchableOpacity>
+          </TouchableOpacity>
+        </Modal>
       </KeyboardAvoidingView>
     </Screen>
   );
 }
+
+// 附件弹窗样式
+const attachmentStyles = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  sheetContainer: {
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingBottom: 34,
+  },
+  sheetHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+  },
+  sheetOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+  },
+  optionIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  optionContent: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  cancelButton: {
+    padding: 16,
+    alignItems: 'center',
+    borderTopWidth: 1,
+    marginTop: 8,
+  },
+});

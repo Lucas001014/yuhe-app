@@ -55,6 +55,7 @@ export const createStyles = (theme: Theme) => {
       flexDirection: 'row',
       flexWrap: 'wrap',
       gap: Spacing.md,
+      marginTop: Spacing.sm,
     },
     imagePreviewContainer: {
       position: 'relative',
@@ -66,6 +67,30 @@ export const createStyles = (theme: Theme) => {
       borderRadius: BorderRadius.md,
       justifyContent: 'center',
       alignItems: 'center',
+    },
+    attachmentsContainer: {
+      marginTop: Spacing.sm,
+      marginBottom: Spacing.sm,
+    },
+    attachmentItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: Spacing.md,
+      backgroundColor: theme.backgroundTertiary,
+      borderRadius: BorderRadius.lg,
+      marginBottom: Spacing.sm,
+    },
+    attachmentIcon: {
+      width: 40,
+      height: 40,
+      borderRadius: 10,
+      backgroundColor: theme.primary + '20',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    attachmentInfo: {
+      flex: 1,
+      marginLeft: Spacing.md,
     },
     removeButton: {
       position: 'absolute',
