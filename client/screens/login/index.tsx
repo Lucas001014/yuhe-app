@@ -55,8 +55,8 @@ export default function LoginScreen() {
       return;
     }
 
-    if (password.length < 8) {
-      Alert.alert('提示', '密码长度必须大于8位');
+    if (password.length < 6) {
+      Alert.alert('提示', '密码长度必须至少6位');
       return;
     }
 
@@ -92,8 +92,8 @@ export default function LoginScreen() {
       return;
     }
 
-    if (password.length < 8) {
-      Alert.alert('提示', '密码长度必须大于8位');
+    if (password.length < 6) {
+      Alert.alert('提示', '密码长度必须至少6位');
       return;
     }
 
