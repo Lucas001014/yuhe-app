@@ -79,6 +79,7 @@ export const createStyles = (theme: Theme, width?: number) => StyleSheet.create(
   },
   cardContent: {
     padding: 10,
+    position: 'relative',
   },
   cardTitle: {
     fontSize: 13,
@@ -127,6 +128,25 @@ export const createStyles = (theme: Theme, width?: number) => StyleSheet.create(
     alignItems: 'center',
     gap: 4,
   },
+  // 用户头像样式
+  authorAvatarContainer: {
+    position: 'absolute',
+    right: 8,
+    bottom: 8,
+    zIndex: 10,
+  },
+  authorAvatar: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 3,
+    elevation: 4,
+  },
   // 悬赏Tab专用样式
   cardImage: {
     width: '100%',
@@ -149,11 +169,6 @@ export const createStyles = (theme: Theme, width?: number) => StyleSheet.create(
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-  },
-  authorAvatar: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
   },
   stats: {
     flexDirection: 'row',

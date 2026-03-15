@@ -95,8 +95,8 @@ export default function HomeScreen() {
           images: p.images || [],
           aspectRatio: p.aspectRatio || generateAspectRatio(),
           author_id: p.author_id,
-          authorName: '用户',
-          authorAvatar: 'https://i.pravatar.cc/150',
+          authorName: p.username || p.authorName || '用户',
+          authorAvatar: p.avatar || p.authorAvatar || 'https://i.pravatar.cc/150',
           tags: p.tags || [],
           like_count: p.like_count || 0,
           comment_count: p.comment_count || 0,
@@ -234,7 +234,7 @@ export default function HomeScreen() {
     return (
       <TouchableOpacity
         key={post.id}
-        style={styles.card}
+        style={[styles.card, imageUrl ? {} : { position: 'relative' }]}
         onPress={() => handlePostPress(post)}
         activeOpacity={0.9}
       >
@@ -258,6 +258,15 @@ export default function HomeScreen() {
           <ThemedText variant="caption" color={theme.textSecondary} numberOfLines={imageUrl ? 2 : 4} style={styles.cardDescription}>
             {post.content}
           </ThemedText>
+
+          {/* 用户头像 - 右下角 */}
+          <View style={styles.authorAvatarContainer}>
+            <Image
+              source={{ uri: post.authorAvatar }}
+              style={styles.authorAvatar}
+              contentFit="cover"
+            />
+          </View>
 
           {/* 标签 */}
           {post.tags && post.tags.length > 0 && (

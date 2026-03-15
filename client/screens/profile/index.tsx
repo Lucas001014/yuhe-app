@@ -115,7 +115,13 @@ export default function ProfileScreen() {
 
       if (!result.canceled && result.assets && result.assets[0]) {
         const newAvatar = result.assets[0].uri;
+        
+        // 更新本地状态
         setUserInfo({ ...userInfo!, avatar: newAvatar });
+        
+        // 保存到 AsyncStorage
+        await AsyncStorage.setItem('avatar', newAvatar);
+        
         Alert.alert('成功', '头像更换成功');
       }
     } catch (error) {
