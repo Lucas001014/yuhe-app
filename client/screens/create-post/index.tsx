@@ -229,23 +229,7 @@ export default function CreatePostScreen() {
             <FontAwesome6 name="xmark" size={20} color={theme.textPrimary} />
           </TouchableOpacity>
           <ThemedText variant="h3" color={theme.textPrimary}>发布动态</ThemedText>
-          <TouchableOpacity
-            style={[styles.publishButton, loading && styles.publishButtonDisabled]}
-            onPress={handlePublish}
-            disabled={loading}
-          >
-            {loading ? (
-              <ActivityIndicator size="small" color={theme.primary} />
-            ) : (
-              <ThemedText
-                variant="bodyMedium"
-                color={theme.primary}
-                style={{ fontWeight: '600' }}
-              >
-                发布
-              </ThemedText>
-            )}
-          </TouchableOpacity>
+          <View style={{ width: 40 }} />
         </View>
 
         <ScrollView contentContainerStyle={styles.scrollContent}>

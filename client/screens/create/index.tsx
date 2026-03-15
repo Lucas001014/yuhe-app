@@ -301,23 +301,7 @@ export default function CreateScreen() {
             <FontAwesome6 name="xmark" size={24} color={theme.textPrimary} />
           </TouchableOpacity>
           <ThemedText variant="h4" color={theme.textPrimary}>发布动态</ThemedText>
-          <TouchableOpacity
-            style={[
-              styles.publishButton,
-              { height: 36, marginHorizontal: 0, marginTop: 0, paddingHorizontal: 16 },
-              loading && styles.disabledButton
-            ]}
-            onPress={handlePublish}
-            disabled={loading}
-          >
-            {loading ? (
-              <ActivityIndicator size="small" color={theme.buttonPrimaryText} />
-            ) : (
-              <ThemedText variant="bodyMedium" color={theme.buttonPrimaryText} style={{ fontWeight: '600' }}>
-                发布
-              </ThemedText>
-            )}
-          </TouchableOpacity>
+          <View style={{ width: 24 }} />
         </View>
 
         <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -326,25 +310,27 @@ export default function CreateScreen() {
             <ThemedText variant="bodyMedium" color={theme.textPrimary} style={styles.sectionTitle}>
               选择类型
             </ThemedText>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.typeScroll}>
-              {(['normal', 'qa_paid', 'qa_bounty', 'product'] as const).map((type) => (
-                <TouchableOpacity
-                  key={type}
-                  style={[
-                    styles.typeButton,
-                    postType === type && { backgroundColor: getPostTypeColor(type) }
-                  ]}
-                  onPress={() => setPostType(type)}
-                >
-                  <ThemedText
-                    variant="body"
-                    color={postType === type ? theme.buttonPrimaryText : theme.textSecondary}
+            <View>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.typeScroll}>
+                {(['normal', 'qa_paid', 'qa_bounty', 'product'] as const).map((type) => (
+                  <TouchableOpacity
+                    key={type}
+                    style={[
+                      styles.typeButton,
+                      postType === type && { backgroundColor: getPostTypeColor(type) }
+                    ]}
+                    onPress={() => setPostType(type)}
                   >
-                    {getPostTypeLabel(type)}
-                  </ThemedText>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
+                    <ThemedText
+                      variant="body"
+                      color={postType === type ? theme.buttonPrimaryText : theme.textSecondary}
+                    >
+                      {getPostTypeLabel(type)}
+                    </ThemedText>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
           </View>
 
           {/* 标题输入 */}
