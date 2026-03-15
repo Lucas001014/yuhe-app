@@ -226,5 +226,25 @@ export const createStyles = (theme: Theme) => {
       borderWidth: 1,
       borderColor: theme.border,
     },
+    // 头像预览
+    avatarPreviewContent: {
+      alignItems: 'center',
+    },
+    avatarPreviewContainer: {
+      width: 200,
+      height: 200,
+      borderRadius: 100,
+      overflow: 'hidden',
+      marginBottom: Spacing.md,
+      backgroundColor: theme.backgroundTertiary,
+    },
+    avatarPreviewImage: {
+      width: '100%',
+      height: '100%',
+    },
+    avatarPreviewHint: {
+      marginBottom: Spacing.lg,
+      textAlign: 'center',
+    },
   });
 };

@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { View, ScrollView, TouchableOpacity, Alert, Modal, Pressable, TextInput } from 'react-native';
+import { View, ScrollView, TouchableOpacity, Alert, Modal, Pressable, TextInput, TouchableWithoutFeedback, Keyboard } from 'react-native';
 import { FontAwesome6 } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
 import { ThemedText } from '@/components/ThemedText';
@@ -48,6 +48,8 @@ export default function ProfileScreen() {
   const [showAccountSwitchModal, setShowAccountSwitchModal] = useState(false);
   const [savedAccounts, setSavedAccounts] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [showAvatarPreviewModal, setShowAvatarPreviewModal] = useState(false);
+  const [avatarPreviewUri, setAvatarPreviewUri] = useState<string | null>(null);
 
   const API_BASE_URL = process.env.EXPO_PUBLIC_BACKEND_BASE_URL;
 
@@ -155,75 +157,97 @@ export default function ProfileScreen() {
 
       if (!result.canceled && result.assets && result.assets[0]) {
         const localUri = result.assets[0].uri;
-        setLoading(true);
-
-        // 1. 上传图片到对象存储
-        const filename = localUri.split('/').pop() || 'avatar.jpg';
-        const match = /\.(\w+)$/.exec(filename);
-        const ext = match ? match[1] : 'jpg';
-        const mimeType = `image/${ext}`;
-
-        const formData = new FormData();
-        const file = await createFormDataFile(localUri, filename, mimeType);
-        formData.append('file', file as any);
-
-        /**
-         * 服务端文件：server/src/routes/upload.ts
-         * 接口：POST /api/v1/upload
-         * Body: multipart/form-data with 'file' field
-         */
-        const uploadResponse = await fetch(`${API_BASE_URL}/api/v1/upload`, {
-          method: 'POST',
-          body: formData,
-        });
-
-        const uploadData = await uploadResponse.json();
-
-        if (!uploadData.success) {
-          throw new Error(uploadData.error || '上传失败');
-        }
-
-        const avatarUrl = uploadData.url;
-
-        // 2. 更新后端用户信息
-        const userId = await AsyncStorage.getItem('userId');
-        if (!userId) {
-          Alert.alert('错误', '请先登录');
-          return;
-        }
-
-        /**
-         * 服务端文件：server/src/routes/auth.ts
-         * 接口：POST /api/v1/auth/update-profile
-         * Body: { userId: number, avatar_url?: string }
-         */
-        const updateResponse = await fetch(`${API_BASE_URL}/api/v1/auth/update-profile`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            userId: parseInt(userId),
-            avatar_url: avatarUrl,
-          }),
-        });
-
-        const updateData = await updateResponse.json();
-
-        if (!updateData.success) {
-          throw new Error(updateData.error || '更新失败');
-        }
-
-        // 3. 更新本地状态和 AsyncStorage
-        setUserInfo({ ...userInfo!, avatar: avatarUrl });
-        await AsyncStorage.setItem('avatar', avatarUrl);
-
-        Alert.alert('成功', '头像更换成功');
+        // 显示预览弹窗
+        setAvatarPreviewUri(localUri);
+        setShowAvatarPreviewModal(true);
       }
+    } catch (error) {
+      console.error('选择图片失败:', error);
+      Alert.alert('错误', '选择图片失败，请重试');
+    }
+  };
+
+  // 确认上传头像
+  const confirmChangeAvatar = async () => {
+    if (!avatarPreviewUri) return;
+
+    setShowAvatarPreviewModal(false);
+    setLoading(true);
+
+    try {
+      // 1. 上传图片到对象存储
+      const filename = avatarPreviewUri.split('/').pop() || 'avatar.jpg';
+      const match = /\.(\w+)$/.exec(filename);
+      const ext = match ? match[1] : 'jpg';
+      const mimeType = `image/${ext}`;
+
+      const formData = new FormData();
+      const file = await createFormDataFile(avatarPreviewUri, filename, mimeType);
+      formData.append('file', file as any);
+
+      /**
+       * 服务端文件：server/src/routes/upload.ts
+       * 接口：POST /api/v1/upload
+       * Body: multipart/form-data with 'file' field
+       */
+      const uploadResponse = await fetch(`${API_BASE_URL}/api/v1/upload`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      const uploadData = await uploadResponse.json();
+
+      if (!uploadData.success) {
+        throw new Error(uploadData.error || '上传失败');
+      }
+
+      const avatarUrl = uploadData.url;
+
+      // 2. 更新后端用户信息
+      const userId = await AsyncStorage.getItem('userId');
+      if (!userId) {
+        Alert.alert('错误', '请先登录');
+        return;
+      }
+
+      /**
+       * 服务端文件：server/src/routes/auth.ts
+       * 接口：POST /api/v1/auth/update-profile
+       * Body: { userId: number, avatar_url?: string }
+       */
+      const updateResponse = await fetch(`${API_BASE_URL}/api/v1/auth/update-profile`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: parseInt(userId),
+          avatar_url: avatarUrl,
+        }),
+      });
+
+      const updateData = await updateResponse.json();
+
+      if (!updateData.success) {
+        throw new Error(updateData.error || '更新失败');
+      }
+
+      // 3. 更新本地状态和 AsyncStorage
+      setUserInfo({ ...userInfo!, avatar: avatarUrl });
+      await AsyncStorage.setItem('avatar', avatarUrl);
+      setAvatarPreviewUri(null);
+
+      Alert.alert('成功', '头像更换成功');
     } catch (error) {
       console.error('更换头像失败:', error);
       Alert.alert('错误', '更换头像失败，请重试');
     } finally {
       setLoading(false);
     }
+  };
+
+  // 取消头像修改
+  const cancelChangeAvatar = () => {
+    setShowAvatarPreviewModal(false);
+    setAvatarPreviewUri(null);
   };
 
   // 处理改名
@@ -592,44 +616,95 @@ export default function ProfileScreen() {
         animationType="fade"
         onRequestClose={() => setShowChangeNameModal(false)}
       >
-        <Pressable 
-          style={styles.modalOverlay}
-          onPress={() => setShowChangeNameModal(false)}
-        >
-          <View style={styles.modalContent}>
-            <ThemedText variant="h4" color={theme.textPrimary} style={styles.modalTitle}>
-              修改用户名
-            </ThemedText>
-            <View style={styles.inputContainer}>
-              <TextInput
-                style={styles.modalInput}
-                placeholder="请输入新用户名"
-                placeholderTextColor={theme.textMuted}
-                value={newName}
-                onChangeText={setNewName}
-                maxLength={20}
-              />
-            </View>
-            <View style={styles.modalButtons}>
-              <Pressable 
-                style={[styles.modalButton, styles.cancelButton]} 
-                onPress={() => setShowChangeNameModal(false)}
-              >
-                <ThemedText variant="bodyMedium" color={theme.textSecondary}>
-                  取消
+        <TouchableWithoutFeedback onPress={() => setShowChangeNameModal(false)}>
+          <View style={styles.modalOverlay}>
+            <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
+              <View style={styles.modalContent}>
+                <ThemedText variant="h4" color={theme.textPrimary} style={styles.modalTitle}>
+                  修改用户名
                 </ThemedText>
-              </Pressable>
-              <Pressable 
-                style={[styles.modalButton, styles.confirmButton]} 
-                onPress={confirmChangeName}
-              >
-                <ThemedText variant="bodyMedium" color={theme.buttonPrimaryText}>
-                  确定
-                </ThemedText>
-              </Pressable>
-            </View>
+                <View style={styles.inputContainer}>
+                  <TextInput
+                    style={styles.modalInput}
+                    placeholder="请输入新用户名"
+                    placeholderTextColor={theme.textMuted}
+                    value={newName}
+                    onChangeText={setNewName}
+                    maxLength={20}
+                  />
+                </View>
+                <View style={styles.modalButtons}>
+                  <Pressable 
+                    style={[styles.modalButton, styles.cancelButton]} 
+                    onPress={() => setShowChangeNameModal(false)}
+                  >
+                    <ThemedText variant="bodyMedium" color={theme.textSecondary}>
+                      取消
+                    </ThemedText>
+                  </Pressable>
+                  <Pressable 
+                    style={[styles.modalButton, styles.confirmButton]} 
+                    onPress={confirmChangeName}
+                  >
+                    <ThemedText variant="bodyMedium" color={theme.buttonPrimaryText}>
+                      确定
+                    </ThemedText>
+                  </Pressable>
+                </View>
+              </View>
+            </TouchableWithoutFeedback>
           </View>
-        </Pressable>
+        </TouchableWithoutFeedback>
+      </Modal>
+
+      {/* 头像预览弹窗 */}
+      <Modal
+        visible={showAvatarPreviewModal}
+        transparent
+        animationType="fade"
+        onRequestClose={cancelChangeAvatar}
+      >
+        <TouchableWithoutFeedback onPress={cancelChangeAvatar}>
+          <View style={styles.modalOverlay}>
+            <TouchableWithoutFeedback>
+              <View style={[styles.modalContent, styles.avatarPreviewContent]}>
+                <ThemedText variant="h4" color={theme.textPrimary} style={styles.modalTitle}>
+                  确认头像
+                </ThemedText>
+                <View style={styles.avatarPreviewContainer}>
+                  {avatarPreviewUri && (
+                    <Image
+                      source={{ uri: avatarPreviewUri }}
+                      style={styles.avatarPreviewImage}
+                      contentFit="cover"
+                    />
+                  )}
+                </View>
+                <ThemedText variant="caption" color={theme.textMuted} style={styles.avatarPreviewHint}>
+                  确认使用此头像吗？
+                </ThemedText>
+                <View style={styles.modalButtons}>
+                  <Pressable 
+                    style={[styles.modalButton, styles.cancelButton]} 
+                    onPress={cancelChangeAvatar}
+                  >
+                    <ThemedText variant="bodyMedium" color={theme.textSecondary}>
+                      取消
+                    </ThemedText>
+                  </Pressable>
+                  <Pressable 
+                    style={[styles.modalButton, styles.confirmButton]} 
+                    onPress={confirmChangeAvatar}
+                  >
+                    <ThemedText variant="bodyMedium" color={theme.buttonPrimaryText}>
+                      确认
+                    </ThemedText>
+                  </Pressable>
+                </View>
+              </View>
+            </TouchableWithoutFeedback>
+          </View>
+        </TouchableWithoutFeedback>
       </Modal>
 
       {/* 账号切换弹窗 */}
