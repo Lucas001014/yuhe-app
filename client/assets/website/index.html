@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>遇合 - 创业者专属社交平台</title>
+    <meta name="description" content="遇合是一款专为创业者打造的社交平台，分享创业经验、实现知识价值、对接商业资源">
+    <meta name="keywords" content="遇合,创业者,社交,知识付费,悬赏,对接,孵化,合作">
+    <link rel="icon" type="image/png" href="favicon.png">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+            line-height: 1.6;
+            color: #333;
+        }
+
+        /* 导航栏 */
+        .navbar {
+            background: linear-gradient(135deg, #1677FF 0%, #4096FF 100%);
+            padding: 15px 20px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 8px rgba(22, 119, 255, 0.2);
+        }
+
+        .navbar-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 30px;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            font-size: 16px;
+            transition: opacity 0.3s;
+        }
+
+        .nav-links a:hover {
+            opacity: 0.8;
+        }
+
+        /* Hero 区域 */
+        .hero {
+            background: linear-gradient(135deg, #1677FF 0%, #4096FF 100%);
+            padding: 120px 20px 80px;
+            text-align: center;
+            color: white;
+        }
+
+        .hero h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+            animation: fadeInUp 1s;
+        }
+
+        .hero p {
+            font-size: 20px;
+            margin-bottom: 40px;
+            opacity: 0.9;
+            animation: fadeInUp 1s 0.2s both;
+        }
+
+        .hero-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            animation: fadeInUp 1s 0.4s both;
+        }
+
+        .btn {
+            padding: 15px 40px;
+            font-size: 18px;
+            border-radius: 8px;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: white;
+            color: #1677FF;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: white;
+            border: 2px solid white;
+        }
+
+        .btn-secondary:hover {
+            background: white;
+            color: #1677FF;
+        }
+
+        /* 特性区域 */
+        .features {
+            padding: 80px 20px;
+            background: #f5f7fa;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 36px;
+            color: #1677FF;
+            margin-bottom: 50px;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+        }
+
+        .feature-card {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(22, 119, 255, 0.15);
+        }
+
+        .feature-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+
+        .feature-card h3 {
+            font-size: 20px;
+            color: #1677FF;
+            margin-bottom: 15px;
+        }
+
+        .feature-card p {
+            color: #666;
+            line-height: 1.8;
+        }
+
+        /* 功能介绍 */
+        .function-intro {
+            padding: 80px 20px;
+        }
+
+        .function-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 60px;
+            align-items: center;
+        }
+
+        .function-image {
+            background: #f5f7fa;
+            padding: 40px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .function-image img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+        }
+
+        .function-content h3 {
+            font-size: 28px;
+            color: #1677FF;
+            margin-bottom: 20px;
+        }
+
+        .function-content p {
+            color: #666;
+            line-height: 1.8;
+            margin-bottom: 20px;
+        }
+
+        .function-list {
+            list-style: none;
+        }
+
+        .function-list li {
+            padding: 10px 0;
+            padding-left: 30px;
+            position: relative;
+            color: #666;
+        }
+
+        .function-list li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #1677FF;
+            font-weight: bold;
+        }
+
+        /* 页脚 */
+        .footer {
+            background: #1a1a1a;
+            color: white;
+            padding: 60px 20px 20px;
+        }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .footer-section h4 {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: #1677FF;
+        }
+
+        .footer-section ul {
+            list-style: none;
+        }
+
+        .footer-section ul li {
+            padding: 8px 0;
+        }
+
+        .footer-section ul li a {
+            color: #999;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .footer-section ul li a:hover {
+            color: white;
+        }
+
+        .footer-bottom {
+            border-top: 1px solid #333;
+            padding-top: 20px;
+            text-align: center;
+            color: #666;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 32px;
+            }
+
+            .hero p {
+                font-size: 16px;
+            }
+
+            .hero-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .function-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .nav-links {
+                display: none;
+            }
+        }
+
+        /* 动画 */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="navbar-container">
+            <a href="index.html" class="logo">遇合</a>
+            <div class="nav-links">
+                <a href="index.html">首页</a>
+                <a href="privacy.html">隐私政策</a>
+                <a href="terms.html">用户协议</a>
+                <a href="support.html">联系我们</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero 区域 -->
+    <section class="hero">
+        <h1>遇合 - 书写属于自己的商业山河</h1>
+        <p>创业者专属社交平台，分享创业经验、实现知识价值、对接商业资源</p>
+        <div class="hero-buttons">
+            <a href="#" class="btn btn-primary">下载应用</a>
+            <a href="#features" class="btn btn-secondary">了解更多</a>
+        </div>
+    </section>
+
+    <!-- 特性区域 -->
+    <section class="features" id="features">
+        <div class="container">
+            <h2 class="section-title">核心功能</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">📝</div>
+                    <h3>内容发布</h3>
+                    <p>发布文字、图片、视频，分享创业心得、行业洞察、经验教训</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">💰</div>
+                    <h3>知识付费</h3>
+                    <p>出售专业知识、课程、咨询服务，实现知识变现，建立个人品牌</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🤝</div>
+                    <h3>合作对接</h3>
+                    <p>对接孵化舱、顾问资源、投资人，智能匹配，精准对接商业机会</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">💬</div>
+                    <h3>社区互动</h3>
+                    <p>点赞、评论、收藏、分享，建立创业者网络，拓展人脉资源</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🎯</div>
+                    <h3>悬赏问答</h3>
+                    <p>发布悬赏获取专业解答，或回答问题赚取悬赏金</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h3>数据洞察</h3>
+                    <p>个性化内容推荐，热门话题，行业趋势分析</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 功能介绍 -->
+    <section class="function-intro">
+        <div class="container">
+            <div class="function-grid">
+                <div class="function-image">
+                    <div style="font-size: 120px; margin-bottom: 20px;">📱</div>
+                    <p style="color: #999;">应用界面示意</p>
+                </div>
+                <div class="function-content">
+                    <h3>专为创业者设计</h3>
+                    <p>遇合是一款专为创业者打造的社交平台，融合知识付费与内容分享功能。</p>
+                    <ul class="function-list">
+                        <li>发布创业经验，分享成功与失败</li>
+                        <li>对接孵化舱、顾问、投资人资源</li>
+                        <li>出售专业知识，实现知识变现</li>
+                        <li>发布悬赏，获取专业解答</li>
+                        <li>建立创业者网络，拓展人脉</li>
+                        <li>智能推荐，发现优质内容</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 页脚 -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-section">
+                    <h4>关于遇合</h4>
+                    <p style="color: #999; line-height: 1.8;">遇合是一款专为创业者打造的社交平台，帮助创业者分享经验、实现知识价值、对接商业资源。</p>
+                </div>
+                <div class="footer-section">
+                    <h4>快速链接</h4>
+                    <ul>
+                        <li><a href="index.html">首页</a></li>
+                        <li><a href="privacy.html">隐私政策</a></li>
+                        <li><a href="terms.html">用户协议</a></li>
+                        <li><a href="support.html">联系我们</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>联系方式</h4>
+                    <ul>
+                        <li><a href="mailto:support@yuhe.app">support@yuhe.app</a></li>
+                        <li><a href="tel:400-xxx-xxxx">400-xxx-xxxx</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>关注我们</h4>
+                    <ul>
+                        <li><a href="#">微信公众号：遇合App</a></li>
+                        <li><a href="#">微博：@遇合App</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 遇合. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
