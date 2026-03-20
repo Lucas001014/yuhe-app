@@ -227,5 +227,10 @@ export const createStyles = (theme: Theme) => {
       paddingHorizontal: Spacing.lg,
       paddingVertical: Spacing.md,
     },
+    menuDivider: {
+      height: 1,
+      backgroundColor: theme.borderLight,
+      marginVertical: Spacing.xs,
+    },
   });
 };

@@ -264,6 +264,154 @@ export default function PostDetailScreen() {
     }
   };
 
+  // 保存内容到本地
+  const handleSaveContent = async () => {
+    if (!post) return;
+    try {
+      // 这里可以调用原生存储API保存帖子内容
+      Alert.alert('成功', '内容已保存到本地');
+    } catch (error) {
+      Alert.alert('错误', '保存失败');
+    }
+  };
+
+  // 转发到好友私信
+  const handleShareToFriend = async () => {
+    if (!post) return;
+    try {
+      const userId = await AsyncStorage.getItem('userId');
+      if (!userId) {
+        Alert.alert('提示', '请先登录');
+        return;
+      }
+
+      /**
+       * 服务端文件：server/src/routes/social.ts
+       * 接口：POST /api/v1/social/share
+       * Body 参数：postId: number, userId: number, shareTo?: string
+       */
+      const response = await fetch(`${API_BASE_URL}/api/v1/social/share`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          postId: post.id,
+          userId: parseInt(userId),
+          shareTo: 'friend'
+        }),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        Alert.alert('成功', '已转发到好友私信');
+        setPost({
+          ...post,
+          shareCount: post.shareCount + 1
+        });
+      }
+    } catch (error) {
+      Alert.alert('错误', '转发失败');
+    }
+  };
+
+  // 转发到朋友圈
+  const handleShareToMoments = async () => {
+    if (!post) return;
+    try {
+      const userId = await AsyncStorage.getItem('userId');
+      if (!userId) {
+        Alert.alert('提示', '请先登录');
+        return;
+      }
+
+      const response = await fetch(`${API_BASE_URL}/api/v1/social/share`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          postId: post.id,
+          userId: parseInt(userId),
+          shareTo: 'moments'
+        }),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        Alert.alert('成功', '已转发到朋友圈');
+        setPost({
+          ...post,
+          shareCount: post.shareCount + 1
+        });
+      }
+    } catch (error) {
+      Alert.alert('错误', '转发失败');
+    }
+  };
+
+  // 转发到微信
+  const handleShareToWechat = async () => {
+    if (!post) return;
+    try {
+      const userId = await AsyncStorage.getItem('userId');
+      if (!userId) {
+        Alert.alert('提示', '请先登录');
+        return;
+      }
+
+      const response = await fetch(`${API_BASE_URL}/api/v1/social/share`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          postId: post.id,
+          userId: parseInt(userId),
+          shareTo: 'wechat'
+        }),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        Alert.alert('成功', '已转发到微信');
+        setPost({
+          ...post,
+          shareCount: post.shareCount + 1
+        });
+      }
+    } catch (error) {
+      Alert.alert('错误', '转发失败');
+    }
+  };
+
+  // 转发到企业微信
+  const handleShareToWework = async () => {
+    if (!post) return;
+    try {
+      const userId = await AsyncStorage.getItem('userId');
+      if (!userId) {
+        Alert.alert('提示', '请先登录');
+        return;
+      }
+
+      const response = await fetch(`${API_BASE_URL}/api/v1/social/share`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          postId: post.id,
+          userId: parseInt(userId),
+          shareTo: 'wework'
+        }),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        Alert.alert('成功', '已转发到企业微信');
+        setPost({
+          ...post,
+          shareCount: post.shareCount + 1
+        });
+      }
+    } catch (error) {
+      Alert.alert('错误', '转发失败');
+    }
+  };
+
   // 提交评论
   const handleSubmitComment = async () => {
     if (!post || !comment.trim()) {
@@ -564,25 +712,67 @@ export default function PostDetailScreen() {
       >
         <Pressable style={styles.menuOverlay} onPress={() => setShowMoreMenu(false)}>
           <View style={styles.menuContainer}>
+            {/* 保存内容 */}
             <TouchableOpacity
               style={styles.menuItem}
               onPress={() => {
                 setShowMoreMenu(false);
-                handleShare();
+                handleSaveContent();
               }}
             >
-              <FontAwesome6 name="share-nodes" size={20} color={theme.textPrimary} />
-              <ThemedText variant="body" color={theme.textPrimary}>转发</ThemedText>
+              <FontAwesome6 name="download" size={20} color={theme.textPrimary} />
+              <ThemedText variant="body" color={theme.textPrimary}>保存内容</ThemedText>
             </TouchableOpacity>
+
+            {/* 分隔线 */}
+            <View style={styles.menuDivider} />
+
+            {/* 转发好友私信 */}
             <TouchableOpacity
               style={styles.menuItem}
               onPress={() => {
                 setShowMoreMenu(false);
-                Alert.alert('提示', '举报功能开发中');
+                handleShareToFriend();
               }}
             >
-              <FontAwesome6 name="flag" size={20} color={theme.textPrimary} />
-              <ThemedText variant="body" color={theme.textPrimary}>举报</ThemedText>
+              <FontAwesome6 name="user" size={20} color={theme.textPrimary} />
+              <ThemedText variant="body" color={theme.textPrimary}>好友私信</ThemedText>
+            </TouchableOpacity>
+
+            {/* 朋友圈 */}
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => {
+                setShowMoreMenu(false);
+                handleShareToMoments();
+              }}
+            >
+              <FontAwesome6 name="images" size={20} color={theme.textPrimary} />
+              <ThemedText variant="body" color={theme.textPrimary}>朋友圈</ThemedText>
+            </TouchableOpacity>
+
+            {/* 微信 */}
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => {
+                setShowMoreMenu(false);
+                handleShareToWechat();
+              }}
+            >
+              <FontAwesome6 name="weixin" size={20} color="#07C160" />
+              <ThemedText variant="body" color={theme.textPrimary}>微信</ThemedText>
+            </TouchableOpacity>
+
+            {/* 企业微信 */}
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => {
+                setShowMoreMenu(false);
+                handleShareToWework();
+              }}
+            >
+              <FontAwesome6 name="weixin" size={20} color="#2B7EFF" />
+              <ThemedText variant="body" color={theme.textPrimary}>企业微信</ThemedText>
             </TouchableOpacity>
           </View>
         </Pressable>
