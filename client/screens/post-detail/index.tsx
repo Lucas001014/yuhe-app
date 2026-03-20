@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { View, ScrollView, TouchableOpacity, TextInput, Alert, KeyboardAvoidingView, Platform, FlatList, ActivityIndicator } from 'react-native';
+import { View, ScrollView, TouchableOpacity, TextInput, Alert, KeyboardAvoidingView, Platform, FlatList, ActivityIndicator, Modal, Pressable } from 'react-native';
 import { FontAwesome6 } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
 import { ThemedText } from '@/components/ThemedText';
@@ -59,6 +59,7 @@ export default function PostDetailScreen() {
   const [comment, setComment] = useState('');
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
 
   const API_BASE_URL = process.env.EXPO_PUBLIC_BACKEND_BASE_URL;
 
@@ -398,7 +399,7 @@ export default function PostDetailScreen() {
             <ThemedText variant="bodyMedium" color={theme.textPrimary}>
               帖子详情
             </ThemedText>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={() => setShowMoreMenu(true)}>
               <FontAwesome6 name="ellipsis" size={20} color={theme.textPrimary} />
             </TouchableOpacity>
           </View>
@@ -480,26 +481,6 @@ export default function PostDetailScreen() {
               </View>
             )}
 
-            {/* 统计数据 */}
-            <View style={styles.statsRow}>
-              <View style={styles.statItem}>
-                <FontAwesome6 name="heart" size={14} color={theme.textMuted} />
-                <ThemedText variant="caption" color={theme.textMuted}>{post.likeCount}</ThemedText>
-              </View>
-              <View style={styles.statItem}>
-                <FontAwesome6 name="comment" size={14} color={theme.textMuted} />
-                <ThemedText variant="caption" color={theme.textMuted}>{post.commentCount}</ThemedText>
-              </View>
-              <View style={styles.statItem}>
-                <FontAwesome6 name="share-nodes" size={14} color={theme.textMuted} />
-                <ThemedText variant="caption" color={theme.textMuted}>{post.shareCount}</ThemedText>
-              </View>
-              <View style={styles.statItem}>
-                <FontAwesome6 name="bookmark" size={14} color={theme.textMuted} />
-                <ThemedText variant="caption" color={theme.textMuted}>{post.collectCount}</ThemedText>
-              </View>
-            </View>
-
             {/* 操作按钮 */}
             <View style={styles.actionsRow}>
               <TouchableOpacity style={styles.actionButton} onPress={handleLike}>
@@ -524,11 +505,6 @@ export default function PostDetailScreen() {
                 <ThemedText variant="small" color={post.isCollected ? theme.primary : theme.textMuted}>
                   {post.isCollected ? '已收藏' : '收藏'}
                 </ThemedText>
-              </TouchableOpacity>
-
-              <TouchableOpacity style={styles.actionButton} onPress={handleShare}>
-                <FontAwesome6 name="share-nodes" size={20} color={theme.textMuted} />
-                <ThemedText variant="small" color={theme.textMuted}>转发</ThemedText>
               </TouchableOpacity>
 
               <TouchableOpacity style={styles.actionButton} onPress={goToChat}>
@@ -578,6 +554,39 @@ export default function PostDetailScreen() {
           </View>
         </View>
       </KeyboardAvoidingView>
+
+      {/* 右上角更多菜单 */}
+      <Modal
+        visible={showMoreMenu}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowMoreMenu(false)}
+      >
+        <Pressable style={styles.menuOverlay} onPress={() => setShowMoreMenu(false)}>
+          <View style={styles.menuContainer}>
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => {
+                setShowMoreMenu(false);
+                handleShare();
+              }}
+            >
+              <FontAwesome6 name="share-nodes" size={20} color={theme.textPrimary} />
+              <ThemedText variant="body" color={theme.textPrimary}>转发</ThemedText>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => {
+                setShowMoreMenu(false);
+                Alert.alert('提示', '举报功能开发中');
+              }}
+            >
+              <FontAwesome6 name="flag" size={20} color={theme.textPrimary} />
+              <ThemedText variant="body" color={theme.textPrimary}>举报</ThemedText>
+            </TouchableOpacity>
+          </View>
+        </Pressable>
+      </Modal>
     </Screen>
   );
 }

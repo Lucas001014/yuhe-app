@@ -201,5 +201,31 @@ export const createStyles = (theme: Theme) => {
     sendButtonDisabled: {
       opacity: 0.4,
     },
+    // 右上角更多菜单
+    menuOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    },
+    menuContainer: {
+      position: 'absolute',
+      top: 60,
+      right: 16,
+      backgroundColor: theme.backgroundDefault,
+      borderRadius: BorderRadius.lg,
+      paddingVertical: Spacing.sm,
+      minWidth: 120,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.15,
+      shadowRadius: 8,
+      elevation: 5,
+    },
+    menuItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.md,
+      paddingHorizontal: Spacing.lg,
+      paddingVertical: Spacing.md,
+    },
   });
 };
