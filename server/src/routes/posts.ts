@@ -3,6 +3,59 @@ import { Pool } from 'pg';
 
 const router = express.Router();
 
+// 获取用户帖子统计
+router.get('/user/:userId/stats', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const db = (req as any).db;
+
+    if (!db) {
+      return res.status(500).json({ success: false, error: '数据库连接失败' });
+    }
+
+    // 我的帖子数
+    const myPostsResult = await db.query(
+      'SELECT COUNT(*) as count FROM posts WHERE author_id = $1',
+      [userId]
+    );
+    const myPosts = parseInt(myPostsResult.rows[0].count);
+
+    // 点赞的帖子数
+    const likedPostsResult = await db.query(
+      'SELECT COUNT(*) as count FROM likes WHERE user_id = $1',
+      [userId]
+    );
+    const likedPosts = parseInt(likedPostsResult.rows[0].count);
+
+    // 收藏的帖子数
+    const collectedPostsResult = await db.query(
+      'SELECT COUNT(*) as count FROM collections WHERE user_id = $1',
+      [userId]
+    );
+    const collectedPosts = parseInt(collectedPostsResult.rows[0].count);
+
+    // 私密帖子数（设为私密的帖子）
+    const privatePostsResult = await db.query(
+      'SELECT COUNT(*) as count FROM posts WHERE author_id = $1 AND visibility = $2',
+      [userId, 'private']
+    );
+    const privatePosts = parseInt(privatePostsResult.rows[0].count);
+
+    res.json({
+      success: true,
+      stats: {
+        myPosts,
+        likedPosts,
+        collectedPosts,
+        privatePosts,
+      },
+    });
+  } catch (error: any) {
+    console.error('获取用户帖子统计失败：', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // 获取用户自己的帖子列表（包括所有状态）
 router.get('/my-posts', async (req, res) => {
   try {

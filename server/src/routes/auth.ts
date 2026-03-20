@@ -192,7 +192,7 @@ router.get('/me', async (req, res) => {
   try {
     // 获取用户基本信息
     const userResult = await (req as any).db.query(
-      'SELECT id, phone, username, avatar_url, bio, balance, tags, created_at FROM users WHERE id = $1',
+      'SELECT id, phone, username, avatar_url, background_image, bio, balance, tags, is_merchant, created_at FROM users WHERE id = $1',
       [userId]
     );
 
@@ -244,10 +244,10 @@ router.get('/me', async (req, res) => {
 /**
  * 更新用户资料
  * POST /api/v1/auth/update-profile
- * Body: { userId: number, username?: string, bio?: string, avatar_url?: string, tags?: string[] }
+ * Body: { userId: number, username?: string, bio?: string, avatar_url?: string, background_image?: string, tags?: string[] }
  */
 router.post('/update-profile', async (req, res) => {
-  const { userId, username, bio, avatar_url, tags } = req.body;
+  const { userId, username, bio, avatar_url, background_image, tags } = req.body;
 
   if (!userId) {
     return res.status(400).json({ error: '用户ID不能为空' });
@@ -271,6 +271,10 @@ router.post('/update-profile', async (req, res) => {
       updates.push(`avatar_url = $${paramIndex++}`);
       values.push(avatar_url);
     }
+    if (background_image !== undefined) {
+      updates.push(`background_image = $${paramIndex++}`);
+      values.push(background_image);
+    }
     if (tags !== undefined) {
       updates.push(`tags = $${paramIndex++}`);
       values.push(tags);
@@ -287,7 +291,7 @@ router.post('/update-profile', async (req, res) => {
       UPDATE users
       SET ${updates.join(', ')}
       WHERE id = $${paramIndex}
-      RETURNING id, phone, username, avatar_url, bio, balance, tags, updated_at
+      RETURNING id, phone, username, avatar_url, background_image, bio, balance, tags, updated_at
     `;
 
     const result = await (req as any).db.query(query, values);
