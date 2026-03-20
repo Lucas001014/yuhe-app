@@ -705,8 +705,16 @@ export default function ProfileScreen() {
         animationType="fade"
         onRequestClose={() => setShowChangeNameModal(false)}
       >
-        <Pressable style={styles.modalOverlay} onPress={() => setShowChangeNameModal(false)}>
-          <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
+        <TouchableOpacity 
+          style={styles.modalOverlay} 
+          activeOpacity={1}
+          onPress={() => setShowChangeNameModal(false)}
+        >
+          <TouchableOpacity 
+            style={styles.modalContent}
+            activeOpacity={1}
+            onPress={() => {}}
+          >
             <ThemedText variant="h4" color={theme.textPrimary} style={styles.modalTitle}>
               修改用户名
             </ThemedText>
@@ -722,25 +730,27 @@ export default function ProfileScreen() {
               />
             </View>
             <View style={styles.modalButtons}>
-              <Pressable 
+              <TouchableOpacity 
                 style={[styles.modalButton, styles.cancelButton]} 
+                activeOpacity={0.7}
                 onPress={() => setShowChangeNameModal(false)}
               >
                 <ThemedText variant="bodyMedium" color={theme.textSecondary}>
                   取消
                 </ThemedText>
-              </Pressable>
-              <Pressable 
+              </TouchableOpacity>
+              <TouchableOpacity 
                 style={[styles.modalButton, styles.confirmButton]} 
+                activeOpacity={0.7}
                 onPress={confirmChangeName}
               >
                 <ThemedText variant="bodyMedium" color={theme.buttonPrimaryText}>
                   确定
                 </ThemedText>
-              </Pressable>
+              </TouchableOpacity>
             </View>
-          </View>
-        </Pressable>
+          </TouchableOpacity>
+        </TouchableOpacity>
       </Modal>
 
       {/* 头像预览弹窗 */}
