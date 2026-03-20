@@ -705,45 +705,42 @@ export default function ProfileScreen() {
         animationType="fade"
         onRequestClose={() => setShowChangeNameModal(false)}
       >
-        <TouchableWithoutFeedback onPress={() => setShowChangeNameModal(false)}>
-          <View style={styles.modalOverlay}>
-            <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
-              <View style={styles.modalContent}>
-                <ThemedText variant="h4" color={theme.textPrimary} style={styles.modalTitle}>
-                  修改用户名
+        <Pressable style={styles.modalOverlay} onPress={() => setShowChangeNameModal(false)}>
+          <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
+            <ThemedText variant="h4" color={theme.textPrimary} style={styles.modalTitle}>
+              修改用户名
+            </ThemedText>
+            <View style={styles.inputContainer}>
+              <TextInput
+                style={styles.modalInput}
+                placeholder="请输入新用户名"
+                placeholderTextColor={theme.textMuted}
+                value={newName}
+                onChangeText={setNewName}
+                maxLength={20}
+                autoFocus={true}
+              />
+            </View>
+            <View style={styles.modalButtons}>
+              <Pressable 
+                style={[styles.modalButton, styles.cancelButton]} 
+                onPress={() => setShowChangeNameModal(false)}
+              >
+                <ThemedText variant="bodyMedium" color={theme.textSecondary}>
+                  取消
                 </ThemedText>
-                <View style={styles.inputContainer}>
-                  <TextInput
-                    style={styles.modalInput}
-                    placeholder="请输入新用户名"
-                    placeholderTextColor={theme.textMuted}
-                    value={newName}
-                    onChangeText={setNewName}
-                    maxLength={20}
-                  />
-                </View>
-                <View style={styles.modalButtons}>
-                  <Pressable 
-                    style={[styles.modalButton, styles.cancelButton]} 
-                    onPress={() => setShowChangeNameModal(false)}
-                  >
-                    <ThemedText variant="bodyMedium" color={theme.textSecondary}>
-                      取消
-                    </ThemedText>
-                  </Pressable>
-                  <Pressable 
-                    style={[styles.modalButton, styles.confirmButton]} 
-                    onPress={confirmChangeName}
-                  >
-                    <ThemedText variant="bodyMedium" color={theme.buttonPrimaryText}>
-                      确定
-                    </ThemedText>
-                  </Pressable>
-                </View>
-              </View>
-            </TouchableWithoutFeedback>
+              </Pressable>
+              <Pressable 
+                style={[styles.modalButton, styles.confirmButton]} 
+                onPress={confirmChangeName}
+              >
+                <ThemedText variant="bodyMedium" color={theme.buttonPrimaryText}>
+                  确定
+                </ThemedText>
+              </Pressable>
+            </View>
           </View>
-        </TouchableWithoutFeedback>
+        </Pressable>
       </Modal>
 
       {/* 头像预览弹窗 */}
