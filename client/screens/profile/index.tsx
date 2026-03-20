@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback, useRef } from 'react';
-import { View, ScrollView, TouchableOpacity, Alert, Modal, TextInput, Dimensions, PanResponder, Animated, FlatList } from 'react-native';
+import { View, ScrollView, TouchableOpacity, Alert, Modal, TextInput, Dimensions, PanResponder, Animated } from 'react-native';
 import { FontAwesome6 } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
 import { ThemedText } from '@/components/ThemedText';
@@ -73,7 +73,7 @@ const MOCK_PROJECTS: ProjectItem[] = [
 ];
 
 export default function ProfileScreen() {
-  const { theme, isDark } = useTheme();
+  const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const router = useSafeRouter();
   const { updateUser } = useAuth();
@@ -190,7 +190,6 @@ export default function ProfileScreen() {
         await AsyncStorage.setItem('avatar', data.user.avatar_url || '');
       }
 
-      // 加载统计数据（这里使用模拟数据，实际应从后端获取）
       setUserStats({
         likes: 893,
         mutualFollows: 59,
@@ -361,32 +360,10 @@ export default function ProfileScreen() {
     Alert.alert('功能提示', `${feature}功能开发中`);
   };
 
-  // 渲染项目卡片
-  const renderProjectCard = ({ item }: { item: ProjectItem }) => (
-    <TouchableOpacity style={styles.projectCard} activeOpacity={0.85}>
-      <Image source={{ uri: item.cover }} style={styles.projectCover} contentFit="cover" />
-      <View style={styles.projectInfo}>
-        <ThemedText variant="bodyMedium" color={theme.textPrimary} numberOfLines={2}>
-          {item.title}
-        </ThemedText>
-        <View style={styles.projectStats}>
-          <View style={styles.projectStatItem}>
-            <FontAwesome6 name="eye" size={12} color={theme.textMuted} />
-            <ThemedText variant="caption" color={theme.textMuted}>{item.views}</ThemedText>
-          </View>
-          <View style={styles.projectStatItem}>
-            <FontAwesome6 name="heart" size={12} color={theme.textMuted} />
-            <ThemedText variant="caption" color={theme.textMuted}>{item.likes}</ThemedText>
-          </View>
-        </View>
-      </View>
-    </TouchableOpacity>
-  );
-
   // 标签栏数据
   const tabs = ['我的项目', '对接记录', '收藏资源', '喜欢内容'];
 
-  // 功能入口数据
+  // 功能入口数据 - 图标使用深灰色
   const features = [
     { icon: 'chart-line', name: '创业进度看板', key: 'dashboard' },
     { icon: 'file-lines', name: '我的对接记录', key: 'records' },
@@ -404,16 +381,16 @@ export default function ProfileScreen() {
       >
         {/* ========== 顶部用户信息区 ========== */}
         <View style={styles.headerSection}>
-          {/* 半透明天蓝色渐变背景 */}
+          {/* 极淡灰白背景 */}
           <View style={styles.headerGradient} />
 
           {/* 顶部操作栏 */}
           <View style={styles.headerTopBar}>
             <TouchableOpacity style={styles.headerButton} onPress={() => handleFeaturePress('搜索')}>
-              <FontAwesome6 name="magnifying-glass" size={20} color={theme.textPrimary} />
+              <FontAwesome6 name="magnifying-glass" size={18} color="#6B7280" />
             </TouchableOpacity>
             <TouchableOpacity style={styles.headerButton} onPress={() => router.push('/settings')}>
-              <FontAwesome6 name="bars" size={20} color={theme.textPrimary} />
+              <FontAwesome6 name="bars" size={18} color="#6B7280" />
             </TouchableOpacity>
           </View>
 
@@ -422,24 +399,24 @@ export default function ProfileScreen() {
             {/* 头像 */}
             <TouchableOpacity onPress={handleChangeAvatar} style={styles.avatarContainer}>
               <Image source={{ uri: userInfo.avatar }} style={styles.avatar} contentFit="cover" />
-              {/* 右下角悬浮按钮 */}
+              {/* 右下角悬浮按钮 - 天蓝色点缀 */}
               <TouchableOpacity style={styles.avatarAddButton} onPress={() => handleFeaturePress('添加好友')}>
-                <FontAwesome6 name="plus" size={12} color="#FFFFFF" />
+                <FontAwesome6 name="plus" size={10} color="#FFFFFF" />
               </TouchableOpacity>
             </TouchableOpacity>
 
             {/* 用户名、标签、ID */}
             <View style={styles.userTextInfo}>
               <TouchableOpacity onPress={() => handleEdit('username')} style={styles.usernameRow}>
-                <ThemedText variant="h3" color={theme.textPrimary} style={{ fontWeight: '700' }}>
+                <ThemedText variant="h3" color="#1F2937" style={{ fontWeight: '700' }}>
                   {userInfo.username}
                 </ThemedText>
-                <FontAwesome6 name="pen" size={12} color={theme.textMuted} style={{ marginLeft: 8 }} />
+                <FontAwesome6 name="pen" size={12} color="#9CA3AF" style={{ marginLeft: 8 }} />
               </TouchableOpacity>
 
               {/* 金牌会员标签 */}
               <View style={styles.memberBadge}>
-                <FontAwesome6 name="crown" size={12} color="#F59E0B" solid />
+                <FontAwesome6 name="crown" size={11} color="#F59E0B" solid />
                 <ThemedText variant="caption" color="#F59E0B" style={{ fontWeight: '600', marginLeft: 4 }}>
                   金牌会员
                 </ThemedText>
@@ -447,11 +424,11 @@ export default function ProfileScreen() {
 
               {/* 遇合ID */}
               <View style={styles.idRow}>
-                <ThemedText variant="caption" color={theme.textMuted}>
+                <ThemedText variant="caption" color="#9CA3AF">
                   遇合号：{userInfo.yuheId}
                 </ThemedText>
                 <TouchableOpacity style={styles.copyIdButton}>
-                  <FontAwesome6 name="copy" size={10} color={SKY_BLUE} />
+                  <FontAwesome6 name="copy" size={10} color="#9CA3AF" />
                 </TouchableOpacity>
               </View>
             </View>
@@ -463,39 +440,39 @@ export default function ProfileScreen() {
           <View style={styles.statsRow}>
             {/* 获赞 */}
             <TouchableOpacity style={styles.statItem} onPress={() => handleFeaturePress('获赞')}>
-              <ThemedText variant="h3" color={theme.textPrimary} style={styles.statNumber}>
+              <ThemedText variant="h3" color="#1F2937" style={styles.statNumber}>
                 {userStats.likes}
               </ThemedText>
-              <ThemedText variant="caption" color={theme.textSecondary}>获赞</ThemedText>
+              <ThemedText variant="caption" color="#6B7280">获赞</ThemedText>
             </TouchableOpacity>
 
             {/* 互关 */}
             <TouchableOpacity style={styles.statItem} onPress={() => handleFeaturePress('互关')}>
-              <ThemedText variant="h3" color={theme.textPrimary} style={styles.statNumber}>
+              <ThemedText variant="h3" color="#1F2937" style={styles.statNumber}>
                 {userStats.mutualFollows}
               </ThemedText>
-              <ThemedText variant="caption" color={theme.textSecondary}>互关</ThemedText>
+              <ThemedText variant="caption" color="#6B7280">互关</ThemedText>
             </TouchableOpacity>
 
             {/* 关注 */}
             <TouchableOpacity style={styles.statItem} onPress={() => handleFeaturePress('关注')}>
-              <ThemedText variant="h3" color={theme.textPrimary} style={styles.statNumber}>
+              <ThemedText variant="h3" color="#1F2937" style={styles.statNumber}>
                 {userStats.following}
               </ThemedText>
-              <ThemedText variant="caption" color={theme.textSecondary}>关注</ThemedText>
+              <ThemedText variant="caption" color="#6B7280">关注</ThemedText>
             </TouchableOpacity>
 
             {/* 粉丝 */}
             <TouchableOpacity style={styles.statItem} onPress={() => handleFeaturePress('粉丝')}>
-              <ThemedText variant="h3" color={theme.textPrimary} style={styles.statNumber}>
+              <ThemedText variant="h3" color="#1F2937" style={styles.statNumber}>
                 {userStats.followers}
               </ThemedText>
-              <ThemedText variant="caption" color={theme.textSecondary}>粉丝</ThemedText>
+              <ThemedText variant="caption" color="#6B7280">粉丝</ThemedText>
             </TouchableOpacity>
 
             {/* 编辑主页按钮 */}
             <TouchableOpacity style={styles.editProfileButton} onPress={() => handleFeaturePress('编辑主页')}>
-              <ThemedText variant="caption" color={theme.textPrimary} style={{ fontWeight: '500' }}>
+              <ThemedText variant="caption" color="#374151" style={{ fontWeight: '500' }}>
                 编辑主页
               </ThemedText>
             </TouchableOpacity>
@@ -503,7 +480,7 @@ export default function ProfileScreen() {
 
           {/* 用户简介 */}
           <TouchableOpacity onPress={() => handleEdit('bio')} style={styles.bioRow}>
-            <ThemedText variant="body" color={theme.textPrimary}>
+            <ThemedText variant="body" color="#374151">
               {userInfo.bio}
             </ThemedText>
           </TouchableOpacity>
@@ -511,10 +488,10 @@ export default function ProfileScreen() {
           {/* 标签栏 */}
           <View style={styles.tagsRow}>
             <View style={styles.tagItem}>
-              <ThemedText variant="caption" color={theme.textSecondary}>山东·烟台</ThemedText>
+              <ThemedText variant="caption" color="#6B7280">山东·烟台</ThemedText>
             </View>
             <View style={styles.tagItem}>
-              <ThemedText variant="caption" color={theme.textSecondary}>男·25岁</ThemedText>
+              <ThemedText variant="caption" color="#6B7280">男·25岁</ThemedText>
             </View>
           </View>
         </View>
@@ -530,9 +507,9 @@ export default function ProfileScreen() {
                 activeOpacity={0.7}
               >
                 <View style={styles.featureIconBg}>
-                  <FontAwesome6 name={feature.icon} size={20} color={SKY_BLUE} />
+                  <FontAwesome6 name={feature.icon} size={18} color="#6B7280" />
                 </View>
-                <ThemedText variant="caption" color={theme.textSecondary} style={styles.featureName}>
+                <ThemedText variant="caption" color="#6B7280" style={styles.featureName}>
                   {feature.name}
                 </ThemedText>
               </TouchableOpacity>
@@ -543,18 +520,19 @@ export default function ProfileScreen() {
           <TouchableOpacity style={styles.activityBanner} activeOpacity={0.85}>
             <View style={styles.bannerContent}>
               <View style={styles.bannerIconBg}>
-                <FontAwesome6 name="rocket" size={16} color={SKY_BLUE} />
+                <FontAwesome6 name="rocket" size={14} color="#6B7280" />
               </View>
               <View style={styles.bannerText}>
-                <ThemedText variant="bodyMedium" color={theme.textPrimary}>
+                <ThemedText variant="bodyMedium" color="#1F2937">
                   遇合创业季
                 </ThemedText>
-                <ThemedText variant="caption" color={theme.textMuted}>
+                <ThemedText variant="caption" color="#9CA3AF">
                   参与活动赢取创业资源
                 </ThemedText>
               </View>
             </View>
             <View style={styles.bannerAction}>
+              {/* 天蓝色点缀 - 去参与按钮 */}
               <ThemedText variant="caption" color={SKY_BLUE} style={{ fontWeight: '500' }}>
                 去参与
               </ThemedText>
@@ -575,11 +553,12 @@ export default function ProfileScreen() {
               >
                 <ThemedText
                   variant="body"
-                  color={activeTab === index ? SKY_BLUE : theme.textSecondary}
+                  color={activeTab === index ? '#1F2937' : '#9CA3AF'}
                   style={{ fontWeight: activeTab === index ? '600' : '400' }}
                 >
                   {tab}
                 </ThemedText>
+                {/* 天蓝色点缀 - 标签指示器 */}
                 {activeTab === index && <View style={styles.tabIndicator} />}
               </TouchableOpacity>
             ))}
@@ -595,17 +574,17 @@ export default function ProfileScreen() {
                     <TouchableOpacity key={project.id} style={styles.projectCard} activeOpacity={0.85}>
                       <Image source={{ uri: project.cover }} style={styles.projectCover} contentFit="cover" />
                       <View style={styles.projectInfo}>
-                        <ThemedText variant="body" color={theme.textPrimary} numberOfLines={2} style={{ fontWeight: '500' }}>
+                        <ThemedText variant="body" color="#1F2937" numberOfLines={2} style={{ fontWeight: '500' }}>
                           {project.title}
                         </ThemedText>
                         <View style={styles.projectStats}>
                           <View style={styles.projectStatItem}>
-                            <FontAwesome6 name="eye" size={11} color={theme.textMuted} />
-                            <ThemedText variant="caption" color={theme.textMuted}>{project.views}</ThemedText>
+                            <FontAwesome6 name="eye" size={10} color="#9CA3AF" />
+                            <ThemedText variant="caption" color="#9CA3AF">{project.views}</ThemedText>
                           </View>
                           <View style={styles.projectStatItem}>
-                            <FontAwesome6 name="heart" size={11} color={theme.textMuted} />
-                            <ThemedText variant="caption" color={theme.textMuted}>{project.likes}</ThemedText>
+                            <FontAwesome6 name="heart" size={10} color="#9CA3AF" />
+                            <ThemedText variant="caption" color="#9CA3AF">{project.likes}</ThemedText>
                           </View>
                         </View>
                       </View>
@@ -616,21 +595,22 @@ export default function ProfileScreen() {
                 {/* 草稿箱入口 */}
                 <TouchableOpacity style={styles.draftBox} activeOpacity={0.7}>
                   <View style={styles.draftIconBg}>
-                    <FontAwesome6 name="folder" size={16} color={theme.textMuted} />
+                    <FontAwesome6 name="folder" size={14} color="#9CA3AF" />
                   </View>
-                  <ThemedText variant="body" color={theme.textSecondary}>
+                  <ThemedText variant="body" color="#6B7280">
                     草稿箱
                   </ThemedText>
+                  {/* 天蓝色点缀 - 草稿数量 */}
                   <View style={styles.draftBadge}>
                     <ThemedText variant="caption" color="#FFFFFF">2</ThemedText>
                   </View>
-                  <FontAwesome6 name="chevron-right" size={14} color={theme.textMuted} />
+                  <FontAwesome6 name="chevron-right" size={12} color="#D1D5DB" />
                 </TouchableOpacity>
               </>
             ) : (
               <View style={styles.emptyContent}>
-                <FontAwesome6 name="inbox" size={40} color={theme.textMuted} />
-                <ThemedText variant="body" color={theme.textMuted} style={{ marginTop: 12 }}>
+                <FontAwesome6 name="inbox" size={36} color="#D1D5DB" />
+                <ThemedText variant="body" color="#9CA3AF" style={{ marginTop: 12 }}>
                   暂无内容
                 </ThemedText>
               </View>
@@ -659,14 +639,14 @@ export default function ProfileScreen() {
             activeOpacity={1}
             onPress={() => {}}
           >
-            <ThemedText variant="h4" color={theme.textPrimary} style={styles.modalTitle}>
+            <ThemedText variant="h4" color="#1F2937" style={styles.modalTitle}>
               {editField === 'username' ? '修改用户名' : '修改个人简介'}
             </ThemedText>
             <View style={styles.inputContainer}>
               <TextInput
                 style={[styles.modalInput, editField === 'bio' && styles.modalInputMultiline]}
                 placeholder={editField === 'username' ? '请输入用户名' : '请输入个人简介'}
-                placeholderTextColor={theme.textMuted}
+                placeholderTextColor="#9CA3AF"
                 value={editValue}
                 onChangeText={setEditValue}
                 maxLength={editField === 'username' ? 20 : 100}
@@ -680,12 +660,13 @@ export default function ProfileScreen() {
                 style={[styles.modalButton, styles.cancelButton]}
                 onPress={() => setShowEditModal(false)}
               >
-                <ThemedText variant="bodyMedium" color={theme.textSecondary}>取消</ThemedText>
+                <ThemedText variant="bodyMedium" color="#6B7280">取消</ThemedText>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.modalButton, styles.confirmButton]}
                 onPress={confirmEdit}
               >
+                {/* 天蓝色点缀 - 确认按钮 */}
                 <ThemedText variant="bodyMedium" color="#FFFFFF">确定</ThemedText>
               </TouchableOpacity>
             </View>

@@ -4,10 +4,8 @@ import { Spacing, BorderRadius, Theme } from '@/constants/theme';
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const AVATAR_CROP_SIZE = SCREEN_WIDTH * 0.75;
 
-// 天蓝色主题色 - 淡蓝色，非亮蓝
+// 天蓝色 - 仅作点缀色，不喧宾夺主
 export const SKY_BLUE = '#38BDF8';
-const SKY_BLUE_LIGHT = '#E0F2FE';
-const SKY_BLUE_DARK = '#0EA5E9';
 
 export const createStyles = (theme: Theme) => {
   return StyleSheet.create({
@@ -20,15 +18,15 @@ export const createStyles = (theme: Theme) => {
     headerSection: {
       position: 'relative',
       paddingBottom: Spacing.lg,
+      backgroundColor: '#FFFFFF',
     },
     headerGradient: {
       position: 'absolute',
       top: 0,
       left: 0,
       right: 0,
-      height: 180,
-      backgroundColor: SKY_BLUE_LIGHT,
-      opacity: 0.6,
+      height: 160,
+      backgroundColor: '#F8FAFC', // 极淡灰白，取代蓝色渐变
     },
     headerTopBar: {
       flexDirection: 'row',
@@ -41,9 +39,15 @@ export const createStyles = (theme: Theme) => {
       width: 40,
       height: 40,
       borderRadius: 20,
-      backgroundColor: 'rgba(255,255,255,0.9)',
+      backgroundColor: '#FFFFFF',
       justifyContent: 'center',
       alignItems: 'center',
+      // 微阴影
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.05,
+      shadowRadius: 2,
+      elevation: 1,
     },
     userInfoRow: {
       flexDirection: 'row',
@@ -61,15 +65,21 @@ export const createStyles = (theme: Theme) => {
       backgroundColor: '#F3F4F6',
       borderWidth: 3,
       borderColor: '#FFFFFF',
+      // 微阴影
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.08,
+      shadowRadius: 4,
+      elevation: 2,
     },
     avatarAddButton: {
       position: 'absolute',
       bottom: 0,
       right: 0,
-      width: 26,
-      height: 26,
-      borderRadius: 13,
-      backgroundColor: SKY_BLUE,
+      width: 24,
+      height: 24,
+      borderRadius: 12,
+      backgroundColor: SKY_BLUE, // 天蓝色点缀
       justifyContent: 'center',
       alignItems: 'center',
       borderWidth: 2,
@@ -88,7 +98,7 @@ export const createStyles = (theme: Theme) => {
     memberBadge: {
       flexDirection: 'row',
       alignItems: 'center',
-      backgroundColor: '#FEF3C7',
+      backgroundColor: '#FFFBEB', // 淡黄
       paddingHorizontal: Spacing.md,
       paddingVertical: Spacing.xs,
       borderRadius: BorderRadius.xl,
@@ -122,6 +132,7 @@ export const createStyles = (theme: Theme) => {
     statNumber: {
       fontSize: 18,
       fontWeight: '700',
+      color: '#1F2937',
     },
     editProfileButton: {
       marginLeft: 'auto',
@@ -149,8 +160,6 @@ export const createStyles = (theme: Theme) => {
       paddingHorizontal: Spacing.lg,
       paddingVertical: Spacing.lg,
       backgroundColor: '#FFFFFF',
-      borderTopWidth: 8,
-      borderTopColor: '#F9FAFB',
     },
     featuresRow: {
       flexDirection: 'row',
@@ -161,10 +170,10 @@ export const createStyles = (theme: Theme) => {
       alignItems: 'center',
     },
     featureIconBg: {
-      width: 48,
-      height: 48,
-      borderRadius: 24,
-      backgroundColor: SKY_BLUE_LIGHT,
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      backgroundColor: '#F8FAFC', // 极淡灰白背景
       justifyContent: 'center',
       alignItems: 'center',
       marginBottom: Spacing.xs,
@@ -173,16 +182,15 @@ export const createStyles = (theme: Theme) => {
       fontSize: 11,
       textAlign: 'center',
       maxWidth: 60,
+      color: '#6B7280',
     },
     activityBanner: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      backgroundColor: '#F0F9FF',
+      backgroundColor: '#F8FAFC',
       borderRadius: BorderRadius.lg,
       padding: Spacing.md,
-      borderWidth: 1,
-      borderColor: SKY_BLUE_LIGHT,
     },
     bannerContent: {
       flexDirection: 'row',
@@ -209,8 +217,6 @@ export const createStyles = (theme: Theme) => {
     // ========== 内容展示区 ==========
     contentSection: {
       backgroundColor: '#FFFFFF',
-      borderTopWidth: 8,
-      borderTopColor: '#F9FAFB',
     },
     tabsRow: {
       flexDirection: 'row',
@@ -230,11 +236,12 @@ export const createStyles = (theme: Theme) => {
       left: '25%',
       right: '25%',
       height: 2,
-      backgroundColor: SKY_BLUE,
+      backgroundColor: SKY_BLUE, // 天蓝色点缀 - 标签指示器
       borderRadius: 1,
     },
     contentList: {
       padding: Spacing.lg,
+      backgroundColor: '#FAFAFA', // 内容区稍暗的背景
     },
     projectGrid: {
       flexDirection: 'row',
@@ -246,8 +253,12 @@ export const createStyles = (theme: Theme) => {
       backgroundColor: '#FFFFFF',
       borderRadius: BorderRadius.lg,
       overflow: 'hidden',
-      borderWidth: 1,
-      borderColor: '#F3F4F6',
+      // 卡片阴影
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.04,
+      shadowRadius: 2,
+      elevation: 1,
     },
     projectCover: {
       width: '100%',
@@ -271,6 +282,7 @@ export const createStyles = (theme: Theme) => {
       alignItems: 'center',
       justifyContent: 'center',
       paddingVertical: Spacing['3xl'],
+      backgroundColor: '#FAFAFA',
     },
     draftBox: {
       flexDirection: 'row',
@@ -278,7 +290,7 @@ export const createStyles = (theme: Theme) => {
       marginTop: Spacing.lg,
       paddingVertical: Spacing.md,
       paddingHorizontal: Spacing.md,
-      backgroundColor: '#F9FAFB',
+      backgroundColor: '#FFFFFF',
       borderRadius: BorderRadius.lg,
       gap: Spacing.sm,
     },
@@ -293,7 +305,7 @@ export const createStyles = (theme: Theme) => {
     draftBadge: {
       marginLeft: 'auto',
       marginRight: Spacing.sm,
-      backgroundColor: SKY_BLUE,
+      backgroundColor: SKY_BLUE, // 天蓝色点缀 - 草稿数量
       paddingHorizontal: Spacing.sm,
       paddingVertical: 2,
       borderRadius: BorderRadius.xl,
@@ -304,7 +316,7 @@ export const createStyles = (theme: Theme) => {
     // ========== Modal ==========
     modalOverlay: {
       flex: 1,
-      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      backgroundColor: 'rgba(0, 0, 0, 0.4)',
       justifyContent: 'center',
       alignItems: 'center',
       padding: Spacing.xl,
@@ -321,16 +333,19 @@ export const createStyles = (theme: Theme) => {
       fontWeight: '700',
       marginBottom: Spacing.lg,
       textAlign: 'center',
+      color: '#1F2937',
     },
     inputContainer: {
       marginBottom: Spacing.lg,
     },
     modalInput: {
-      backgroundColor: '#F3F4F6',
+      backgroundColor: '#F9FAFB',
       borderRadius: BorderRadius.md,
       padding: Spacing.md,
       fontSize: 16,
-      color: theme.textPrimary,
+      color: '#1F2937',
+      borderWidth: 1,
+      borderColor: '#E5E7EB',
     },
     modalInputMultiline: {
       minHeight: 80,
@@ -350,7 +365,7 @@ export const createStyles = (theme: Theme) => {
       backgroundColor: '#F3F4F6',
     },
     confirmButton: {
-      backgroundColor: SKY_BLUE,
+      backgroundColor: SKY_BLUE, // 天蓝色点缀 - 确认按钮
     },
 
     // ========== 头像裁剪 ==========
