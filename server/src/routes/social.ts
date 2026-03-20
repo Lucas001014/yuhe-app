@@ -766,6 +766,64 @@ router.get('/blocked', async (req, res) => {
   }
 });
 
+// ============== 投诉功能 ==============
+
+/**
+ * 投诉用户
+ * POST /api/v1/social/report
+ * Body: { currentUserId: number, targetUserId: number, reason: string }
+ */
+router.post('/report', async (req, res) => {
+  const db = (req as any).db;
+  const { currentUserId, targetUserId, reason } = req.body;
+
+  if (!currentUserId || !targetUserId) {
+    return res.status(400).json({ success: false, error: '用户ID不能为空' });
+  }
+
+  if (currentUserId === targetUserId) {
+    return res.status(400).json({ success: false, error: '不能投诉自己' });
+  }
+
+  try {
+    // 创建用户投诉表（如果不存在）
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS user_reports (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL,
+        reported_user_id INTEGER NOT NULL,
+        reason VARCHAR(50) NOT NULL,
+        status VARCHAR(20) DEFAULT 'pending',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // 检查是否已投诉过
+    const existingReport = await db.query(
+      'SELECT * FROM user_reports WHERE user_id = $1 AND reported_user_id = $2',
+      [currentUserId, targetUserId]
+    );
+
+    if (existingReport.rows.length > 0) {
+      return res.status(400).json({ success: false, error: '您已投诉过该用户' });
+    }
+
+    // 插入投诉记录
+    await db.query(
+      'INSERT INTO user_reports (user_id, reported_user_id, reason) VALUES ($1, $2, $3)',
+      [currentUserId, targetUserId, reason]
+    );
+
+    res.json({
+      success: true,
+      message: '投诉已提交，我们会尽快处理',
+    });
+  } catch (error: any) {
+    console.error('投诉操作失败:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // ============== 辅助函数 ==============
 
 /**

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { 
   View, 
   ScrollView, 
@@ -9,12 +9,15 @@ import {
   Platform,
   StatusBar,
   StyleSheet,
+  Modal,
+  Pressable,
 } from 'react-native';
 import { FontAwesome6 } from '@expo/vector-icons';
 import { useSafeRouter, useSafeSearchParams } from '@/hooks/useSafeRouter';
 import { ThemedText } from '@/components/ThemedText';
 import { useTheme } from '@/hooks/useTheme';
 import { Image } from 'expo-image';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 44 : (StatusBar.currentHeight || 24);
@@ -68,6 +71,11 @@ export default function UserProfileScreen() {
   
   // 是否已关注
   const [isFollowed, setIsFollowed] = useState(false);
+  
+  // 菜单显示状态
+  const [showMenu, setShowMenu] = useState(false);
+  
+  const API_BASE_URL = process.env.EXPO_PUBLIC_BACKEND_BASE_URL;
 
   // 模拟用户数据
   const [userInfo] = useState({
@@ -136,9 +144,161 @@ export default function UserProfileScreen() {
   // 标签栏
   const tabs = ['帖子', '动态', '喜欢', '收藏'];
 
-  const handleSendMessage = () => {
-    Alert.alert('提示', '私信功能开发中');
-  };
+  // 关注/取消关注
+  const handleFollow = useCallback(async () => {
+    try {
+      const userId = await AsyncStorage.getItem('userId');
+      if (!userId) {
+        Alert.alert('提示', '请先登录');
+        return;
+      }
+
+      /**
+       * 服务端文件：server/src/routes/social.ts
+       * 接口：POST /api/v1/social/follow
+       * Body 参数：currentUserId: number, targetUserId: number
+       */
+      const response = await fetch(`${API_BASE_URL}/api/v1/social/follow`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          currentUserId: parseInt(userId),
+          targetUserId: userInfo.id,
+        }),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        setIsFollowed(data.isFollowing);
+      }
+    } catch (error) {
+      console.error('关注操作失败:', error);
+    }
+  }, [API_BASE_URL, userInfo.id]);
+
+  // 私信
+  const handleSendMessage = useCallback(() => {
+    router.push('/chat', {
+      userId: userInfo.id,
+      username: userInfo.username,
+      avatar: userInfo.avatar,
+    });
+  }, [router, userInfo]);
+
+  // 分享给遇友
+  const handleShareToYuhu = useCallback(() => {
+    setShowMenu(false);
+    router.push('/share-friends', { targetUserId: userInfo.id.toString() });
+  }, [router, userInfo.id]);
+
+  // 分享到微信
+  const handleShareToWechat = useCallback(() => {
+    setShowMenu(false);
+    Alert.alert('提示', '正在打开微信...');
+  }, []);
+
+  // 分享到企业微信
+  const handleShareToWework = useCallback(() => {
+    setShowMenu(false);
+    Alert.alert('提示', '正在打开企业微信...');
+  }, []);
+
+  // 提交投诉（需要先声明）
+  const submitReport = useCallback(async (reason: string) => {
+    try {
+      const userId = await AsyncStorage.getItem('userId');
+      if (!userId) {
+        Alert.alert('提示', '请先登录');
+        return;
+      }
+
+      /**
+       * 服务端文件：server/src/routes/social.ts
+       * 接口：POST /api/v1/social/report
+       * Body 参数：currentUserId: number, targetUserId: number, reason: string
+       */
+      const response = await fetch(`${API_BASE_URL}/api/v1/social/report`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          currentUserId: parseInt(userId),
+          targetUserId: userInfo.id,
+          reason,
+        }),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        Alert.alert('成功', '投诉已提交，我们会尽快处理');
+      }
+    } catch (error) {
+      console.error('投诉失败:', error);
+      Alert.alert('错误', '投诉失败');
+    }
+  }, [API_BASE_URL, userInfo.id]);
+
+  // 投诉用户
+  const handleReport = useCallback(() => {
+    setShowMenu(false);
+    Alert.alert(
+      '投诉',
+      '请选择投诉原因',
+      [
+        { text: '取消', style: 'cancel' },
+        { text: '虚假信息', onPress: () => submitReport('fake') },
+        { text: '骚扰行为', onPress: () => submitReport('harassment') },
+        { text: '侵权', onPress: () => submitReport('copyright') },
+        { text: '其他', onPress: () => submitReport('other') },
+      ]
+    );
+  }, [submitReport]);
+
+  // 提交屏蔽（需要先声明）
+  const submitBlock = useCallback(async () => {
+    try {
+      const userId = await AsyncStorage.getItem('userId');
+      if (!userId) {
+        Alert.alert('提示', '请先登录');
+        return;
+      }
+
+      /**
+       * 服务端文件：server/src/routes/social.ts
+       * 接口：POST /api/v1/social/block
+       * Body 参数：currentUserId: number, targetUserId: number
+       */
+      const response = await fetch(`${API_BASE_URL}/api/v1/social/block`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          currentUserId: parseInt(userId),
+          targetUserId: userInfo.id,
+        }),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        Alert.alert('成功', '已屏蔽该用户');
+        router.back();
+      }
+    } catch (error) {
+      console.error('屏蔽失败:', error);
+      Alert.alert('错误', '操作失败');
+    }
+  }, [API_BASE_URL, userInfo.id, router]);
+
+  // 屏蔽用户
+  const handleBlock = useCallback(() => {
+    setShowMenu(false);
+    Alert.alert(
+      '屏蔽用户',
+      `确定要屏蔽 ${userInfo.username} 吗？屏蔽后将不再看到该用户的帖子。`,
+      [
+        { text: '取消', style: 'cancel' },
+        { text: '确定屏蔽', style: 'destructive', onPress: submitBlock },
+      ]
+    );
+  }, [userInfo.username, submitBlock]);
 
   const styles = useMemo(() => createStyles(theme), [theme]);
 
@@ -159,7 +319,7 @@ export default function UserProfileScreen() {
             {userInfo.username}
           </Animated.Text>
           
-          <TouchableOpacity style={styles.navButton}>
+          <TouchableOpacity style={styles.navButton} onPress={() => setShowMenu(true)}>
             <FontAwesome6 name="ellipsis-vertical" size={18} color="#FFFFFF" />
           </TouchableOpacity>
         </View>
@@ -245,7 +405,7 @@ export default function UserProfileScreen() {
             <View style={styles.actionButtons}>
               <TouchableOpacity 
                 style={[styles.followButton, isFollowed && styles.followedButton]}
-                onPress={() => setIsFollowed(!isFollowed)}
+                onPress={handleFollow}
                 activeOpacity={0.7}
               >
                 <FontAwesome6 
@@ -328,6 +488,61 @@ export default function UserProfileScreen() {
         {/* 底部安全区 */}
         <View style={{ height: 100 }} />
       </Animated.ScrollView>
+
+      {/* ========== 右上角菜单 ========== */}
+      <Modal
+        visible={showMenu}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowMenu(false)}
+      >
+        <Pressable style={styles.menuOverlay} onPress={() => setShowMenu(false)}>
+          <View style={styles.menuContainer}>
+            {/* 分享给遇友 */}
+            <TouchableOpacity style={styles.menuItem} onPress={handleShareToYuhu}>
+              <View style={[styles.menuIconWrap, { backgroundColor: 'rgba(56, 189, 248, 0.1)' }]}>
+                <FontAwesome6 name="user-group" size={18} color="#38BDF8" />
+              </View>
+              <ThemedText variant="body" color={theme.textPrimary}>分享给遇友</ThemedText>
+            </TouchableOpacity>
+
+            {/* 微信 */}
+            <TouchableOpacity style={styles.menuItem} onPress={handleShareToWechat}>
+              <View style={[styles.menuIconWrap, { backgroundColor: 'rgba(7, 193, 96, 0.1)' }]}>
+                <FontAwesome6 name="weixin" size={18} color="#07C160" brand />
+              </View>
+              <ThemedText variant="body" color={theme.textPrimary}>微信</ThemedText>
+            </TouchableOpacity>
+
+            {/* 企业微信 */}
+            <TouchableOpacity style={styles.menuItem} onPress={handleShareToWework}>
+              <View style={[styles.menuIconWrap, { backgroundColor: 'rgba(43, 126, 255, 0.1)' }]}>
+                <FontAwesome6 name="weixin" size={18} color="#2B7EFF" brand />
+              </View>
+              <ThemedText variant="body" color={theme.textPrimary}>企业微信</ThemedText>
+            </TouchableOpacity>
+
+            {/* 分隔线 */}
+            <View style={styles.menuDivider} />
+
+            {/* 投诉 */}
+            <TouchableOpacity style={styles.menuItem} onPress={handleReport}>
+              <View style={[styles.menuIconWrap, { backgroundColor: 'rgba(249, 115, 22, 0.1)' }]}>
+                <FontAwesome6 name="triangle-exclamation" size={18} color="#F97316" />
+              </View>
+              <ThemedText variant="body" color={theme.textPrimary}>投诉</ThemedText>
+            </TouchableOpacity>
+
+            {/* 屏蔽 */}
+            <TouchableOpacity style={styles.menuItem} onPress={handleBlock}>
+              <View style={[styles.menuIconWrap, { backgroundColor: 'rgba(239, 68, 68, 0.1)' }]}>
+                <FontAwesome6 name="ban" size={18} color="#EF4444" />
+              </View>
+              <ThemedText variant="body" color="#EF4444">屏蔽</ThemedText>
+            </TouchableOpacity>
+          </View>
+        </Pressable>
+      </Modal>
     </View>
   );
 }
@@ -546,5 +761,45 @@ const createStyles = (theme: any) => StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 48,
+  },
+
+  // 菜单
+  menuOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+  },
+  menuContainer: {
+    position: 'absolute',
+    top: STATUS_BAR_HEIGHT + NAV_HEIGHT + 8,
+    right: 16,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    paddingVertical: 8,
+    minWidth: 160,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  menuIconWrap: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  menuDivider: {
+    height: 1,
+    backgroundColor: '#F3F4F6',
+    marginVertical: 4,
+    marginHorizontal: 16,
   },
 });
