@@ -308,7 +308,10 @@ export default function UserProfileScreen() {
 
       {/* ========== 固定顶部导航栏 ========== */}
       <View style={styles.fixedNav}>
-        <Animated.View style={[styles.navBackground, { opacity: navBgOpacity }]} />
+        <Animated.View 
+          style={[styles.navBackground, { opacity: navBgOpacity }]} 
+          pointerEvents="none"
+        />
         
         <View style={styles.navContent}>
           <TouchableOpacity style={styles.navButton} onPress={() => router.back()}>
@@ -567,6 +570,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
     borderBottomColor: '#F3F4F6',
+    pointerEvents: 'none',
   },
   navContent: {
     flexDirection: 'row',
