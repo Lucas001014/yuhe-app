@@ -4,173 +4,304 @@ import { Spacing, BorderRadius, Theme } from '@/constants/theme';
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const AVATAR_CROP_SIZE = SCREEN_WIDTH * 0.75;
 
+// 天蓝色主题色 - 淡蓝色，非亮蓝
+export const SKY_BLUE = '#38BDF8';
+const SKY_BLUE_LIGHT = '#E0F2FE';
+const SKY_BLUE_DARK = '#0EA5E9';
+
 export const createStyles = (theme: Theme) => {
   return StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: theme.backgroundRoot,
+      backgroundColor: '#FFFFFF',
     },
-    // 全屏背景
-    fullScreenBackground: {
+
+    // ========== 顶部用户信息区 ==========
+    headerSection: {
+      position: 'relative',
+      paddingBottom: Spacing.lg,
+    },
+    headerGradient: {
       position: 'absolute',
       top: 0,
       left: 0,
       right: 0,
-      bottom: 0,
-      width: SCREEN_WIDTH,
-      height: SCREEN_HEIGHT,
+      height: 180,
+      backgroundColor: SKY_BLUE_LIGHT,
+      opacity: 0.6,
     },
-    defaultBackground: {
-      backgroundColor: theme.primary,
+    headerTopBar: {
+      flexDirection: 'row',
+      justifyContent: 'flex-end',
+      paddingHorizontal: Spacing.lg,
+      paddingTop: Spacing['2xl'],
+      gap: Spacing.md,
     },
-    // 渐变遮罩
-    gradientOverlay: {
-      position: 'absolute',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-    },
-    gradientTop: {
-      position: 'absolute',
-      top: 0,
-      left: 0,
-      right: 0,
-      height: SCREEN_HEIGHT * 0.25,
-    },
-    gradientMiddle: {
-      position: 'absolute',
-      top: SCREEN_HEIGHT * 0.25,
-      left: 0,
-      right: 0,
-      height: SCREEN_HEIGHT * 0.15,
-    },
-    gradientBottom: {
-      position: 'absolute',
-      top: SCREEN_HEIGHT * 0.4,
-      left: 0,
-      right: 0,
-      bottom: 0,
-    },
-    // 设置按钮 - 右上角
-    settingsButton: {
-      position: 'absolute',
-      top: Spacing['2xl'],
-      right: Spacing.lg,
+    headerButton: {
       width: 40,
       height: 40,
       borderRadius: 20,
-      backgroundColor: theme.primary,
+      backgroundColor: 'rgba(255,255,255,0.9)',
       justifyContent: 'center',
       alignItems: 'center',
-      zIndex: 10,
     },
-    // 更换背景按钮
-    changeBackgroundButton: {
-      position: 'absolute',
-      bottom: Spacing.xl + 60, // 避开底部导航
-      right: Spacing.lg,
-      width: 44,
-      height: 44,
-      borderRadius: 22,
-      backgroundColor: 'rgba(0,0,0,0.5)',
-      justifyContent: 'center',
-      alignItems: 'center',
-      zIndex: 10,
-    },
-    // 滚动内容
-    scrollContent: {
-      flexGrow: 1,
-      paddingTop: SCREEN_HEIGHT * 0.08, // 顶部安全区
-    },
-    topSpacer: {
-      height: SCREEN_HEIGHT * 0.08,
-    },
-    // 用户信息区 - 靠左上
-    userInfoSection: {
-      paddingHorizontal: Spacing.xl,
-      paddingTop: Spacing.xl,
+    userInfoRow: {
+      flexDirection: 'row',
       alignItems: 'flex-start',
+      paddingHorizontal: Spacing.lg,
+      paddingTop: Spacing.lg,
     },
-    avatarWrapper: {
+    avatarContainer: {
       position: 'relative',
-      marginBottom: Spacing.md,
     },
     avatar: {
-      width: 72,
-      height: 72,
-      borderRadius: 36,
+      width: 80,
+      height: 80,
+      borderRadius: 40,
+      backgroundColor: '#F3F4F6',
       borderWidth: 3,
-      borderColor: theme.backgroundRoot,
-      backgroundColor: theme.backgroundDefault,
+      borderColor: '#FFFFFF',
     },
-    avatarEditBadge: {
+    avatarAddButton: {
       position: 'absolute',
       bottom: 0,
       right: 0,
-      width: 24,
-      height: 24,
-      borderRadius: 12,
-      backgroundColor: theme.primary,
+      width: 26,
+      height: 26,
+      borderRadius: 13,
+      backgroundColor: SKY_BLUE,
       justifyContent: 'center',
       alignItems: 'center',
       borderWidth: 2,
-      borderColor: theme.backgroundRoot,
+      borderColor: '#FFFFFF',
     },
-    nameRow: {
+    userTextInfo: {
+      flex: 1,
+      marginLeft: Spacing.lg,
+      paddingTop: Spacing.xs,
+    },
+    usernameRow: {
       flexDirection: 'row',
       alignItems: 'center',
       marginBottom: Spacing.sm,
-      marginTop: Spacing.sm,
     },
-    identityBadge: {
+    memberBadge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: '#FEF3C7',
+      paddingHorizontal: Spacing.md,
+      paddingVertical: Spacing.xs,
+      borderRadius: BorderRadius.xl,
+      alignSelf: 'flex-start',
+      marginBottom: Spacing.sm,
+    },
+    idRow: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: Spacing.xs,
-      paddingHorizontal: Spacing.md,
-      paddingVertical: Spacing.xs,
-      backgroundColor: 'rgba(139, 92, 246, 0.15)',
-      borderRadius: BorderRadius.xl,
-      marginBottom: Spacing.md,
     },
-    merchantBadge: {
-      backgroundColor: 'rgba(255, 215, 0, 0.15)',
+    copyIdButton: {
+      padding: Spacing.xs,
     },
-    bioSection: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      paddingHorizontal: Spacing.md,
-      paddingVertical: Spacing.sm,
-      backgroundColor: theme.backgroundDefault,
-      borderRadius: BorderRadius.lg,
-      marginBottom: Spacing.lg,
-    },
-    bioText: {
-      flex: 1,
-    },
-    // 底部统计板块 - 纯文字简洁版
+
+    // ========== 数据统计区 ==========
     statsSection: {
-      paddingHorizontal: Spacing.xl,
-      paddingVertical: Spacing.xl,
-      marginTop: 'auto',
+      paddingHorizontal: Spacing.lg,
+      paddingVertical: Spacing.md,
+      backgroundColor: '#FFFFFF',
     },
     statsRow: {
       flexDirection: 'row',
-      justifyContent: 'space-around',
-      paddingVertical: Spacing.lg,
-      backgroundColor: theme.backgroundDefault,
-      borderRadius: BorderRadius.lg,
+      alignItems: 'center',
+      marginBottom: Spacing.md,
     },
     statItem: {
       alignItems: 'center',
-      paddingHorizontal: Spacing.lg,
+      paddingHorizontal: Spacing.md,
     },
     statNumber: {
-      fontSize: 22,
+      fontSize: 18,
       fontWeight: '700',
+    },
+    editProfileButton: {
+      marginLeft: 'auto',
+      paddingHorizontal: Spacing.lg,
+      paddingVertical: Spacing.sm,
+      backgroundColor: '#F3F4F6',
+      borderRadius: BorderRadius.md,
+    },
+    bioRow: {
+      marginBottom: Spacing.sm,
+    },
+    tagsRow: {
+      flexDirection: 'row',
+      gap: Spacing.sm,
+    },
+    tagItem: {
+      paddingHorizontal: Spacing.md,
+      paddingVertical: Spacing.xs,
+      backgroundColor: '#F3F4F6',
+      borderRadius: BorderRadius.xl,
+    },
+
+    // ========== 功能快捷入口区 ==========
+    featuresSection: {
+      paddingHorizontal: Spacing.lg,
+      paddingVertical: Spacing.lg,
+      backgroundColor: '#FFFFFF',
+      borderTopWidth: 8,
+      borderTopColor: '#F9FAFB',
+    },
+    featuresRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-around',
+      marginBottom: Spacing.lg,
+    },
+    featureItem: {
+      alignItems: 'center',
+    },
+    featureIconBg: {
+      width: 48,
+      height: 48,
+      borderRadius: 24,
+      backgroundColor: SKY_BLUE_LIGHT,
+      justifyContent: 'center',
+      alignItems: 'center',
       marginBottom: Spacing.xs,
     },
-    // Modal
+    featureName: {
+      fontSize: 11,
+      textAlign: 'center',
+      maxWidth: 60,
+    },
+    activityBanner: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      backgroundColor: '#F0F9FF',
+      borderRadius: BorderRadius.lg,
+      padding: Spacing.md,
+      borderWidth: 1,
+      borderColor: SKY_BLUE_LIGHT,
+    },
+    bannerContent: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.md,
+    },
+    bannerIconBg: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      backgroundColor: '#FFFFFF',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    bannerText: {
+      gap: 2,
+    },
+    bannerAction: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.xs,
+    },
+
+    // ========== 内容展示区 ==========
+    contentSection: {
+      backgroundColor: '#FFFFFF',
+      borderTopWidth: 8,
+      borderTopColor: '#F9FAFB',
+    },
+    tabsRow: {
+      flexDirection: 'row',
+      borderBottomWidth: 1,
+      borderBottomColor: '#F3F4F6',
+    },
+    tabItem: {
+      flex: 1,
+      alignItems: 'center',
+      paddingVertical: Spacing.md,
+      position: 'relative',
+    },
+    tabItemActive: {},
+    tabIndicator: {
+      position: 'absolute',
+      bottom: 0,
+      left: '25%',
+      right: '25%',
+      height: 2,
+      backgroundColor: SKY_BLUE,
+      borderRadius: 1,
+    },
+    contentList: {
+      padding: Spacing.lg,
+    },
+    projectGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: Spacing.md,
+    },
+    projectCard: {
+      width: (SCREEN_WIDTH - Spacing.lg * 2 - Spacing.md) / 2,
+      backgroundColor: '#FFFFFF',
+      borderRadius: BorderRadius.lg,
+      overflow: 'hidden',
+      borderWidth: 1,
+      borderColor: '#F3F4F6',
+    },
+    projectCover: {
+      width: '100%',
+      height: 100,
+      backgroundColor: '#F3F4F6',
+    },
+    projectInfo: {
+      padding: Spacing.sm,
+    },
+    projectStats: {
+      flexDirection: 'row',
+      gap: Spacing.md,
+      marginTop: Spacing.xs,
+    },
+    projectStatItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+    },
+    emptyContent: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: Spacing['3xl'],
+    },
+    draftBox: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginTop: Spacing.lg,
+      paddingVertical: Spacing.md,
+      paddingHorizontal: Spacing.md,
+      backgroundColor: '#F9FAFB',
+      borderRadius: BorderRadius.lg,
+      gap: Spacing.sm,
+    },
+    draftIconBg: {
+      width: 32,
+      height: 32,
+      borderRadius: 8,
+      backgroundColor: '#F3F4F6',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    draftBadge: {
+      marginLeft: 'auto',
+      marginRight: Spacing.sm,
+      backgroundColor: SKY_BLUE,
+      paddingHorizontal: Spacing.sm,
+      paddingVertical: 2,
+      borderRadius: BorderRadius.xl,
+      minWidth: 20,
+      alignItems: 'center',
+    },
+
+    // ========== Modal ==========
     modalOverlay: {
       flex: 1,
       backgroundColor: 'rgba(0, 0, 0, 0.5)',
@@ -179,7 +310,7 @@ export const createStyles = (theme: Theme) => {
       padding: Spacing.xl,
     },
     modalContent: {
-      backgroundColor: theme.backgroundDefault,
+      backgroundColor: '#FFFFFF',
       borderRadius: BorderRadius.xl,
       padding: Spacing.xl,
       width: '100%',
@@ -195,7 +326,7 @@ export const createStyles = (theme: Theme) => {
       marginBottom: Spacing.lg,
     },
     modalInput: {
-      backgroundColor: theme.backgroundTertiary,
+      backgroundColor: '#F3F4F6',
       borderRadius: BorderRadius.md,
       padding: Spacing.md,
       fontSize: 16,
@@ -216,12 +347,13 @@ export const createStyles = (theme: Theme) => {
       alignItems: 'center',
     },
     cancelButton: {
-      backgroundColor: theme.backgroundTertiary,
+      backgroundColor: '#F3F4F6',
     },
     confirmButton: {
-      backgroundColor: theme.primary,
+      backgroundColor: SKY_BLUE,
     },
-    // 头像裁剪
+
+    // ========== 头像裁剪 ==========
     avatarCropModalContainer: {
       flex: 1,
       backgroundColor: '#000000',
@@ -241,7 +373,7 @@ export const createStyles = (theme: Theme) => {
       alignItems: 'center',
     },
     avatarCropConfirmButton: {
-      backgroundColor: '#6366F1',
+      backgroundColor: SKY_BLUE,
       borderRadius: BorderRadius.md,
       paddingHorizontal: Spacing.lg,
     },
