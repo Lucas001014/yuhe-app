@@ -55,6 +55,8 @@ router.get('/', async (req, res) => {
 
     let sqlQuery = `
       SELECT p.*,
+        u.username as author_username,
+        u.avatar_url as author_avatar,
         COALESCE(json_agg(
           json_build_object(
             'userId', pi.user_id,
@@ -62,6 +64,7 @@ router.get('/', async (req, res) => {
           )
         ) FILTER (WHERE pi.user_id = $1), '[]') as user_interactions
       FROM posts p
+      LEFT JOIN users u ON p.author_id = u.id
       LEFT JOIN post_interactions pi ON p.id = pi.post_id AND pi.user_id = $1
       WHERE p.status = 'published' AND p.audit_status = 'approved'
     `;
@@ -79,7 +82,7 @@ router.get('/', async (req, res) => {
     }
 
     sqlQuery += `
-      GROUP BY p.id
+      GROUP BY p.id, u.username, u.avatar_url
       ORDER BY p.created_at DESC
       LIMIT 50
     `;
@@ -94,6 +97,8 @@ router.get('/', async (req, res) => {
 
       return {
         ...row,
+        username: row.author_username,
+        avatar: row.author_avatar,
         images: row.images || [],
         tags: row.tags || [],
         aspectRatio: calculateAspectRatio(row.images),

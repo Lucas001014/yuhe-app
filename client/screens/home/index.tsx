@@ -72,7 +72,6 @@ export default function HomeScreen() {
     try {
       setLoading(true);
       const userId = await AsyncStorage.getItem('userId');
-      const userAvatar = await AsyncStorage.getItem('avatar'); // 获取当前用户头像
       setCurrentUserId(userId);
 
       /**
@@ -89,8 +88,6 @@ export default function HomeScreen() {
 
       if (data.success) {
         const processedPosts = data.posts.map((p: any) => {
-          // 如果是当前用户发的帖子，使用最新的头像
-          const isMyPost = userId && p.author_id === parseInt(userId);
           return {
             id: p.id,
             type: p.type || 'normal',
@@ -100,7 +97,7 @@ export default function HomeScreen() {
             aspectRatio: p.aspectRatio || generateAspectRatio(),
             author_id: p.author_id,
             authorName: p.username || p.authorName || '用户',
-            authorAvatar: isMyPost && userAvatar ? userAvatar : (p.avatar || p.authorAvatar || 'https://i.pravatar.cc/150'),
+            authorAvatar: p.avatar || p.authorAvatar || 'https://i.pravatar.cc/150',
             tags: p.tags || [],
             like_count: p.like_count || 0,
             comment_count: p.comment_count || 0,
