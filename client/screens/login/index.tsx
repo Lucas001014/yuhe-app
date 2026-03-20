@@ -8,11 +8,13 @@ import { useTheme } from '@/hooks/useTheme';
 import { useSafeRouter } from '@/hooks/useSafeRouter';
 import { createStyles } from './styles';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function LoginScreen() {
   const { theme, isDark } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const router = useSafeRouter();
+  const { login } = useAuth();
 
   const [isLogin, setIsLogin] = useState(true);
   const [phone, setPhone] = useState('');
@@ -71,9 +73,13 @@ export default function LoginScreen() {
       const data = await response.json();
 
       if (data.success) {
-        await AsyncStorage.setItem('userId', String(data.user.id));
-        await AsyncStorage.setItem('username', data.user.username || '');
-        await AsyncStorage.setItem('avatar', data.user.avatar || '');
+        // 使用 AuthContext 的 login 方法保存登录状态
+        await login({
+          id: data.user.id,
+          username: data.user.username,
+          avatar: data.user.avatar_url,
+          phone: data.user.phone,
+        });
         router.replace('/');
       } else {
         Alert.alert('失败', data.error || '登录失败');
@@ -108,9 +114,13 @@ export default function LoginScreen() {
       const data = await response.json();
 
       if (data.success) {
-        await AsyncStorage.setItem('userId', String(data.user.id));
-        await AsyncStorage.setItem('username', data.user.username || '');
-        await AsyncStorage.setItem('avatar', data.user.avatar || '');
+        // 使用 AuthContext 的 login 方法保存登录状态
+        await login({
+          id: data.user.id,
+          username: data.user.username,
+          avatar: data.user.avatar_url,
+          phone: data.user.phone,
+        });
         router.replace('/');
       } else {
         Alert.alert('失败', data.error || '注册失败');

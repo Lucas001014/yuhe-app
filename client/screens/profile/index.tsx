@@ -12,6 +12,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { createFormDataFile } from '@/utils';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface UserInfo {
   id: number;
@@ -32,6 +33,7 @@ export default function ProfileScreen() {
   const { theme, isDark } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const router = useSafeRouter();
+  const { logout, updateUser, user, refreshUser } = useAuth();
 
   // 权限控制
   useAuthGuard('/profile');
@@ -315,6 +317,8 @@ export default function ProfileScreen() {
       // 3. 更新本地状态和 AsyncStorage
       setUserInfo({ ...userInfo!, avatar: avatarUrl });
       await AsyncStorage.setItem('avatar', avatarUrl);
+      // 更新 AuthContext 的用户状态
+      updateUser({ avatar: avatarUrl });
       setAvatarPreviewUri(null);
 
       Alert.alert('成功', '头像更换成功');
@@ -375,6 +379,8 @@ export default function ProfileScreen() {
       // 更新本地状态和 AsyncStorage
       setUserInfo({ ...userInfo!, username: newName.trim() });
       await AsyncStorage.setItem('username', newName.trim());
+      // 更新 AuthContext 的用户状态
+      updateUser({ username: newName.trim() });
       setShowChangeNameModal(false);
       Alert.alert('成功', '用户名修改成功');
     } catch (error) {
@@ -415,11 +421,8 @@ export default function ProfileScreen() {
 
       await AsyncStorage.setItem('savedAccounts', JSON.stringify(finalAccounts));
       
-      // 清除当前登录信息
-      await AsyncStorage.removeItem('userId');
-      await AsyncStorage.removeItem('username');
-      await AsyncStorage.removeItem('avatar');
-      await AsyncStorage.removeItem('userInfo');
+      // 使用 AuthContext 的 logout 方法清除登录信息
+      await logout();
 
       setShowLogoutModal(false);
       setShowAccountSwitchModal(true);
@@ -433,12 +436,16 @@ export default function ProfileScreen() {
   // 切换到已保存的账号
   const handleSwitchAccount = async (account: any) => {
     try {
+      // 保存新账号信息到 AsyncStorage
       await AsyncStorage.setItem('userId', account.userId.toString());
       await AsyncStorage.setItem('username', account.username);
       await AsyncStorage.setItem('avatar', account.avatar);
       
+      // 刷新 AuthContext 的用户状态
+      await refreshUser();
+      
       setShowAccountSwitchModal(false);
-      router.replace('/home');
+      router.replace('/');
     } catch (error) {
       console.error('切换账号失败:', error);
       Alert.alert('错误', '切换失败，请重试');

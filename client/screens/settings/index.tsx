@@ -8,6 +8,7 @@ import { useSafeRouter } from '@/hooks/useSafeRouter';
 import { createStyles } from './styles';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Image } from 'expo-image';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface UserInfo {
   id: number;
@@ -118,6 +119,7 @@ export default function SettingsScreen() {
   const { theme, isDark } = useTheme();
   const styles = createStyles(theme);
   const router = useSafeRouter();
+  const { logout } = useAuth();
 
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
@@ -156,11 +158,7 @@ export default function SettingsScreen() {
 
   const confirmLogout = async () => {
     try {
-      await AsyncStorage.removeItem('userId');
-      await AsyncStorage.removeItem('username');
-      await AsyncStorage.removeItem('avatar');
-      await AsyncStorage.removeItem('userInfo');
-      
+      await logout();
       setShowLogoutModal(false);
       router.replace('/login');
     } catch (error) {

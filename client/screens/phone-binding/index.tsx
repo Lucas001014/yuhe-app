@@ -7,12 +7,14 @@ import { useTheme } from '@/hooks/useTheme';
 import { useSafeRouter, useSafeSearchParams } from '@/hooks/useSafeRouter';
 import { createStyles } from './styles';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function PhoneBindingScreen() {
   const { theme, isDark } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const router = useSafeRouter();
   const params = useSafeSearchParams();
+  const { login } = useAuth();
 
   const [phone, setPhone] = useState('');
   const [code, setCode] = useState('');
@@ -83,9 +85,13 @@ export default function PhoneBindingScreen() {
       const data = await response.json();
 
       if (data.success) {
-        await AsyncStorage.setItem('userId', String(data.user.id));
-        await AsyncStorage.setItem('username', data.user.username || '');
-        await AsyncStorage.setItem('avatar', data.user.avatar_url || '');
+        // 使用 AuthContext 的 login 方法保存登录状态
+        await login({
+          id: data.user.id,
+          username: data.user.username,
+          avatar: data.user.avatar_url,
+          phone: data.user.phone,
+        });
         router.replace('/');
       } else {
         Alert.alert('失败', data.error || '绑定失败');

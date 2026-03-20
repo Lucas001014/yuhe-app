@@ -16,6 +16,7 @@ interface AuthContextType {
   login: (userData: User) => Promise<void>;
   logout: () => Promise<void>;
   updateUser: (userData: Partial<User>) => void;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -30,7 +31,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     checkAuthStatus();
   }, []);
 
-  const checkAuthStatus = async () => {
+  const checkAuthStatus = async (isRefresh: boolean = false) => {
+    if (isRefresh) {
+      // 刷新时不重置 isLoading
+    } else {
+      setIsLoading(true);
+    }
     try {
       const userId = await AsyncStorage.getItem('userId');
       const username = await AsyncStorage.getItem('username');
@@ -44,6 +50,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           avatar: avatar || undefined,
         });
         setToken(authToken);
+      } else {
+        setUser(null);
+        setToken(null);
       }
     } catch (error) {
       console.error('检查登录状态失败:', error);
@@ -62,6 +71,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     if (userData.avatar) {
       await AsyncStorage.setItem('avatar', userData.avatar);
     }
+    if (userData.phone) {
+      await AsyncStorage.setItem('phone', userData.phone);
+    }
     setToken('mock-token'); // 简化处理，实际应该从后端获取
   };
 
@@ -77,6 +89,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
+  const refreshUser = async () => {
+    await checkAuthStatus(true);
+  };
+
   const value: AuthContextType = {
     user,
     token,
@@ -85,6 +101,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     login,
     logout,
     updateUser,
+    refreshUser,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
