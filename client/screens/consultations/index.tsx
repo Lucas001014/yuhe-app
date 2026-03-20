@@ -23,8 +23,8 @@ interface Consultation {
   status: 'pending' | 'paid' | 'in_progress' | 'completed' | 'refunded';
   createdAt: string;
   description?: string;
-  platformFee?: number; // 平台服务费 3%
-  totalAmount?: number; // 总金额（含平台费）
+  // 平台服务费仅在流水记录中显示，不在正常页面展示
+  platformFee?: number; 
 }
 
   // 模拟数据（在组件外定义）
@@ -43,8 +43,6 @@ interface Consultation {
       status: 'completed',
       createdAt: new Date(now - 2 * 60 * 60 * 1000).toISOString(),
       description: '咨询 SaaS 产品开发策略',
-      platformFee: 6,
-      totalAmount: 206,
     },
     {
       id: 2,
@@ -59,8 +57,6 @@ interface Consultation {
       status: 'paid',
       createdAt: new Date(now - 5 * 60 * 60 * 1000).toISOString(),
       description: '咨询融资相关问题',
-      platformFee: 1.5,
-      totalAmount: 51.5,
     },
     {
       id: 3,
@@ -75,8 +71,6 @@ interface Consultation {
       status: 'pending',
       createdAt: new Date(now - 10 * 60 * 60 * 1000).toISOString(),
       description: '咨询市场营销策略',
-      platformFee: 9,
-      totalAmount: 309,
     },
   ];
 
@@ -124,7 +118,6 @@ export default function ConsultationScreen() {
 
     // 模拟创建咨询
     setTimeout(() => {
-      const platformFee = priceNum * 0.03;
       const newConsultation: Consultation = {
         id: Date.now(),
         consultant: {
@@ -138,8 +131,6 @@ export default function ConsultationScreen() {
         status: 'pending',
         createdAt: new Date().toISOString(),
         description: consultantType === 'per_question' ? description : undefined,
-        platformFee,
-        totalAmount: priceNum + platformFee,
       };
 
       setConsultations([newConsultation, ...consultations]);
@@ -181,7 +172,7 @@ export default function ConsultationScreen() {
     // 模拟支付处理
     Alert.alert(
       '支付确认',
-      `将使用 ${paymentMethodNames[selectedPaymentMethod]} 支付 ¥${selectedConsultation.totalAmount?.toFixed(2)}`,
+      `将使用 ${paymentMethodNames[selectedPaymentMethod]} 支付 ¥${selectedConsultation.price.toFixed(2)}`,
       [
         { text: '取消', style: 'cancel' },
         {
@@ -336,17 +327,6 @@ export default function ConsultationScreen() {
             {item.type === 'hourly' ? '/小时' : '/问题'}
           </ThemedText>
         </View>
-
-        {item.platformFee && (
-          <View style={styles.feeContainer}>
-            <ThemedText variant="caption" color={theme.textMuted}>
-              平台服务费: ¥{item.platformFee.toFixed(2)} (3%)
-            </ThemedText>
-            <ThemedText variant="caption" color={theme.textPrimary} style={{ fontWeight: '600' }}>
-              总计: ¥{item.totalAmount?.toFixed(2)}
-            </ThemedText>
-          </View>
-        )}
       </View>
 
       {item.description && (
@@ -547,14 +527,6 @@ export default function ConsultationScreen() {
                   />
                 </>
               )}
-
-              {/* 费用说明 */}
-              <View style={styles.feeInfo}>
-                <FontAwesome6 name="circle-info" size={16} color={theme.primary} />
-                <ThemedText variant="caption" color={theme.textSecondary}>
-                  平台收取 3% 服务费
-                </ThemedText>
-              </View>
             </ScrollView>
 
             <View style={styles.modalFooter}>
@@ -603,28 +575,12 @@ export default function ConsultationScreen() {
             {selectedConsultation && (
               <>
                 <View style={styles.payDetails}>
-                  <View style={styles.payDetailItem}>
-                    <ThemedText variant="body" color={theme.textSecondary}>
-                      咨询费用
-                    </ThemedText>
-                    <ThemedText variant="bodyMedium" color={theme.textPrimary}>
-                      ¥{selectedConsultation.price.toFixed(2)}
-                    </ThemedText>
-                  </View>
-                  <View style={styles.payDetailItem}>
-                    <ThemedText variant="body" color={theme.textSecondary}>
-                      平台服务费
-                    </ThemedText>
-                    <ThemedText variant="bodyMedium" color={theme.textPrimary}>
-                      ¥{selectedConsultation.platformFee?.toFixed(2)}
-                    </ThemedText>
-                  </View>
                   <View style={[styles.payDetailItem, styles.payTotal]}>
                     <ThemedText variant="bodyMedium" color={theme.textPrimary} style={{ fontWeight: '600' }}>
-                      总计
+                      咨询费用
                     </ThemedText>
-                    <ThemedText variant="h3" color={theme.primary} style={{ fontWeight: '700' }}>
-                      ¥{selectedConsultation.totalAmount?.toFixed(2)}
+                    <ThemedText variant="h2" color={theme.primary} style={{ fontWeight: '700' }}>
+                      ¥{selectedConsultation.price.toFixed(2)}
                     </ThemedText>
                   </View>
                 </View>
@@ -679,7 +635,7 @@ export default function ConsultationScreen() {
                   支付金额
                 </ThemedText>
                 <ThemedText variant="h2" color={theme.primary} style={{ fontWeight: '700' }}>
-                  ¥{selectedConsultation.totalAmount?.toFixed(2)}
+                  ¥{selectedConsultation.price.toFixed(2)}
                 </ThemedText>
               </View>
             )}
