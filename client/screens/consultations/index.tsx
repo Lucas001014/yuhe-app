@@ -88,7 +88,9 @@ export default function ConsultationScreen() {
   const [consultations, setConsultations] = useState<Consultation[]>([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showPayModal, setShowPayModal] = useState(false);
+  const [showPaymentMethodModal, setShowPaymentMethodModal] = useState(false);
   const [selectedConsultation, setSelectedConsultation] = useState<Consultation | null>(null);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'wechat' | 'alipay' | 'balance' | null>(null);
   
   // 创建咨询表单
   const [consultantType, setConsultantType] = useState<'hourly' | 'per_question'>('hourly');
@@ -155,18 +157,37 @@ export default function ConsultationScreen() {
     setShowPayModal(true);
   };
 
-  // 确认支付
+  // 确认支付 - 显示支付方式选择
   const confirmPay = () => {
     if (!selectedConsultation) return;
+    // 关闭支付确认弹窗，显示支付方式选择弹窗
+    setShowPayModal(false);
+    setShowPaymentMethodModal(true);
+  };
 
+  // 选择支付方式后确认支付
+  const confirmPaymentWithMethod = () => {
+    if (!selectedConsultation || !selectedPaymentMethod) {
+      Alert.alert('提示', '请选择支付方式');
+      return;
+    }
+
+    const paymentMethodNames: Record<string, string> = {
+      wechat: '微信支付',
+      alipay: '支付宝',
+      balance: '余额支付',
+    };
+
+    // 模拟支付处理
     Alert.alert(
-      '确认支付',
-      `确认支付 ${selectedConsultation.totalAmount?.toFixed(2)} 元？\n（含平台服务费 ${selectedConsultation.platformFee?.toFixed(2)} 元）`,
+      '支付确认',
+      `将使用 ${paymentMethodNames[selectedPaymentMethod]} 支付 ¥${selectedConsultation.totalAmount?.toFixed(2)}`,
       [
         { text: '取消', style: 'cancel' },
         {
           text: '确认支付',
           onPress: () => {
+            // 模拟支付成功
             setConsultations(prev =>
               prev.map(c =>
                 c.id === selectedConsultation.id
@@ -174,8 +195,9 @@ export default function ConsultationScreen() {
                   : c
               )
             );
-            setShowPayModal(false);
+            setShowPaymentMethodModal(false);
             setSelectedConsultation(null);
+            setSelectedPaymentMethod(null);
             Alert.alert('支付成功', '咨询已支付，请等待顾问回复');
           },
         },
@@ -624,6 +646,140 @@ export default function ConsultationScreen() {
             >
               <ThemedText variant="bodyMedium" color={theme.textSecondary}>
                 取消
+              </ThemedText>
+            </TouchableOpacity>
+          </View>
+        </Pressable>
+      </Modal>
+
+      {/* 支付方式选择 Modal */}
+      <Modal
+        visible={showPaymentMethodModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowPaymentMethodModal(false)}
+      >
+        <Pressable
+          style={styles.modalOverlay}
+          onPress={() => setShowPaymentMethodModal(false)}
+        >
+          <View style={styles.paymentMethodModalContent}>
+            <View style={styles.paymentMethodHeader}>
+              <ThemedText variant="h3" color={theme.textPrimary}>
+                选择支付方式
+              </ThemedText>
+              <TouchableOpacity onPress={() => setShowPaymentMethodModal(false)}>
+                <FontAwesome6 name="xmark" size={24} color={theme.textSecondary} />
+              </TouchableOpacity>
+            </View>
+
+            {selectedConsultation && (
+              <View style={styles.paymentAmountSection}>
+                <ThemedText variant="body" color={theme.textSecondary}>
+                  支付金额
+                </ThemedText>
+                <ThemedText variant="h2" color={theme.primary} style={{ fontWeight: '700' }}>
+                  ¥{selectedConsultation.totalAmount?.toFixed(2)}
+                </ThemedText>
+              </View>
+            )}
+
+            <View style={styles.paymentMethodsList}>
+              {/* 微信支付 */}
+              <TouchableOpacity
+                style={[
+                  styles.paymentMethodItem,
+                  selectedPaymentMethod === 'wechat' && styles.paymentMethodItemSelected
+                ]}
+                onPress={() => setSelectedPaymentMethod('wechat')}
+              >
+                <View style={styles.paymentMethodIcon}>
+                  <FontAwesome6 name="weixin" size={28} color="#07C160" />
+                </View>
+                <View style={styles.paymentMethodInfo}>
+                  <ThemedText variant="bodyMedium" color={theme.textPrimary}>
+                    微信支付
+                  </ThemedText>
+                  <ThemedText variant="caption" color={theme.textMuted}>
+                    推荐使用
+                  </ThemedText>
+                </View>
+                <View style={styles.paymentMethodRadio}>
+                  {selectedPaymentMethod === 'wechat' ? (
+                    <FontAwesome6 name="circle-check" size={24} color={theme.primary} />
+                  ) : (
+                    <FontAwesome6 name="circle" size={24} color={theme.border} />
+                  )}
+                </View>
+              </TouchableOpacity>
+
+              {/* 支付宝 */}
+              <TouchableOpacity
+                style={[
+                  styles.paymentMethodItem,
+                  selectedPaymentMethod === 'alipay' && styles.paymentMethodItemSelected
+                ]}
+                onPress={() => setSelectedPaymentMethod('alipay')}
+              >
+                <View style={styles.paymentMethodIcon}>
+                  <FontAwesome6 name="alipay" size={28} color="#1677FF" />
+                </View>
+                <View style={styles.paymentMethodInfo}>
+                  <ThemedText variant="bodyMedium" color={theme.textPrimary}>
+                    支付宝
+                  </ThemedText>
+                  <ThemedText variant="caption" color={theme.textMuted}>
+                    安全快捷
+                  </ThemedText>
+                </View>
+                <View style={styles.paymentMethodRadio}>
+                  {selectedPaymentMethod === 'alipay' ? (
+                    <FontAwesome6 name="circle-check" size={24} color={theme.primary} />
+                  ) : (
+                    <FontAwesome6 name="circle" size={24} color={theme.border} />
+                  )}
+                </View>
+              </TouchableOpacity>
+
+              {/* 余额支付 */}
+              <TouchableOpacity
+                style={[
+                  styles.paymentMethodItem,
+                  selectedPaymentMethod === 'balance' && styles.paymentMethodItemSelected
+                ]}
+                onPress={() => setSelectedPaymentMethod('balance')}
+              >
+                <View style={styles.paymentMethodIcon}>
+                  <FontAwesome6 name="wallet" size={28} color={theme.primary} />
+                </View>
+                <View style={styles.paymentMethodInfo}>
+                  <ThemedText variant="bodyMedium" color={theme.textPrimary}>
+                    余额支付
+                  </ThemedText>
+                  <ThemedText variant="caption" color={theme.textMuted}>
+                    余额: ¥1,000.00
+                  </ThemedText>
+                </View>
+                <View style={styles.paymentMethodRadio}>
+                  {selectedPaymentMethod === 'balance' ? (
+                    <FontAwesome6 name="circle-check" size={24} color={theme.primary} />
+                  ) : (
+                    <FontAwesome6 name="circle" size={24} color={theme.border} />
+                  )}
+                </View>
+              </TouchableOpacity>
+            </View>
+
+            <TouchableOpacity
+              style={[
+                styles.paymentConfirmButton,
+                !selectedPaymentMethod && styles.paymentConfirmButtonDisabled
+              ]}
+              onPress={confirmPaymentWithMethod}
+              disabled={!selectedPaymentMethod}
+            >
+              <ThemedText variant="bodyMedium" color={theme.buttonPrimaryText} style={{ fontWeight: '600' }}>
+                {selectedPaymentMethod ? '确认支付' : '请选择支付方式'}
               </ThemedText>
             </TouchableOpacity>
           </View>

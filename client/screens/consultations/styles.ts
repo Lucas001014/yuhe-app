@@ -264,5 +264,65 @@ export const createStyles = (theme: Theme) => {
     payCancelButton: {
       paddingVertical: Spacing.md,
     },
+    // 支付方式选择 Modal
+    paymentMethodModalContent: {
+      backgroundColor: theme.backgroundDefault,
+      borderTopLeftRadius: BorderRadius.xl,
+      borderTopRightRadius: BorderRadius.xl,
+      padding: Spacing.xl,
+    },
+    paymentMethodHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: Spacing.xl,
+    },
+    paymentAmountSection: {
+      alignItems: 'center',
+      paddingVertical: Spacing.lg,
+      marginBottom: Spacing.xl,
+      backgroundColor: theme.backgroundTertiary,
+      borderRadius: BorderRadius.lg,
+    },
+    paymentMethodsList: {
+      gap: Spacing.md,
+      marginBottom: Spacing.xl,
+    },
+    paymentMethodItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: Spacing.lg,
+      backgroundColor: theme.backgroundTertiary,
+      borderRadius: BorderRadius.lg,
+      borderWidth: 2,
+      borderColor: 'transparent',
+    },
+    paymentMethodItemSelected: {
+      borderColor: theme.primary,
+      backgroundColor: `${theme.primary}08`,
+    },
+    paymentMethodIcon: {
+      width: 48,
+      height: 48,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginRight: Spacing.md,
+    },
+    paymentMethodInfo: {
+      flex: 1,
+      gap: Spacing.xs,
+    },
+    paymentMethodRadio: {
+      marginLeft: Spacing.md,
+    },
+    paymentConfirmButton: {
+      backgroundColor: theme.primary,
+      borderRadius: BorderRadius.md,
+      paddingVertical: Spacing.lg,
+      alignItems: 'center',
+    },
+    paymentConfirmButtonDisabled: {
+      backgroundColor: theme.border,
+    },
   });
 };
