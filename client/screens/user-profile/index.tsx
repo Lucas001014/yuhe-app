@@ -306,28 +306,6 @@ export default function UserProfileScreen() {
     <View style={styles.container}>
       <StatusBar barStyle="light-content" />
 
-      {/* ========== 固定顶部导航栏 ========== */}
-      <View style={styles.fixedNav}>
-        <Animated.View 
-          style={[styles.navBackground, { opacity: navBgOpacity }]} 
-          pointerEvents="none"
-        />
-        
-        <View style={styles.navContent}>
-          <TouchableOpacity style={styles.navButton} onPress={() => router.back()}>
-            <FontAwesome6 name="arrow-left" size={18} color="#FFFFFF" />
-          </TouchableOpacity>
-          
-          <Animated.Text style={[styles.navTitle, { opacity: navTitleOpacity }]}>
-            {userInfo.username}
-          </Animated.Text>
-          
-          <TouchableOpacity style={styles.navButton} onPress={() => setShowMenu(true)}>
-            <FontAwesome6 name="ellipsis-vertical" size={18} color="#FFFFFF" />
-          </TouchableOpacity>
-        </View>
-      </View>
-
       {/* ========== 可滚动内容 ========== */}
       <Animated.ScrollView
         style={styles.scrollView}
@@ -492,6 +470,36 @@ export default function UserProfileScreen() {
         <View style={{ height: 100 }} />
       </Animated.ScrollView>
 
+      {/* ========== 固定顶部导航栏 ========== */}
+      <View style={styles.fixedNav} pointerEvents="box-none">
+        <Animated.View 
+          style={[styles.navBackground, { opacity: navBgOpacity }]} 
+          pointerEvents="none"
+        />
+        
+        <View style={styles.navContent} pointerEvents="box-none">
+          <TouchableOpacity 
+            style={styles.navButton} 
+            onPress={() => router.back()}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <FontAwesome6 name="arrow-left" size={18} color="#FFFFFF" />
+          </TouchableOpacity>
+          
+          <Animated.Text style={[styles.navTitle, { opacity: navTitleOpacity }]} pointerEvents="none">
+            {userInfo.username}
+          </Animated.Text>
+          
+          <TouchableOpacity 
+            style={styles.navButton} 
+            onPress={() => setShowMenu(true)}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <FontAwesome6 name="ellipsis-vertical" size={18} color="#FFFFFF" />
+          </TouchableOpacity>
+        </View>
+      </View>
+
       {/* ========== 右上角菜单 ========== */}
       <Modal
         visible={showMenu}
@@ -564,13 +572,13 @@ const createStyles = (theme: any) => StyleSheet.create({
     right: 0,
     height: STATUS_BAR_HEIGHT + NAV_HEIGHT,
     zIndex: 100,
+    elevation: 100,
   },
   navBackground: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
     borderBottomColor: '#F3F4F6',
-    pointerEvents: 'none',
   },
   navContent: {
     flexDirection: 'row',
@@ -579,6 +587,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     height: '100%',
     paddingBottom: 10,
     paddingHorizontal: 16,
+    zIndex: 101,
   },
   navButton: {
     width: 36,
@@ -587,6 +596,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.4)',
     justifyContent: 'center',
     alignItems: 'center',
+    zIndex: 102,
   },
   navTitle: {
     position: 'absolute',
