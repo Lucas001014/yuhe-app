@@ -10,41 +10,49 @@ export const createStyles = (theme: Theme) => {
       flex: 1,
       backgroundColor: theme.backgroundRoot,
     },
-    // 背景图区域
-    backgroundContainer: {
-      height: SCREEN_HEIGHT * 0.3,
-      position: 'relative',
-    },
-    backgroundImage: {
-      width: '100%',
-      height: '100%',
-    },
-    backgroundPlaceholder: {
-      backgroundColor: theme.primary,
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    gradientOverlay: {
+    // 全屏背景
+    fullScreenBackground: {
       position: 'absolute',
-      bottom: 0,
+      top: 0,
       left: 0,
       right: 0,
-      height: '60%',
+      bottom: 0,
+      width: SCREEN_WIDTH,
+      height: SCREEN_HEIGHT,
     },
-    gradientLayer: {
-      flex: 1,
+    defaultBackground: {
+      backgroundColor: theme.primary,
     },
-    changeBackgroundButton: {
+    // 渐变遮罩
+    gradientOverlay: {
       position: 'absolute',
-      bottom: Spacing.lg,
-      right: Spacing.xl,
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-      backgroundColor: 'rgba(0,0,0,0.4)',
-      justifyContent: 'center',
-      alignItems: 'center',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
     },
+    gradientTop: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: SCREEN_HEIGHT * 0.25,
+    },
+    gradientMiddle: {
+      position: 'absolute',
+      top: SCREEN_HEIGHT * 0.25,
+      left: 0,
+      right: 0,
+      height: SCREEN_HEIGHT * 0.15,
+    },
+    gradientBottom: {
+      position: 'absolute',
+      top: SCREEN_HEIGHT * 0.4,
+      left: 0,
+      right: 0,
+      bottom: 0,
+    },
+    // 设置按钮 - 右上角
     settingsButton: {
       position: 'absolute',
       top: Spacing['2xl'],
@@ -52,26 +60,47 @@ export const createStyles = (theme: Theme) => {
       width: 40,
       height: 40,
       borderRadius: 20,
-      backgroundColor: 'rgba(0,0,0,0.3)',
+      backgroundColor: theme.primary,
       justifyContent: 'center',
       alignItems: 'center',
+      zIndex: 10,
     },
-    // 用户信息区
+    // 更换背景按钮
+    changeBackgroundButton: {
+      position: 'absolute',
+      bottom: Spacing.xl + 60, // 避开底部导航
+      right: Spacing.lg,
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      backgroundColor: 'rgba(0,0,0,0.5)',
+      justifyContent: 'center',
+      alignItems: 'center',
+      zIndex: 10,
+    },
+    // 滚动内容
+    scrollContent: {
+      flexGrow: 1,
+      paddingTop: SCREEN_HEIGHT * 0.08, // 顶部安全区
+    },
+    topSpacer: {
+      height: SCREEN_HEIGHT * 0.08,
+    },
+    // 用户信息区 - 靠左上
     userInfoSection: {
       paddingHorizontal: Spacing.xl,
-      paddingTop: Spacing.lg,
-      marginTop: -Spacing['2xl'],
-      alignItems: 'center',
+      paddingTop: Spacing.xl,
+      alignItems: 'flex-start',
     },
     avatarWrapper: {
       position: 'relative',
-      marginBottom: Spacing.lg,
+      marginBottom: Spacing.md,
     },
     avatar: {
-      width: 88,
-      height: 88,
-      borderRadius: 44,
-      borderWidth: 4,
+      width: 72,
+      height: 72,
+      borderRadius: 36,
+      borderWidth: 3,
       borderColor: theme.backgroundRoot,
       backgroundColor: theme.backgroundDefault,
     },
@@ -79,27 +108,20 @@ export const createStyles = (theme: Theme) => {
       position: 'absolute',
       bottom: 0,
       right: 0,
-      width: 28,
-      height: 28,
-      borderRadius: 14,
+      width: 24,
+      height: 24,
+      borderRadius: 12,
       backgroundColor: theme.primary,
       justifyContent: 'center',
       alignItems: 'center',
-      borderWidth: 3,
+      borderWidth: 2,
       borderColor: theme.backgroundRoot,
-    },
-    nameSection: {
-      alignItems: 'center',
-      marginBottom: Spacing.md,
     },
     nameRow: {
       flexDirection: 'row',
       alignItems: 'center',
       marginBottom: Spacing.sm,
-    },
-    identityRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
+      marginTop: Spacing.sm,
     },
     identityBadge: {
       flexDirection: 'row',
@@ -107,8 +129,9 @@ export const createStyles = (theme: Theme) => {
       gap: Spacing.xs,
       paddingHorizontal: Spacing.md,
       paddingVertical: Spacing.xs,
-      backgroundColor: `${theme.primary}15`,
+      backgroundColor: 'rgba(139, 92, 246, 0.15)',
       borderRadius: BorderRadius.xl,
+      marginBottom: Spacing.md,
     },
     merchantBadge: {
       backgroundColor: 'rgba(255, 215, 0, 0.15)',
@@ -116,42 +139,36 @@ export const createStyles = (theme: Theme) => {
     bioSection: {
       flexDirection: 'row',
       alignItems: 'center',
-      paddingHorizontal: Spacing.lg,
-      paddingVertical: Spacing.md,
+      paddingHorizontal: Spacing.md,
+      paddingVertical: Spacing.sm,
       backgroundColor: theme.backgroundDefault,
       borderRadius: BorderRadius.lg,
-      marginBottom: Spacing.xl,
+      marginBottom: Spacing.lg,
     },
     bioText: {
       flex: 1,
-      textAlign: 'center',
     },
-    // 底部统计板块
+    // 底部统计板块 - 纯文字简洁版
     statsSection: {
-      flex: 1,
-      paddingHorizontal: Spacing.lg,
-      paddingTop: Spacing.lg,
+      paddingHorizontal: Spacing.xl,
+      paddingVertical: Spacing.xl,
+      marginTop: 'auto',
     },
-    statsGrid: {
+    statsRow: {
       flexDirection: 'row',
-      gap: Spacing.sm,
-    },
-    statItem: {
-      flex: 1,
+      justifyContent: 'space-around',
+      paddingVertical: Spacing.lg,
       backgroundColor: theme.backgroundDefault,
       borderRadius: BorderRadius.lg,
-      padding: Spacing.lg,
+    },
+    statItem: {
       alignItems: 'center',
-      gap: Spacing.xs,
-      shadowColor: '#00000008',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.08,
-      shadowRadius: 8,
-      elevation: 2,
+      paddingHorizontal: Spacing.lg,
     },
     statNumber: {
-      fontSize: 20,
+      fontSize: 22,
       fontWeight: '700',
+      marginBottom: Spacing.xs,
     },
     // Modal
     modalOverlay: {

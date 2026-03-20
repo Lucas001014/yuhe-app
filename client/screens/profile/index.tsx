@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback, useRef } from 'react';
-import { View, ScrollView, TouchableOpacity, Alert, Modal, Pressable, TextInput, TouchableWithoutFeedback, Keyboard, Dimensions, PanResponder, Animated } from 'react-native';
+import { View, ScrollView, TouchableOpacity, Alert, Modal, Pressable, TextInput, Dimensions, PanResponder, Animated } from 'react-native';
 import { FontAwesome6 } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
 import { ThemedText } from '@/components/ThemedText';
@@ -394,49 +394,53 @@ export default function ProfileScreen() {
 
   return (
     <View style={styles.container}>
-      {/* 背景图区域 */}
-      <View style={styles.backgroundContainer}>
-        {userInfo.backgroundImage ? (
-          <Image
-            source={{ uri: userInfo.backgroundImage }}
-            style={styles.backgroundImage}
-            contentFit="cover"
-          />
-        ) : (
-          <View style={[styles.backgroundImage, styles.backgroundPlaceholder]}>
-            <FontAwesome6 name="image" size={48} color="rgba(255,255,255,0.3)" />
-          </View>
-        )}
-        {/* 渐变遮罩 */}
-        <View style={styles.gradientOverlay} pointerEvents="none">
-          <View style={[styles.gradientLayer, { backgroundColor: 'rgba(0,0,0,0.3)' }]} />
-          <View style={[styles.gradientLayer, { backgroundColor: `rgba(255,255,255,0.1)` }]} />
-          <View style={[styles.gradientLayer, { backgroundColor: theme.backgroundRoot }]} />
-        </View>
-        
-        {/* 更换背景按钮 */}
-        <TouchableOpacity style={styles.changeBackgroundButton} onPress={handleChangeBackground}>
-          <FontAwesome6 name="camera" size={16} color="#FFFFFF" />
-        </TouchableOpacity>
-
-        {/* 设置按钮 */}
-        <TouchableOpacity style={styles.settingsButton} onPress={() => router.push('/settings')}>
-          <FontAwesome6 name="gear" size={22} color="#FFFFFF" />
-        </TouchableOpacity>
+      {/* 全屏背景图 */}
+      {userInfo.backgroundImage ? (
+        <Image
+          source={{ uri: userInfo.backgroundImage }}
+          style={styles.fullScreenBackground}
+          contentFit="cover"
+        />
+      ) : (
+        <View style={[styles.fullScreenBackground, styles.defaultBackground]} />
+      )}
+      
+      {/* 渐变遮罩 - 从上到下渐变 */}
+      <View style={styles.gradientOverlay} pointerEvents="none">
+        <View style={[styles.gradientTop, { backgroundColor: 'rgba(99, 102, 241, 0.3)' }]} />
+        <View style={[styles.gradientMiddle, { backgroundColor: 'rgba(99, 102, 241, 0.1)' }]} />
+        <View style={[styles.gradientBottom, { backgroundColor: theme.backgroundRoot }]} />
       </View>
 
-      {/* 用户信息区 */}
-      <View style={styles.userInfoSection}>
-        {/* 头像 */}
-        <TouchableOpacity onPress={handleChangeAvatar} style={styles.avatarWrapper}>
-          <Image source={{ uri: userInfo.avatar }} style={styles.avatar} contentFit="cover" />
-          <View style={styles.avatarEditBadge}>
-            <FontAwesome6 name="camera" size={12} color="#FFFFFF" />
-          </View>
-        </TouchableOpacity>
+      {/* 设置按钮 - 右上角 */}
+      <TouchableOpacity style={styles.settingsButton} onPress={() => router.push('/settings')}>
+        <FontAwesome6 name="gear" size={22} color="#FFFFFF" />
+      </TouchableOpacity>
 
-        {/* 用户名和身份 */}
-        <View style={styles.nameSection}>
+      {/* 更换背景按钮 - 右下角 */}
+      <TouchableOpacity style={styles.changeBackgroundButton} onPress={handleChangeBackground}>
+        <FontAwesome6 name="camera" size={16} color="#FFFFFF" />
+      </TouchableOpacity>
+
+      {/* 内容区域 */}
+      <ScrollView 
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* 顶部占位 */}
+        <View style={styles.topSpacer} />
+
+        {/* 用户信息区 - 靠左上 */}
+        <View style={styles.userInfoSection}>
+          {/* 头像 */}
+          <TouchableOpacity onPress={handleChangeAvatar} style={styles.avatarWrapper}>
+            <Image source={{ uri: userInfo.avatar }} style={styles.avatar} contentFit="cover" />
+            <View style={styles.avatarEditBadge}>
+              <FontAwesome6 name="camera" size={10} color="#FFFFFF" />
+            </View>
+          </TouchableOpacity>
+
+          {/* 用户名 */}
           <TouchableOpacity onPress={() => handleEdit('username')} style={styles.nameRow}>
             <ThemedText variant="h2" color={theme.textPrimary} style={{ fontWeight: '700' }}>
               {userInfo.username}
@@ -445,77 +449,71 @@ export default function ProfileScreen() {
           </TouchableOpacity>
 
           {/* 身份标签 */}
-          <View style={styles.identityRow}>
-            <View style={[styles.identityBadge, userInfo.isMerchant && styles.merchantBadge]}>
-              <FontAwesome6
-                name={userInfo.isMerchant ? 'store' : 'user-tie'}
-                size={12}
-                color={userInfo.isMerchant ? '#FFD700' : theme.primary}
-              />
-              <ThemedText
-                variant="caption"
-                color={userInfo.isMerchant ? '#FFD700' : theme.primary}
-                style={{ fontWeight: '600' }}
-              >
-                {userInfo.identity}
+          <View style={[styles.identityBadge, userInfo.isMerchant && styles.merchantBadge]}>
+            <FontAwesome6
+              name={userInfo.isMerchant ? 'store' : 'user-tie'}
+              size={12}
+              color={userInfo.isMerchant ? '#FFD700' : '#8B5CF6'}
+            />
+            <ThemedText
+              variant="caption"
+              color={userInfo.isMerchant ? '#FFD700' : '#8B5CF6'}
+              style={{ fontWeight: '500' }}
+            >
+              {userInfo.identity}
+            </ThemedText>
+          </View>
+
+          {/* 个人简介 */}
+          <TouchableOpacity onPress={() => handleEdit('bio')} style={styles.bioSection}>
+            <ThemedText variant="body" color={theme.textSecondary} style={styles.bioText}>
+              {userInfo.bio}
+            </ThemedText>
+            <FontAwesome6 name="pen" size={12} color={theme.textMuted} style={{ marginLeft: 6 }} />
+          </TouchableOpacity>
+        </View>
+
+        {/* 底部统计板块 - 纯文字简洁版 */}
+        <View style={styles.statsSection}>
+          <View style={styles.statsRow}>
+            <TouchableOpacity style={styles.statItem} onPress={() => goToPosts('myPosts')}>
+              <ThemedText variant="h3" color={theme.textPrimary} style={styles.statNumber}>
+                {postStats.myPosts}
               </ThemedText>
-            </View>
+              <ThemedText variant="body" color={theme.textSecondary}>
+                帖子
+              </ThemedText>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.statItem} onPress={() => goToPosts('collectedPosts')}>
+              <ThemedText variant="h3" color={theme.textPrimary} style={styles.statNumber}>
+                {postStats.collectedPosts}
+              </ThemedText>
+              <ThemedText variant="body" color={theme.textSecondary}>
+                收藏
+              </ThemedText>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.statItem} onPress={() => goToPosts('likedPosts')}>
+              <ThemedText variant="h3" color={theme.textPrimary} style={styles.statNumber}>
+                {postStats.likedPosts}
+              </ThemedText>
+              <ThemedText variant="body" color={theme.textSecondary}>
+                点赞
+              </ThemedText>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.statItem} onPress={() => goToPosts('privatePosts')}>
+              <ThemedText variant="h3" color={theme.textPrimary} style={styles.statNumber}>
+                {postStats.privatePosts}
+              </ThemedText>
+              <ThemedText variant="body" color={theme.textSecondary}>
+                私密
+              </ThemedText>
+            </TouchableOpacity>
           </View>
         </View>
-
-        {/* 个人简介 */}
-        <TouchableOpacity onPress={() => handleEdit('bio')} style={styles.bioSection}>
-          <ThemedText variant="body" color={theme.textSecondary} style={styles.bioText}>
-            {userInfo.bio}
-          </ThemedText>
-          <FontAwesome6 name="pen" size={12} color={theme.textMuted} style={{ marginLeft: 8 }} />
-        </TouchableOpacity>
-      </View>
-
-      {/* 底部统计板块 */}
-      <View style={styles.statsSection}>
-        <View style={styles.statsGrid}>
-          <TouchableOpacity style={styles.statItem} onPress={() => goToPosts('myPosts')}>
-            <FontAwesome6 name="file-lines" size={24} color={theme.primary} />
-            <ThemedText variant="h3" color={theme.textPrimary} style={styles.statNumber}>
-              {postStats.myPosts}
-            </ThemedText>
-            <ThemedText variant="caption" color={theme.textSecondary}>
-              帖子
-            </ThemedText>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.statItem} onPress={() => goToPosts('collectedPosts')}>
-            <FontAwesome6 name="bookmark" size={24} color="#FFD93D" />
-            <ThemedText variant="h3" color={theme.textPrimary} style={styles.statNumber}>
-              {postStats.collectedPosts}
-            </ThemedText>
-            <ThemedText variant="caption" color={theme.textSecondary}>
-              收藏
-            </ThemedText>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.statItem} onPress={() => goToPosts('likedPosts')}>
-            <FontAwesome6 name="heart" size={24} color="#FF6B6B" />
-            <ThemedText variant="h3" color={theme.textPrimary} style={styles.statNumber}>
-              {postStats.likedPosts}
-            </ThemedText>
-            <ThemedText variant="caption" color={theme.textSecondary}>
-              点赞
-            </ThemedText>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.statItem} onPress={() => goToPosts('privatePosts')}>
-            <FontAwesome6 name="lock" size={24} color="#8B5CF6" />
-            <ThemedText variant="h3" color={theme.textPrimary} style={styles.statNumber}>
-              {postStats.privatePosts}
-            </ThemedText>
-            <ThemedText variant="caption" color={theme.textSecondary}>
-              私密
-            </ThemedText>
-          </TouchableOpacity>
-        </View>
-      </View>
+      </ScrollView>
 
       {/* 编辑弹窗 */}
       <Modal
