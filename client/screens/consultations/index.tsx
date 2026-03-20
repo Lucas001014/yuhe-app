@@ -280,7 +280,7 @@ export default function ConsultationScreen() {
       case 'paid':
         return '#3B82F6';
       case 'in_progress':
-        return '#8B5CF6';
+        return '#0EA5E9';
       case 'completed':
         return '#10B981';
       case 'refunded':

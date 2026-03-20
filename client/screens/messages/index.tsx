@@ -158,7 +158,7 @@ export default function MessagesScreen() {
       case 'comment':
         return { icon: 'comment', color: '#3B82F6' };
       case 'message':
-        return { icon: 'message', color: '#8B5CF6' };
+        return { icon: 'message', color: '#0EA5E9' };
       default:
         return { icon: 'bell', color: theme.textMuted };
     }

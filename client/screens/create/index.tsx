@@ -446,13 +446,13 @@ export default function CreateScreen() {
   const getPostTypeColor = (type: string) => {
     switch (type) {
       case 'normal':
-        return '#4F46E5';
+        return '#38BDF8';
       case 'qa_paid':
         return '#F59E0B';
       case 'qa_bounty':
         return '#10B981';
       case 'product':
-        return '#8B5CF6';
+        return '#0EA5E9';
       default:
         return theme.textMuted;
     }
@@ -743,8 +743,8 @@ export default function CreateScreen() {
               </View>
               
               <TouchableOpacity style={attachmentStyles.sheetOption} onPress={handleAddPhoto}>
-                <View style={[attachmentStyles.optionIcon, { backgroundColor: '#4F46E520' }]}>
-                  <FontAwesome6 name="image" size={24} color="#4F46E5" />
+                <View style={[attachmentStyles.optionIcon, { backgroundColor: '#38BDF820' }]}>
+                  <FontAwesome6 name="image" size={24} color="#38BDF8" />
                 </View>
                 <View style={attachmentStyles.optionContent}>
                   <ThemedText variant="bodyMedium" color={theme.textPrimary}>添加照片</ThemedText>

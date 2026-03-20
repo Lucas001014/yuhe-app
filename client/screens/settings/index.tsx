@@ -229,7 +229,7 @@ export default function SettingsScreen() {
 
           <SettingItem
             icon="id-card"
-            iconColor="#4F46E5"
+            iconColor="#38BDF8"
             title="身份认证"
             value="查看认证状态"
             onPress={() => router.push('/identity-verification')}
@@ -266,7 +266,7 @@ export default function SettingsScreen() {
           
           <SwitchSettingItem
             icon="message"
-            iconColor="#6366F1"
+            iconColor="#38BDF8"
             title="允许陌生人私信"
             value={privacySettings.allowStrangerMessage}
             onToggle={() => updatePrivacySetting('allowStrangerMessage')}
@@ -313,7 +313,7 @@ export default function SettingsScreen() {
           
           <SwitchSettingItem
             icon="circle-info"
-            iconColor="#8B5CF6"
+            iconColor="#0EA5E9"
             title="系统通知"
             value={notificationSettings.systemNotification}
             onToggle={() => updateNotificationSetting('systemNotification')}
@@ -357,7 +357,7 @@ export default function SettingsScreen() {
           
           <SettingItem
             icon="circle-info"
-            iconColor="#8B5CF6"
+            iconColor="#0EA5E9"
             title="关于我们"
             value="版本 1.0.0"
             onPress={() => router.push('/about')}

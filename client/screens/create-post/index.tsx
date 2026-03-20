@@ -500,8 +500,8 @@ export default function CreatePostScreen() {
               </View>
               
               <TouchableOpacity style={attachmentStyles.sheetOption} onPress={handleAddPhoto}>
-                <View style={[attachmentStyles.optionIcon, { backgroundColor: '#4F46E520' }]}>
-                  <FontAwesome6 name="image" size={24} color="#4F46E5" />
+                <View style={[attachmentStyles.optionIcon, { backgroundColor: '#38BDF820' }]}>
+                  <FontAwesome6 name="image" size={24} color="#38BDF8" />
                 </View>
                 <View style={attachmentStyles.optionContent}>
                   <ThemedText variant="bodyMedium" color={theme.textPrimary}>添加照片</ThemedText>
