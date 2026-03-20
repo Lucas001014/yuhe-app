@@ -1,17 +1,5 @@
 import React, { useState, useMemo, useCallback, useRef } from 'react';
-import { 
-  View, 
-  ScrollView, 
-  TouchableOpacity, 
-  Alert, 
-  Modal, 
-  TextInput, 
-  Dimensions, 
-  PanResponder, 
-  Animated,
-  Platform,
-  Image as RNImage
-} from 'react-native';
+import { View, ScrollView, TouchableOpacity, Alert, Modal, TextInput, Dimensions, PanResponder, Animated } from 'react-native';
 import { FontAwesome6 } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
 import { ThemedText } from '@/components/ThemedText';
@@ -27,9 +15,6 @@ import { createFormDataFile } from '@/utils';
 import { useAuth } from '@/contexts/AuthContext';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
-const HEADER_MAX_HEIGHT = 280;
-const HEADER_MIN_HEIGHT = 56;
-const HEADER_SCROLL_DISTANCE = HEADER_MAX_HEIGHT - HEADER_MIN_HEIGHT;
 
 interface UserInfo {
   id: number;
@@ -43,55 +28,53 @@ interface UserInfo {
 }
 
 interface UserStats {
+  likes: number;
+  mutualFollows: number;
   following: number;
   followers: number;
-  posts: number;
 }
 
-// 示例帖子数据
-const MOCK_POSTS = [
+// 示例项目数据
+const MOCK_PROJECTS = [
   {
     id: 1,
-    content: '创业路上，每一个决策都是一次赌博，但我们要做的不是赌徒，而是精算师。',
+    title: '智能供应链管理系统',
+    cover: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=400&h=300&fit=crop',
+    progress: 75,
+    views: 1234,
     likes: 89,
-    comments: 12,
-    time: '2小时前',
   },
   {
     id: 2,
-    content: '团队管理最重要的是建立信任，信任是效率的基石。',
-    likes: 156,
-    comments: 23,
-    time: '5小时前',
+    title: '跨境电商平台',
+    cover: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=400&h=300&fit=crop',
+    progress: 45,
+    views: 856,
+    likes: 56,
   },
   {
     id: 3,
-    content: '产品迭代不求快，但求稳。每一次更新都要给用户带来真正的价值。',
-    likes: 234,
-    comments: 45,
-    time: '昨天',
+    title: '农业物联网项目',
+    cover: 'https://images.unsplash.com/photo-1574943320219-553eb213f72d?w=400&h=300&fit=crop',
+    progress: 90,
+    views: 2341,
+    likes: 167,
   },
 ];
 
 export default function ProfileScreen() {
-  const { theme, isDark } = useTheme();
+  const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const router = useSafeRouter();
   const { updateUser } = useAuth();
 
   useAuthGuard('/profile');
 
-  // 滚动动画值
-  const scrollY = useRef(new Animated.Value(0)).current;
-  
-  // 是否已关注
-  const [isFollowed, setIsFollowed] = useState(false);
-
   const [userInfo, setUserInfo] = useState<UserInfo>({
     id: 1,
     username: '张三',
     avatar: 'https://i.pravatar.cc/150?img=68',
-    backgroundImage: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=400&fit=crop',
+    backgroundImage: '',
     bio: '成为光',
     identity: '创业者',
     verified: true,
@@ -99,9 +82,10 @@ export default function ProfileScreen() {
   });
 
   const [userStats, setUserStats] = useState<UserStats>({
+    likes: 893,
+    mutualFollows: 59,
     following: 354,
     followers: 121,
-    posts: 28,
   });
 
   const [activeTab, setActiveTab] = useState(0);
@@ -109,75 +93,26 @@ export default function ProfileScreen() {
   const [editField, setEditField] = useState<'username' | 'bio'>('username');
   const [editValue, setEditValue] = useState('');
   const [loading, setLoading] = useState(false);
-  const [showAvatarPreviewModal, setShowAvatarPreviewModal] = useState(false);
-  const [avatarPreviewUri, setAvatarPreviewUri] = useState<string | null>(null);
 
   const API_BASE_URL = process.env.EXPO_PUBLIC_BACKEND_BASE_URL;
-
-  // 动画插值
-  const headerHeight = scrollY.interpolate({
-    inputRange: [0, HEADER_SCROLL_DISTANCE],
-    outputRange: [HEADER_MAX_HEIGHT, HEADER_MIN_HEIGHT],
-    extrapolate: 'clamp',
-  });
-
-  const headerOpacity = scrollY.interpolate({
-    inputRange: [0, HEADER_SCROLL_DISTANCE / 2, HEADER_SCROLL_DISTANCE],
-    outputRange: [0, 0.5, 1],
-    extrapolate: 'clamp',
-  });
-
-  // 头像缩放
-  const avatarScale = scrollY.interpolate({
-    inputRange: [0, HEADER_SCROLL_DISTANCE],
-    outputRange: [1, 0.4],
-    extrapolate: 'clamp',
-  });
-
-  const avatarTranslateX = scrollY.interpolate({
-    inputRange: [0, HEADER_SCROLL_DISTANCE],
-    outputRange: [0, SCREEN_WIDTH / 2 - 60],
-    extrapolate: 'clamp',
-  });
-
-  const avatarTranslateY = scrollY.interpolate({
-    inputRange: [0, HEADER_SCROLL_DISTANCE],
-    outputRange: [0, -HEADER_MAX_HEIGHT + 70],
-    extrapolate: 'clamp',
-  });
-
-  // 数据区域透明度和位移
-  const statsOpacity = scrollY.interpolate({
-    inputRange: [0, HEADER_SCROLL_DISTANCE / 3],
-    outputRange: [1, 0],
-    extrapolate: 'clamp',
-  });
-
-  const statsTranslateY = scrollY.interpolate({
-    inputRange: [0, HEADER_SCROLL_DISTANCE / 3],
-    outputRange: [0, -20],
-    extrapolate: 'clamp',
-  });
-
-  // 按钮区域透明度和位移
-  const buttonsOpacity = scrollY.interpolate({
-    inputRange: [0, HEADER_SCROLL_DISTANCE / 2],
-    outputRange: [1, 0],
-    extrapolate: 'clamp',
-  });
-
-  // 收缩后的右侧小图标区域
-  const miniBarOpacity = scrollY.interpolate({
-    inputRange: [HEADER_SCROLL_DISTANCE / 2, HEADER_SCROLL_DISTANCE],
-    outputRange: [0, 1],
-    extrapolate: 'clamp',
-  });
 
   // 加载用户信息
   const loadUserInfo = useCallback(async () => {
     try {
       const userId = await AsyncStorage.getItem('userId');
-      if (!userId) return;
+      if (!userId) {
+        setUserInfo({
+          id: 1,
+          username: '游客',
+          avatar: 'https://i.pravatar.cc/150?img=68',
+          backgroundImage: '',
+          bio: '点击编辑个人简介~',
+          identity: '创业者',
+          verified: false,
+          isMerchant: false,
+        });
+        return;
+      }
 
       const response = await fetch(`${API_BASE_URL}/api/v1/auth/me?userId=${userId}`);
       const data = await response.json();
@@ -193,6 +128,8 @@ export default function ProfileScreen() {
           verified: data.user.is_merchant || false,
           isMerchant: data.user.is_merchant || false,
         });
+        await AsyncStorage.setItem('username', data.user.username || '用户');
+        await AsyncStorage.setItem('avatar', data.user.avatar_url || '');
       }
     } catch (error) {
       console.error('加载用户信息失败:', error);
@@ -306,207 +243,209 @@ export default function ProfileScreen() {
           updateUser({ username: editValue.trim() });
         }
         setShowEditModal(false);
+        Alert.alert('成功', '修改成功');
       }
     } catch (error) {
       console.error('修改失败:', error);
+      Alert.alert('错误', '修改失败');
     } finally {
       setLoading(false);
     }
   };
 
-  // 标签栏
-  const tabs = ['帖子', '动态', '喜欢', '收藏'];
+  // 功能入口点击
+  const handleFeaturePress = (feature: string) => {
+    Alert.alert('功能提示', `${feature}功能开发中`);
+  };
+
+  // 标签栏数据
+  const tabs = ['我的项目', '对接记录', '收藏资源', '喜欢内容'];
+
+  // 功能入口数据
+  const features = [
+    { icon: 'chart-line', name: '创业进度看板', key: 'dashboard' },
+    { icon: 'file-lines', name: '我的对接记录', key: 'records' },
+    { icon: 'lightbulb', name: '我的孵化项目', key: 'incubation' },
+    { icon: 'cubes', name: '我的资源库', key: 'resources' },
+    { icon: 'grip', name: '全部功能', key: 'all' },
+  ];
 
   return (
-    <Screen backgroundColor="#FFFFFF" statusBarStyle="light">
-      <View style={styles.container}>
-        {/* 固定顶部导航栏 */}
-        <View style={styles.fixedHeader}>
-          <Animated.View style={[styles.headerBackground, { opacity: headerOpacity }]} />
-          
-          <View style={styles.headerContent}>
-            <TouchableOpacity style={styles.headerButton} onPress={() => router.back()}>
-              <FontAwesome6 name="arrow-left" size={18} color="#FFFFFF" />
+    <Screen backgroundColor="#FFFFFF" statusBarStyle="dark">
+      <ScrollView 
+        style={styles.container} 
+        showsVerticalScrollIndicator={false}
+        bounces={true}
+      >
+        {/* ========== 顶部用户信息区 ========== */}
+        <View style={styles.headerSection}>
+          {/* 半透明天蓝色渐变背景 */}
+          <View style={styles.headerGradient} />
+
+          {/* 顶部操作栏 */}
+          <View style={styles.headerTopBar}>
+            <TouchableOpacity style={styles.headerButton} onPress={() => handleFeaturePress('搜索')}>
+              <FontAwesome6 name="magnifying-glass" size={20} color={theme.textPrimary} />
             </TouchableOpacity>
-            
-            <Animated.Text style={[
-              styles.headerTitle,
-              { opacity: headerOpacity }
-            ]}>
-              {userInfo.username}
-            </Animated.Text>
-            
             <TouchableOpacity style={styles.headerButton} onPress={() => router.push('/settings')}>
-              <FontAwesome6 name="bars" size={18} color="#FFFFFF" />
+              <FontAwesome6 name="bars" size={20} color={theme.textPrimary} />
             </TouchableOpacity>
           </View>
 
-          {/* 收缩后的右侧迷你栏 */}
-          <Animated.View style={[styles.miniBar, { opacity: miniBarOpacity }]}>
-            <View style={styles.miniStatsRow}>
-              <TouchableOpacity style={styles.miniStatItem}>
-                <FontAwesome6 name="user-group" size={14} color="#666" />
-                <Animated.Text style={styles.miniStatText}>{userStats.following}</Animated.Text>
+          {/* 用户信息 */}
+          <View style={styles.userInfoRow}>
+            {/* 头像 */}
+            <TouchableOpacity onPress={handleChangeAvatar} style={styles.avatarContainer}>
+              <Image source={{ uri: userInfo.avatar }} style={styles.avatar} contentFit="cover" />
+              {/* 右下角悬浮按钮 */}
+              <TouchableOpacity style={styles.avatarAddButton} onPress={() => handleFeaturePress('添加好友')}>
+                <FontAwesome6 name="plus" size={12} color="#FFFFFF" />
               </TouchableOpacity>
-              <TouchableOpacity style={styles.miniStatItem}>
-                <FontAwesome6 name="users" size={14} color="#666" />
-                <Animated.Text style={styles.miniStatText}>{userStats.followers}</Animated.Text>
+            </TouchableOpacity>
+
+            {/* 用户名、标签、ID */}
+            <View style={styles.userTextInfo}>
+              <TouchableOpacity onPress={() => handleEdit('username')} style={styles.usernameRow}>
+                <ThemedText variant="h3" color={theme.textPrimary} style={{ fontWeight: '700' }}>
+                  {userInfo.username}
+                </ThemedText>
+                <FontAwesome6 name="pen" size={12} color={theme.textMuted} style={{ marginLeft: 8 }} />
               </TouchableOpacity>
-              <TouchableOpacity style={styles.miniStatItem}>
-                <FontAwesome6 name="file-lines" size={14} color="#666" />
-                <Animated.Text style={styles.miniStatText}>{userStats.posts}</Animated.Text>
-              </TouchableOpacity>
+
+              {/* 金牌会员标签 */}
+              <View style={styles.memberBadge}>
+                <FontAwesome6 name="crown" size={12} color="#F59E0B" solid />
+                <ThemedText variant="caption" color="#F59E0B" style={{ fontWeight: '600', marginLeft: 4 }}>
+                  金牌会员
+                </ThemedText>
+              </View>
+
+              {/* 遇合ID */}
+              <View style={styles.idRow}>
+                <ThemedText variant="caption" color={theme.textMuted}>
+                  遇合号：{String(userInfo.id).padStart(10, '0')}
+                </ThemedText>
+                <TouchableOpacity style={styles.copyIdButton}>
+                  <FontAwesome6 name="copy" size={10} color={SKY_BLUE} />
+                </TouchableOpacity>
+              </View>
             </View>
-            
-            <View style={styles.miniButtonsRow}>
-              <TouchableOpacity 
-                style={[styles.miniButton, isFollowed && styles.miniButtonActive]}
-                onPress={() => setIsFollowed(!isFollowed)}
-              >
-                <FontAwesome6 
-                  name={isFollowed ? 'check' : 'plus'} 
-                  size={14} 
-                  color={isFollowed ? '#666' : '#FFFFFF'} 
-                />
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.miniButton}>
-                <FontAwesome6 name="comment" size={14} color="#FFFFFF" />
-              </TouchableOpacity>
-            </View>
-          </Animated.View>
+          </View>
         </View>
 
-        {/* 可滚动内容 */}
-        <Animated.ScrollView
-          style={styles.scrollView}
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-          scrollEventThrottle={16}
-          onScroll={Animated.event(
-            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-            { useNativeDriver: true }
-          )}
-        >
-          {/* 头部背景图 */}
-          <View style={styles.headerImageContainer}>
-            {userInfo.backgroundImage ? (
-              <Image
-                source={{ uri: userInfo.backgroundImage }}
-                style={styles.headerImage}
-                contentFit="cover"
-              />
-            ) : (
-              <View style={[styles.headerImage, styles.defaultHeaderBg]} />
-            )}
-            <View style={styles.headerImageOverlay} />
+        {/* ========== 数据统计区 ========== */}
+        <View style={styles.statsSection}>
+          <View style={styles.statsRow}>
+            {/* 获赞 */}
+            <TouchableOpacity style={styles.statItem} onPress={() => handleFeaturePress('获赞')}>
+              <ThemedText variant="h3" color={theme.textPrimary} style={styles.statNumber}>
+                {userStats.likes}
+              </ThemedText>
+              <ThemedText variant="caption" color={theme.textSecondary}>获赞</ThemedText>
+            </TouchableOpacity>
+
+            {/* 互关 */}
+            <TouchableOpacity style={styles.statItem} onPress={() => handleFeaturePress('互关')}>
+              <ThemedText variant="h3" color={theme.textPrimary} style={styles.statNumber}>
+                {userStats.mutualFollows}
+              </ThemedText>
+              <ThemedText variant="caption" color={theme.textSecondary}>互关</ThemedText>
+            </TouchableOpacity>
+
+            {/* 关注 */}
+            <TouchableOpacity style={styles.statItem} onPress={() => handleFeaturePress('关注')}>
+              <ThemedText variant="h3" color={theme.textPrimary} style={styles.statNumber}>
+                {userStats.following}
+              </ThemedText>
+              <ThemedText variant="caption" color={theme.textSecondary}>关注</ThemedText>
+            </TouchableOpacity>
+
+            {/* 粉丝 */}
+            <TouchableOpacity style={styles.statItem} onPress={() => handleFeaturePress('粉丝')}>
+              <ThemedText variant="h3" color={theme.textPrimary} style={styles.statNumber}>
+                {userStats.followers}
+              </ThemedText>
+              <ThemedText variant="caption" color={theme.textSecondary}>粉丝</ThemedText>
+            </TouchableOpacity>
+
+            {/* 编辑主页按钮 */}
+            <TouchableOpacity style={styles.editProfileButton} onPress={() => handleFeaturePress('编辑主页')}>
+              <ThemedText variant="caption" color={theme.textPrimary} style={{ fontWeight: '500' }}>
+                编辑主页
+              </ThemedText>
+            </TouchableOpacity>
           </View>
 
-          {/* 头像 - 带动画 */}
-          <Animated.View style={[
-            styles.avatarWrapper,
-            {
-              transform: [
-                { scale: avatarScale },
-                { translateX: avatarTranslateX },
-                { translateY: avatarTranslateY },
-              ],
-            }
-          ]}>
-            <TouchableOpacity onPress={handleChangeAvatar}>
-              <Image source={{ uri: userInfo.avatar }} style={styles.avatar} contentFit="cover" />
-            </TouchableOpacity>
-          </Animated.View>
-
-          {/* 用户名 */}
-          <Animated.View style={[
-            styles.usernameSection,
-            {
-              opacity: statsOpacity,
-              transform: [{ translateY: statsTranslateY }]
-            }
-          ]}>
-            <TouchableOpacity onPress={() => handleEdit('username')} style={styles.usernameRow}>
-              <ThemedText variant="h2" color={theme.textPrimary} style={{ fontWeight: '700' }}>
-                {userInfo.username}
-              </ThemedText>
-              <FontAwesome6 name="pen" size={12} color={theme.textMuted} style={{ marginLeft: 8 }} />
-            </TouchableOpacity>
-            
-            <TouchableOpacity onPress={() => handleEdit('bio')} style={styles.bioRow}>
-              <ThemedText variant="body" color={theme.textSecondary}>
-                {userInfo.bio}
-              </ThemedText>
-            </TouchableOpacity>
-          </Animated.View>
-
-          {/* 数据统计区域 */}
-          <Animated.View style={[
-            styles.statsSection,
-            {
-              opacity: statsOpacity,
-              transform: [{ translateY: statsTranslateY }]
-            }
-          ]}>
-            <View style={styles.statsRow}>
-              <TouchableOpacity style={styles.statItem}>
-                <ThemedText variant="h4" color={theme.textPrimary} style={styles.statNumber}>
-                  {userStats.following}
-                </ThemedText>
-                <ThemedText variant="caption" color={theme.textSecondary}>关注</ThemedText>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.statItem}>
-                <ThemedText variant="h4" color={theme.textPrimary} style={styles.statNumber}>
-                  {userStats.followers}
-                </ThemedText>
-                <ThemedText variant="caption" color={theme.textSecondary}>粉丝</ThemedText>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.statItem}>
-                <ThemedText variant="h4" color={theme.textPrimary} style={styles.statNumber}>
-                  {userStats.posts}
-                </ThemedText>
-                <ThemedText variant="caption" color={theme.textSecondary}>帖子</ThemedText>
-              </TouchableOpacity>
-            </View>
-          </Animated.View>
-
-          {/* 操作按钮区域 */}
-          <Animated.View style={[
-            styles.actionButtonsSection,
-            { opacity: buttonsOpacity }
-          ]}>
-            <TouchableOpacity 
-              style={[styles.followButton, isFollowed && styles.followedButton]}
-              onPress={() => setIsFollowed(!isFollowed)}
-              activeOpacity={0.7}
-            >
-              <FontAwesome6 
-                name={isFollowed ? 'check' : 'plus'} 
-                size={14} 
-                color={isFollowed ? theme.textSecondary : '#FFFFFF'} 
-              />
-              <ThemedText 
-                variant="body" 
-                color={isFollowed ? theme.textSecondary : '#FFFFFF'}
-                style={{ marginLeft: 6, fontWeight: '500' }}
-              >
-                {isFollowed ? '已关注' : '关注'}
-              </ThemedText>
-            </TouchableOpacity>
-            
-            <TouchableOpacity style={styles.messageButton} activeOpacity={0.7}>
-              <FontAwesome6 name="comment" size={14} color={theme.textPrimary} />
-              <ThemedText variant="body" color={theme.textPrimary} style={{ marginLeft: 6, fontWeight: '500' }}>
-                私信
-              </ThemedText>
-            </TouchableOpacity>
-          </Animated.View>
+          {/* 用户简介 */}
+          <TouchableOpacity onPress={() => handleEdit('bio')} style={styles.bioRow}>
+            <ThemedText variant="body" color={theme.textPrimary}>
+              {userInfo.bio}
+            </ThemedText>
+          </TouchableOpacity>
 
           {/* 标签栏 */}
-          <View style={styles.tabsSection}>
+          <View style={styles.tagsRow}>
+            <View style={styles.tagItem}>
+              <ThemedText variant="caption" color={theme.textSecondary}>山东·烟台</ThemedText>
+            </View>
+            <View style={styles.tagItem}>
+              <ThemedText variant="caption" color={theme.textSecondary}>男·25岁</ThemedText>
+            </View>
+          </View>
+        </View>
+
+        {/* ========== 功能快捷入口区 ========== */}
+        <View style={styles.featuresSection}>
+          <View style={styles.featuresRow}>
+            {features.map((feature) => (
+              <TouchableOpacity 
+                key={feature.key} 
+                style={styles.featureItem}
+                onPress={() => handleFeaturePress(feature.name)}
+                activeOpacity={0.7}
+              >
+                <View style={styles.featureIconBg}>
+                  <FontAwesome6 name={feature.icon} size={20} color={SKY_BLUE} />
+                </View>
+                <ThemedText variant="caption" color={theme.textSecondary} style={styles.featureName}>
+                  {feature.name}
+                </ThemedText>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          {/* 活动横幅 */}
+          <TouchableOpacity style={styles.activityBanner} activeOpacity={0.85}>
+            <View style={styles.bannerContent}>
+              <View style={styles.bannerIconBg}>
+                <FontAwesome6 name="rocket" size={16} color={SKY_BLUE} />
+              </View>
+              <View style={styles.bannerText}>
+                <ThemedText variant="bodyMedium" color={theme.textPrimary}>
+                  遇合创业季
+                </ThemedText>
+                <ThemedText variant="caption" color={theme.textMuted}>
+                  参与活动赢取创业资源
+                </ThemedText>
+              </View>
+            </View>
+            <View style={styles.bannerAction}>
+              <ThemedText variant="caption" color={SKY_BLUE} style={{ fontWeight: '500' }}>
+                去参与
+              </ThemedText>
+              <FontAwesome6 name="chevron-right" size={12} color={SKY_BLUE} />
+            </View>
+          </TouchableOpacity>
+        </View>
+
+        {/* ========== 内容展示区 ========== */}
+        <View style={styles.contentSection}>
+          {/* 标签栏 */}
+          <View style={styles.tabsRow}>
             {tabs.map((tab, index) => (
               <TouchableOpacity
                 key={tab}
-                style={styles.tabItem}
+                style={[styles.tabItem, activeTab === index && styles.tabItemActive]}
                 onPress={() => setActiveTab(index)}
               >
                 <ThemedText
@@ -522,29 +461,48 @@ export default function ProfileScreen() {
           </View>
 
           {/* 内容列表 */}
-          <View style={styles.contentSection}>
-            {activeTab === 0 && MOCK_POSTS.map((post) => (
-              <TouchableOpacity key={post.id} style={styles.postCard} activeOpacity={0.85}>
-                <ThemedText variant="body" color={theme.textPrimary} style={styles.postContent}>
-                  {post.content}
-                </ThemedText>
-                <View style={styles.postFooter}>
-                  <View style={styles.postStat}>
-                    <FontAwesome6 name="heart" size={14} color={theme.textMuted} />
-                    <ThemedText variant="caption" color={theme.textMuted}>{post.likes}</ThemedText>
-                  </View>
-                  <View style={styles.postStat}>
-                    <FontAwesome6 name="comment" size={14} color={theme.textMuted} />
-                    <ThemedText variant="caption" color={theme.textMuted}>{post.comments}</ThemedText>
-                  </View>
-                  <ThemedText variant="caption" color={theme.textMuted} style={{ marginLeft: 'auto' }}>
-                    {post.time}
-                  </ThemedText>
+          <View style={styles.contentList}>
+            {activeTab === 0 ? (
+              <>
+                {/* 项目卡片网格 */}
+                <View style={styles.projectGrid}>
+                  {MOCK_PROJECTS.map((project) => (
+                    <TouchableOpacity key={project.id} style={styles.projectCard} activeOpacity={0.85}>
+                      <Image source={{ uri: project.cover }} style={styles.projectCover} contentFit="cover" />
+                      <View style={styles.projectInfo}>
+                        <ThemedText variant="body" color={theme.textPrimary} numberOfLines={2} style={{ fontWeight: '500' }}>
+                          {project.title}
+                        </ThemedText>
+                        <View style={styles.projectStats}>
+                          <View style={styles.projectStatItem}>
+                            <FontAwesome6 name="eye" size={11} color={theme.textMuted} />
+                            <ThemedText variant="caption" color={theme.textMuted}>{project.views}</ThemedText>
+                          </View>
+                          <View style={styles.projectStatItem}>
+                            <FontAwesome6 name="heart" size={11} color={theme.textMuted} />
+                            <ThemedText variant="caption" color={theme.textMuted}>{project.likes}</ThemedText>
+                          </View>
+                        </View>
+                      </View>
+                    </TouchableOpacity>
+                  ))}
                 </View>
-              </TouchableOpacity>
-            ))}
-            
-            {activeTab !== 0 && (
+
+                {/* 草稿箱入口 */}
+                <TouchableOpacity style={styles.draftBox} activeOpacity={0.7}>
+                  <View style={styles.draftIconBg}>
+                    <FontAwesome6 name="folder" size={16} color={theme.textMuted} />
+                  </View>
+                  <ThemedText variant="body" color={theme.textSecondary}>
+                    草稿箱
+                  </ThemedText>
+                  <View style={styles.draftBadge}>
+                    <ThemedText variant="caption" color="#FFFFFF">2</ThemedText>
+                  </View>
+                  <FontAwesome6 name="chevron-right" size={14} color={theme.textMuted} />
+                </TouchableOpacity>
+              </>
+            ) : (
               <View style={styles.emptyContent}>
                 <FontAwesome6 name="inbox" size={40} color={theme.textMuted} />
                 <ThemedText variant="body" color={theme.textMuted} style={{ marginTop: 12 }}>
@@ -553,13 +511,13 @@ export default function ProfileScreen() {
               </View>
             )}
           </View>
+        </View>
 
-          {/* 底部安全区 */}
-          <View style={{ height: 100 }} />
-        </Animated.ScrollView>
-      </View>
+        {/* 底部安全区 */}
+        <View style={{ height: 100 }} />
+      </ScrollView>
 
-      {/* 编辑弹窗 */}
+      {/* ========== 编辑弹窗 ========== */}
       <Modal
         visible={showEditModal}
         transparent
