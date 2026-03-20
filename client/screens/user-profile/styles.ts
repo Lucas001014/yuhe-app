@@ -8,9 +8,10 @@ export const SKY_BLUE = '#38BDF8';
 const SKY_BLUE_LIGHT = '#E0F2FE';
 
 // 头部尺寸常量
-const HEADER_MAX_HEIGHT = 320;
-const HEADER_MIN_HEIGHT = 56 + (Platform.OS === 'ios' ? 44 : 20);
-const HEADER_SCROLL_DISTANCE = HEADER_MAX_HEIGHT - HEADER_MIN_HEIGHT;
+const HEADER_HEIGHT = 200;
+const AVATAR_SIZE = 80;
+const STATUS_BAR_HEIGHT = Platform.OS === 'ios' ? 44 : 24;
+const NAV_HEIGHT = 44;
 
 export const createStyles = (theme: Theme) => {
   return StyleSheet.create({
@@ -25,7 +26,7 @@ export const createStyles = (theme: Theme) => {
       top: 0,
       left: 0,
       right: 0,
-      height: HEADER_MIN_HEIGHT,
+      height: STATUS_BAR_HEIGHT + NAV_HEIGHT,
       zIndex: 100,
     },
     navBackground: {
@@ -35,74 +36,32 @@ export const createStyles = (theme: Theme) => {
       right: 0,
       bottom: 0,
       backgroundColor: '#FFFFFF',
-      borderBottomWidth: 1,
-      borderBottomColor: '#F3F4F6',
     },
     navContent: {
-      flex: 1,
       flexDirection: 'row',
-      alignItems: 'center',
+      alignItems: 'flex-end',
       justifyContent: 'space-between',
+      height: '100%',
+      paddingBottom: Spacing.sm,
       paddingHorizontal: Spacing.lg,
-      paddingTop: Platform.OS === 'ios' ? 44 : 20,
     },
     navButton: {
       width: 36,
       height: 36,
       borderRadius: 18,
-      backgroundColor: 'rgba(0,0,0,0.3)',
+      backgroundColor: 'rgba(0,0,0,0.4)',
       justifyContent: 'center',
       alignItems: 'center',
     },
     navTitle: {
-      position: 'absolute',
-      left: 0,
-      right: 0,
-      textAlign: 'center',
       fontSize: 17,
       fontWeight: '600',
       color: '#1C1917',
-    },
-
-    // ========== 收缩后的迷你栏 ==========
-    miniBar: {
       position: 'absolute',
-      right: Spacing.lg + 44,
-      top: Platform.OS === 'ios' ? 50 : 26,
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: Spacing.md,
-    },
-    miniStatsRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: Spacing.sm,
-    },
-    miniStatItem: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 3,
-    },
-    miniStatText: {
-      fontSize: 11,
-      color: '#666',
-      fontWeight: '500',
-    },
-    miniButtonsRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: Spacing.xs,
-    },
-    miniButton: {
-      width: 26,
-      height: 26,
-      borderRadius: 13,
-      backgroundColor: SKY_BLUE,
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    miniButtonFollowed: {
-      backgroundColor: '#F3F4F6',
+      left: 0,
+      right: 0,
+      bottom: Spacing.sm + 8,
+      textAlign: 'center',
     },
 
     // ========== 滚动视图 ==========
@@ -124,62 +83,63 @@ export const createStyles = (theme: Theme) => {
       backgroundColor: SKY_BLUE_LIGHT,
     },
     headerBgOverlay: {
-      position: 'absolute',
-      bottom: 0,
-      left: 0,
-      right: 0,
-      height: 40,
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: 'rgba(0,0,0,0.1)',
+    },
+
+    // ========== 白色圆角卡片 ==========
+    card: {
       backgroundColor: '#FFFFFF',
-      borderTopLeftRadius: 20,
-      borderTopRightRadius: 20,
+      borderTopLeftRadius: 24,
+      borderTopRightRadius: 24,
+      marginTop: -24, // 向上覆盖背景图
+      paddingTop: AVATAR_SIZE / 2 + 10, // 为头像留出空间
+      minHeight: SCREEN_WIDTH * 1.5,
     },
 
     // ========== 头像 ==========
     avatarWrapper: {
       position: 'absolute',
-      top: HEADER_MAX_HEIGHT - 120,
+      top: -AVATAR_SIZE / 2,
       left: 0,
       right: 0,
       alignItems: 'center',
       zIndex: 10,
     },
     avatar: {
-      width: 88,
-      height: 88,
-      borderRadius: 44,
-      borderWidth: 4,
+      width: AVATAR_SIZE,
+      height: AVATAR_SIZE,
+      borderRadius: AVATAR_SIZE / 2,
+      borderWidth: 3,
       borderColor: '#FFFFFF',
       backgroundColor: '#F3F4F6',
     },
-
-    // ========== 用户名 ==========
-    usernameWrapper: {
-      position: 'absolute',
-      top: HEADER_MAX_HEIGHT - 25,
-      left: 0,
-      right: 0,
-      alignItems: 'center',
-      zIndex: 10,
-    },
-    usernameRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: Spacing.xs,
-    },
     verifiedBadge: {
-      width: 16,
-      height: 16,
-      borderRadius: 8,
+      position: 'absolute',
+      bottom: 0,
+      right: 0,
+      width: 20,
+      height: 20,
+      borderRadius: 10,
       backgroundColor: SKY_BLUE,
       justifyContent: 'center',
       alignItems: 'center',
+      borderWidth: 2,
+      borderColor: '#FFFFFF',
     },
 
     // ========== 简介 ==========
     bioWrapper: {
       alignItems: 'center',
-      marginTop: 85,
       paddingHorizontal: Spacing.xl,
+      marginTop: Spacing.sm,
+    },
+
+    // ========== 用户名 ==========
+    usernameWrapper: {
+      alignItems: 'center',
+      paddingHorizontal: Spacing.xl,
+      marginTop: Spacing.sm,
     },
 
     // ========== 数据统计区域 ==========
@@ -214,10 +174,10 @@ export const createStyles = (theme: Theme) => {
       alignItems: 'center',
       justifyContent: 'center',
       backgroundColor: SKY_BLUE,
-      paddingVertical: Spacing.sm,
+      paddingVertical: Spacing.sm + 2,
       paddingHorizontal: Spacing['2xl'],
       borderRadius: BorderRadius.xl,
-      minWidth: 100,
+      minWidth: 110,
     },
     followedButton: {
       backgroundColor: '#F3F4F6',
@@ -226,11 +186,13 @@ export const createStyles = (theme: Theme) => {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: '#F3F4F6',
-      paddingVertical: Spacing.sm,
+      backgroundColor: '#FFFFFF',
+      paddingVertical: Spacing.sm + 2,
       paddingHorizontal: Spacing['2xl'],
       borderRadius: BorderRadius.xl,
-      minWidth: 100,
+      minWidth: 110,
+      borderWidth: 1,
+      borderColor: '#E5E7EB',
     },
 
     // ========== 标签栏 ==========
