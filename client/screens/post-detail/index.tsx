@@ -412,6 +412,141 @@ export default function PostDetailScreen() {
     }
   };
 
+  // 分享给遇友
+  const handleShareToYuhu = async () => {
+    if (!post) return;
+    try {
+      const userId = await AsyncStorage.getItem('userId');
+      if (!userId) {
+        Alert.alert('提示', '请先登录');
+        return;
+      }
+
+      /**
+       * 服务端文件：server/src/routes/social.ts
+       * 接口：POST /api/v1/social/share
+       * Body 参数：postId: number, userId: number, shareTo?: string
+       */
+      const response = await fetch(`${API_BASE_URL}/api/v1/social/share`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          postId: post.id,
+          userId: parseInt(userId),
+          shareTo: 'yuhu'
+        }),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        // 跳转到选择好友页面
+        router.push('/share-friends', { postId: post.id });
+        setPost({
+          ...post,
+          shareCount: post.shareCount + 1
+        });
+      }
+    } catch (error) {
+      Alert.alert('错误', '分享失败');
+    }
+  };
+
+  // 投诉帖子
+  const handleReport = () => {
+    if (!post) return;
+    Alert.alert(
+      '投诉',
+      '请选择投诉原因',
+      [
+        { text: '取消', style: 'cancel' },
+        { text: '虚假信息', onPress: () => submitReport('fake') },
+        { text: '内容不当', onPress: () => submitReport('inappropriate') },
+        { text: '侵权', onPress: () => submitReport('copyright') },
+        { text: '其他', onPress: () => submitReport('other') },
+      ]
+    );
+  };
+
+  // 提交投诉
+  const submitReport = async (reason: string) => {
+    if (!post) return;
+    try {
+      const userId = await AsyncStorage.getItem('userId');
+      if (!userId) {
+        Alert.alert('提示', '请先登录');
+        return;
+      }
+
+      /**
+       * 服务端文件：server/src/routes/posts.ts
+       * 接口：POST /api/v1/posts/:id/report
+       * Body 参数：userId: number, reason: string
+       */
+      const response = await fetch(`${API_BASE_URL}/api/v1/posts/${post.id}/report`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: parseInt(userId),
+          reason
+        }),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        Alert.alert('成功', '投诉已提交，我们会尽快处理');
+      }
+    } catch (error) {
+      Alert.alert('错误', '投诉失败');
+    }
+  };
+
+  // 屏蔽用户
+  const handleBlock = () => {
+    if (!post) return;
+    Alert.alert(
+      '屏蔽用户',
+      `确定要屏蔽 ${post.authorName} 吗？屏蔽后将不再看到该用户的帖子。`,
+      [
+        { text: '取消', style: 'cancel' },
+        { text: '确定屏蔽', style: 'destructive', onPress: submitBlock },
+      ]
+    );
+  };
+
+  // 提交屏蔽
+  const submitBlock = async () => {
+    if (!post) return;
+    try {
+      const userId = await AsyncStorage.getItem('userId');
+      if (!userId) {
+        Alert.alert('提示', '请先登录');
+        return;
+      }
+
+      /**
+       * 服务端文件：server/src/routes/social.ts
+       * 接口：POST /api/v1/social/block
+       * Body 参数：currentUserId: number, targetUserId: number
+       */
+      const response = await fetch(`${API_BASE_URL}/api/v1/social/block`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          currentUserId: parseInt(userId),
+          targetUserId: post.author_id || post.authorId,
+        }),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        Alert.alert('成功', '已屏蔽该用户');
+        router.back();
+      }
+    } catch (error) {
+      Alert.alert('错误', '操作失败');
+    }
+  };
+
   // 提交评论
   const handleSubmitComment = async () => {
     if (!post || !comment.trim()) {
@@ -712,43 +847,18 @@ export default function PostDetailScreen() {
       >
         <Pressable style={styles.menuOverlay} onPress={() => setShowMoreMenu(false)}>
           <View style={styles.menuContainer}>
-            {/* 保存内容 */}
+            {/* 分享给遇友 */}
             <TouchableOpacity
               style={styles.menuItem}
               onPress={() => {
                 setShowMoreMenu(false);
-                handleSaveContent();
+                handleShareToYuhu();
               }}
             >
-              <FontAwesome6 name="download" size={20} color={theme.textPrimary} />
-              <ThemedText variant="body" color={theme.textPrimary}>保存内容</ThemedText>
-            </TouchableOpacity>
-
-            {/* 分隔线 */}
-            <View style={styles.menuDivider} />
-
-            {/* 转发好友私信 */}
-            <TouchableOpacity
-              style={styles.menuItem}
-              onPress={() => {
-                setShowMoreMenu(false);
-                handleShareToFriend();
-              }}
-            >
-              <FontAwesome6 name="user" size={20} color={theme.textPrimary} />
-              <ThemedText variant="body" color={theme.textPrimary}>好友私信</ThemedText>
-            </TouchableOpacity>
-
-            {/* 朋友圈 */}
-            <TouchableOpacity
-              style={styles.menuItem}
-              onPress={() => {
-                setShowMoreMenu(false);
-                handleShareToMoments();
-              }}
-            >
-              <FontAwesome6 name="images" size={20} color={theme.textPrimary} />
-              <ThemedText variant="body" color={theme.textPrimary}>朋友圈</ThemedText>
+              <View style={[styles.menuIconWrap, { backgroundColor: 'rgba(56, 189, 248, 0.1)' }]}>
+                <FontAwesome6 name="user-group" size={18} color="#38BDF8" />
+              </View>
+              <ThemedText variant="body" color={theme.textPrimary}>分享给遇友</ThemedText>
             </TouchableOpacity>
 
             {/* 微信 */}
@@ -759,7 +869,9 @@ export default function PostDetailScreen() {
                 handleShareToWechat();
               }}
             >
-              <FontAwesome6 name="weixin" size={20} color="#07C160" />
+              <View style={[styles.menuIconWrap, { backgroundColor: 'rgba(7, 193, 96, 0.1)' }]}>
+                <FontAwesome6 name="weixin" size={18} color="#07C160" brand />
+              </View>
               <ThemedText variant="body" color={theme.textPrimary}>微信</ThemedText>
             </TouchableOpacity>
 
@@ -771,8 +883,41 @@ export default function PostDetailScreen() {
                 handleShareToWework();
               }}
             >
-              <FontAwesome6 name="weixin" size={20} color="#2B7EFF" />
+              <View style={[styles.menuIconWrap, { backgroundColor: 'rgba(43, 126, 255, 0.1)' }]}>
+                <FontAwesome6 name="weixin" size={18} color="#2B7EFF" brand />
+              </View>
               <ThemedText variant="body" color={theme.textPrimary}>企业微信</ThemedText>
+            </TouchableOpacity>
+
+            {/* 分隔线 */}
+            <View style={styles.menuDivider} />
+
+            {/* 投诉 */}
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => {
+                setShowMoreMenu(false);
+                handleReport();
+              }}
+            >
+              <View style={[styles.menuIconWrap, { backgroundColor: 'rgba(249, 115, 22, 0.1)' }]}>
+                <FontAwesome6 name="triangle-exclamation" size={18} color="#F97316" />
+              </View>
+              <ThemedText variant="body" color={theme.textPrimary}>投诉</ThemedText>
+            </TouchableOpacity>
+
+            {/* 屏蔽 */}
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => {
+                setShowMoreMenu(false);
+                handleBlock();
+              }}
+            >
+              <View style={[styles.menuIconWrap, { backgroundColor: 'rgba(239, 68, 68, 0.1)' }]}>
+                <FontAwesome6 name="ban" size={18} color="#EF4444" />
+              </View>
+              <ThemedText variant="body" color="#EF4444">屏蔽</ThemedText>
             </TouchableOpacity>
           </View>
         </Pressable>

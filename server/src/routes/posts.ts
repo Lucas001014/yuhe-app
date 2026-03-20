@@ -621,6 +621,79 @@ router.post('/:id/comments', async (req, res) => {
   }
 });
 
+// 投诉帖子
+router.post('/:id/report', async (req, res) => {
+  try {
+    const db = (req as any).db;
+    if (!db) {
+      return res.status(500).json({ success: false, error: '数据库连接失败' });
+    }
+
+    const { id } = req.params;
+    const { userId, reason } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({ success: false, error: '用户ID不能为空' });
+    }
+
+    // 检查帖子是否存在
+    const postResult = await db.query('SELECT id, author_id, title FROM posts WHERE id = $1', [id]);
+    if (postResult.rows.length === 0) {
+      return res.status(404).json({ success: false, error: '帖子不存在' });
+    }
+
+    // 检查是否已投诉过
+    const existingReport = await db.query(
+      'SELECT * FROM post_reports WHERE post_id = $1 AND reporter_id = $2',
+      [id, userId]
+    );
+
+    if (existingReport.rows.length > 0) {
+      return res.status(400).json({ success: false, error: '您已投诉过此帖子' });
+    }
+
+    // 创建投诉表（如果不存在）
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS post_reports (
+        id SERIAL PRIMARY KEY,
+        post_id INTEGER NOT NULL,
+        reporter_id INTEGER NOT NULL,
+        reason VARCHAR(50) NOT NULL,
+        status VARCHAR(20) DEFAULT 'pending',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // 插入投诉记录
+    await db.query(
+      'INSERT INTO post_reports (post_id, reporter_id, reason) VALUES ($1, $2, $3)',
+      [id, userId, reason]
+    );
+
+    // 检查投诉次数，如果超过阈值则自动下架
+    const reportCount = await db.query(
+      'SELECT COUNT(*) as count FROM post_reports WHERE post_id = $1',
+      [id]
+    );
+
+    const count = parseInt(reportCount.rows[0].count);
+    if (count >= 5) {
+      await db.query(
+        "UPDATE posts SET status = 'hidden', audit_status = 'rejected', audit_reason = '被多次投诉' WHERE id = $1",
+        [id]
+      );
+    }
+
+    res.json({
+      success: true,
+      message: '投诉已提交，我们会尽快处理',
+    });
+  } catch (error: any) {
+    console.error('投诉失败：', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // 创建通知
 async function createNotification(db: Pool, userId: number, postId: number, type: string, username: string) {
   try {

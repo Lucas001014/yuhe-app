@@ -227,10 +227,18 @@ export const createStyles = (theme: Theme) => {
       paddingHorizontal: Spacing.lg,
       paddingVertical: Spacing.md,
     },
+    menuIconWrap: {
+      width: 32,
+      height: 32,
+      borderRadius: 8,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
     menuDivider: {
       height: 1,
       backgroundColor: theme.borderLight,
       marginVertical: Spacing.xs,
+      marginHorizontal: Spacing.lg,
     },
   });
 };

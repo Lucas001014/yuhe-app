@@ -666,6 +666,106 @@ router.get('/user/:userId/posts', async (req, res) => {
   }
 });
 
+// ============== 屏蔽功能 ==============
+
+/**
+ * 屏蔽/取消屏蔽用户
+ * POST /api/v1/social/block
+ * Body: { currentUserId: number, targetUserId: number }
+ */
+router.post('/block', async (req, res) => {
+  const db = (req as any).db;
+  const { currentUserId, targetUserId } = req.body;
+
+  if (!currentUserId || !targetUserId) {
+    return res.status(400).json({ success: false, error: '用户ID不能为空' });
+  }
+
+  if (currentUserId === targetUserId) {
+    return res.status(400).json({ success: false, error: '不能屏蔽自己' });
+  }
+
+  try {
+    // 创建屏蔽表（如果不存在）
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS user_blocks (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL,
+        blocked_user_id INTEGER NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(user_id, blocked_user_id)
+      )
+    `);
+
+    // 检查是否已屏蔽
+    const checkResult = await db.query(
+      'SELECT * FROM user_blocks WHERE user_id = $1 AND blocked_user_id = $2',
+      [currentUserId, targetUserId]
+    );
+
+    let isBlocked = false;
+
+    if (checkResult.rows.length === 0) {
+      // 屏蔽
+      await db.query(
+        'INSERT INTO user_blocks (user_id, blocked_user_id) VALUES ($1, $2)',
+        [currentUserId, targetUserId]
+      );
+      isBlocked = true;
+
+      // 同时取消关注
+      await db.query(
+        'DELETE FROM follows WHERE follower_id = $1 AND following_id = $2',
+        [currentUserId, targetUserId]
+      );
+    } else {
+      // 取消屏蔽
+      await db.query(
+        'DELETE FROM user_blocks WHERE user_id = $1 AND blocked_user_id = $2',
+        [currentUserId, targetUserId]
+      );
+      isBlocked = false;
+    }
+
+    res.json({
+      success: true,
+      isBlocked,
+    });
+  } catch (error: any) {
+    console.error('屏蔽操作失败:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * 获取屏蔽列表
+ * GET /api/v1/social/blocked
+ * Query: { userId: number }
+ */
+router.get('/blocked', async (req, res) => {
+  const db = (req as any).db;
+  const { userId } = req.query;
+
+  if (!userId) {
+    return res.status(400).json({ success: false, error: '用户ID不能为空' });
+  }
+
+  try {
+    const result = await db.query(`
+      SELECT u.id, u.username, u.avatar_url, ub.created_at
+      FROM user_blocks ub
+      JOIN users u ON ub.blocked_user_id = u.id
+      WHERE ub.user_id = $1
+      ORDER BY ub.created_at DESC
+    `, [userId]);
+
+    res.json({ success: true, list: result.rows });
+  } catch (error: any) {
+    console.error('获取屏蔽列表失败:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // ============== 辅助函数 ==============
 
 /**
