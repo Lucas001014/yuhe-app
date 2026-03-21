@@ -89,6 +89,16 @@ export default ({ config }: ConfigContext): ExpoConfig => {
         {
           "microphonePermission": "遇合需要访问麦克风以录制音频内容"
         }
+      ],
+      // 微信登录SDK配置
+      // 注意：需要在微信开放平台申请移动应用，获取AppID
+      // 环境变量: EXPO_PUBLIC_WECHAT_APPID
+      [
+        "react-native-wechat-lib",
+        {
+          "appID": process.env.EXPO_PUBLIC_WECHAT_APPID || "wx_placeholder_appid",
+          "appUniversalLink": "https://yuhe.app/wechat/" // iOS Universal Link
+        }
       ]
     ],
     "experiments": {

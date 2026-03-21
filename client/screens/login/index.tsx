@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from 'react';
-import { View, TextInput, TouchableOpacity, Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import React, { useState, useMemo, useEffect } from 'react';
+import { View, TextInput, TouchableOpacity, Alert, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
 import { FontAwesome6 } from '@expo/vector-icons';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
@@ -9,6 +9,7 @@ import { useSafeRouter } from '@/hooks/useSafeRouter';
 import { createStyles } from './styles';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from '@/contexts/AuthContext';
+import { weChatLogin, initWeChat, isWeChatInstalled } from '@/services/wechat';
 
 export default function LoginScreen() {
   const { theme, isDark } = useTheme();
@@ -21,8 +22,22 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
+  const [wechatLoading, setWechatLoading] = useState(false);
+  const [wechatInstalled, setWechatInstalled] = useState(true);
 
   const API_BASE_URL = process.env.EXPO_PUBLIC_BACKEND_BASE_URL;
+
+  // 初始化微信SDK
+  useEffect(() => {
+    const initWx = async () => {
+      const initialized = await initWeChat();
+      if (initialized) {
+        const installed = await isWeChatInstalled();
+        setWechatInstalled(installed);
+      }
+    };
+    initWx();
+  }, []);
 
   // 发送验证码
   const handleSendCode = async () => {
@@ -134,28 +149,63 @@ export default function LoginScreen() {
 
   // 社交登录处理
   const handleSocialLogin = async () => {
-    setLoading(true);
+    setWechatLoading(true);
 
     try {
-      // 微信登录说明：
-      // 1. 需要安装: npx expo install react-native-wechat-lib
-      // 2. 需要在 app.config.ts 中配置微信 AppID
-      // 3. 需要 Development Build（不能使用 Expo Go）
-      // 4. 需要在微信开放平台申请移动应用
+      // 1. 调用微信登录获取code
+      const result = await weChatLogin();
+      
+      if (!result.success) {
+        Alert.alert('微信登录失败', result.error || '请稍后重试');
+        setWechatLoading(false);
+        return;
+      }
 
-      Alert.alert(
-        '微信登录说明',
-        '微信登录功能需要以下步骤：\n\n1. 安装库：npx expo install react-native-wechat-lib\n2. 配置 app.config.ts（添加微信AppID）\n3. 使用 Development Build 重新构建应用\n4. 在微信开放平台申请应用\n\n当前版本请使用手机号登录。',
-        [
-          { text: '确定' }
-        ]
-      );
+      // 2. 将code发送到后端换取用户信息
+      /**
+       * 服务端文件：server/src/routes/auth.ts
+       * 接口：POST /api/v1/auth/wechat/login
+       * Body 参数：code: string
+       */
+      const response = await fetch(`${API_BASE_URL}/api/v1/auth/wechat/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: result.code }),
+      });
+
+      const data = await response.json();
+
+      if (!data.success) {
+        Alert.alert('登录失败', data.error || '请稍后重试');
+        setWechatLoading(false);
+        return;
+      }
+
+      // 3. 检查是否需要绑定手机号
+      if (data.needBindPhone) {
+        // 跳转到手机号绑定页面
+        router.push('/phone-binding', {
+          openid: data.openid,
+          unionid: data.unionid,
+          wechatUserInfo: JSON.stringify(data.wechatUserInfo),
+          existingUserId: data.existingUserId,
+        });
+      } else {
+        // 直接登录成功
+        await login({
+          id: data.user.id,
+          username: data.user.username,
+          avatar: data.user.avatar_url,
+          phone: data.user.phone,
+        });
+        router.replace('/');
+      }
     } catch (error: any) {
       console.error('微信登录错误:', error);
       Alert.alert('登录失败', error.message || '微信登录失败');
+    } finally {
+      setWechatLoading(false);
     }
-
-    setLoading(false);
   };
 
   return (
@@ -260,15 +310,20 @@ export default function LoginScreen() {
 
               <View style={styles.socialButtons}>
                 <TouchableOpacity
-                  style={styles.socialButton}
+                  style={[styles.socialButton, !wechatInstalled && styles.socialButtonDisabled]}
                   onPress={handleSocialLogin}
+                  disabled={wechatLoading || !wechatInstalled}
                 >
-                  <FontAwesome6 name="weixin" size={28} color="#07C160" />
+                  {wechatLoading ? (
+                    <ActivityIndicator size="small" color="#07C160" />
+                  ) : (
+                    <FontAwesome6 name="weixin" size={28} color="#07C160" />
+                  )}
                 </TouchableOpacity>
               </View>
 
               <ThemedText variant="caption" color={theme.textMuted} style={styles.socialHint}>
-                微信登录后需要绑定手机号
+                {!wechatInstalled ? '请先安装微信客户端' : '微信登录后需要绑定手机号'}
               </ThemedText>
             </View>
           )}

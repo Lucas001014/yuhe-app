@@ -545,10 +545,26 @@
     </div>
 
     <script>
-        // 下载链接配置（构建完成后替换为实际链接）
+        // 下载链接配置
+        // 说明：
+        // 1. 使用 EAS Build 构建 APK: eas build --platform android --profile production
+        // 2. 构建完成后从 Expo 控制台下载 APK
+        // 3. 将 APK 上传到对象存储或 CDN
+        // 4. 更新下面的链接
+        
         const DOWNLOAD_LINKS = {
-            android: '#',  // 替换为实际的 APK 下载链接
-            ios: '#'       // 替换为 App Store 链接
+            // Android APK 下载链接（构建后替换）
+            // 示例: 'https://yuhe.app/downloads/yuhe-1.0.0.apk'
+            android: 'https://expo.dev/accounts/[your-account]/projects/yuhe/builds/[build-id]',
+            // iOS App Store 链接（上架后替换）
+            ios: '#'
+        };
+
+        // 微信登录配置说明
+        const WECHAT_CONFIG = {
+            // 需要在微信开放平台申请移动应用
+            // 获取 AppID 后配置环境变量: EXPO_PUBLIC_WECHAT_APPID
+            appId: 'wx_placeholder_appid'
         };
 
         function showDownloadModal() {

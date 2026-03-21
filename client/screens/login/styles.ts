@@ -111,6 +111,9 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
     borderWidth: 1,
     borderColor: theme.border,
   },
+  socialButtonDisabled: {
+    opacity: 0.5,
+  },
   socialHint: {
     textAlign: 'center',
     fontSize: 12,
