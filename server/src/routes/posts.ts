@@ -174,6 +174,241 @@ function calculateAspectRatio(images: string[]): number {
   return [0.8, 1.0, 1.2, 1.4][Math.floor(Math.random() * 4)];
 }
 
+// ========== 静态路由（必须在动态路由 /:id 之前）==========
+
+/**
+ * 获取用户点赞过的帖子
+ * GET /api/v1/posts/liked?userId=xxx
+ */
+router.get('/liked', async (req, res) => {
+  try {
+    const { userId } = req.query;
+    if (!userId) {
+      return res.status(400).json({ success: false, error: '用户ID不能为空' });
+    }
+
+    const db = (req as any).db;
+    if (!db) {
+      return res.status(500).json({ success: false, error: '数据库连接失败' });
+    }
+
+    const query = `
+      SELECT p.*, u.username as author_username, u.avatar_url as author_avatar,
+             pi.created_at as interaction_time
+      FROM post_interactions pi
+      JOIN posts p ON pi.post_id = p.id
+      LEFT JOIN users u ON p.author_id = u.id
+      WHERE pi.user_id = $1 AND pi.interaction_type = 'like'
+      ORDER BY pi.created_at DESC
+      LIMIT 50
+    `;
+
+    const result = await db.query(query, [parseInt(userId as string)]);
+    
+    const posts = result.rows.map((row: any) => ({
+      ...row,
+      images: row.images || [],
+      tags: row.tags || [],
+      author: {
+        username: row.author_username,
+        avatar: row.author_avatar,
+      },
+      interactedAt: row.interaction_time,
+      isLiked: true,
+    }));
+
+    res.json({ success: true, posts });
+  } catch (error: any) {
+    console.error('获取点赞帖子失败:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * 获取用户收藏过的帖子
+ * GET /api/v1/posts/collected?userId=xxx
+ */
+router.get('/collected', async (req, res) => {
+  try {
+    const { userId } = req.query;
+    if (!userId) {
+      return res.status(400).json({ success: false, error: '用户ID不能为空' });
+    }
+
+    const db = (req as any).db;
+    if (!db) {
+      return res.status(500).json({ success: false, error: '数据库连接失败' });
+    }
+
+    const query = `
+      SELECT p.*, u.username as author_username, u.avatar_url as author_avatar,
+             pi.created_at as interaction_time
+      FROM post_interactions pi
+      JOIN posts p ON pi.post_id = p.id
+      LEFT JOIN users u ON p.author_id = u.id
+      WHERE pi.user_id = $1 AND pi.interaction_type = 'collect'
+      ORDER BY pi.created_at DESC
+      LIMIT 50
+    `;
+
+    const result = await db.query(query, [parseInt(userId as string)]);
+    
+    const posts = result.rows.map((row: any) => ({
+      ...row,
+      images: row.images || [],
+      tags: row.tags || [],
+      author: {
+        username: row.author_username,
+        avatar: row.author_avatar,
+      },
+      interactedAt: row.interaction_time,
+      isCollected: true,
+    }));
+
+    res.json({ success: true, posts });
+  } catch (error: any) {
+    console.error('获取收藏帖子失败:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * 获取用户转发过的帖子
+ * GET /api/v1/posts/forwarded?userId=xxx
+ */
+router.get('/forwarded', async (req, res) => {
+  try {
+    const { userId } = req.query;
+    if (!userId) {
+      return res.status(400).json({ success: false, error: '用户ID不能为空' });
+    }
+
+    const db = (req as any).db;
+    if (!db) {
+      return res.status(500).json({ success: false, error: '数据库连接失败' });
+    }
+
+    const query = `
+      SELECT p.*, u.username as author_username, u.avatar_url as author_avatar,
+             pi.created_at as interaction_time
+      FROM post_interactions pi
+      JOIN posts p ON pi.post_id = p.id
+      LEFT JOIN users u ON p.author_id = u.id
+      WHERE pi.user_id = $1 AND pi.interaction_type = 'forward'
+      ORDER BY pi.created_at DESC
+      LIMIT 50
+    `;
+
+    const result = await db.query(query, [parseInt(userId as string)]);
+    
+    const posts = result.rows.map((row: any) => ({
+      ...row,
+      images: row.images || [],
+      tags: row.tags || [],
+      author: {
+        username: row.author_username,
+        avatar: row.author_avatar,
+      },
+      interactedAt: row.interaction_time,
+      isForwarded: true,
+    }));
+
+    res.json({ success: true, posts });
+  } catch (error: any) {
+    console.error('获取转发帖子失败:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * 获取用户评论过的帖子
+ * GET /api/v1/posts/commented?userId=xxx
+ */
+router.get('/commented', async (req, res) => {
+  try {
+    const { userId } = req.query;
+    if (!userId) {
+      return res.status(400).json({ success: false, error: '用户ID不能为空' });
+    }
+
+    const db = (req as any).db;
+    if (!db) {
+      return res.status(500).json({ success: false, error: '数据库连接失败' });
+    }
+
+    const query = `
+      SELECT DISTINCT p.*, u.username as author_username, u.avatar_url as author_avatar,
+             pc.created_at as interaction_time, pc.content as comment_content
+      FROM post_comments pc
+      JOIN posts p ON pc.post_id = p.id
+      LEFT JOIN users u ON p.author_id = u.id
+      WHERE pc.user_id = $1
+      ORDER BY pc.created_at DESC
+      LIMIT 50
+    `;
+
+    const result = await db.query(query, [parseInt(userId as string)]);
+    
+    const posts = result.rows.map((row: any) => ({
+      ...row,
+      images: row.images || [],
+      tags: row.tags || [],
+      author: {
+        username: row.author_username,
+        avatar: row.author_avatar,
+      },
+      interactedAt: row.interaction_time,
+      commentContent: row.comment_content,
+    }));
+
+    res.json({ success: true, posts });
+  } catch (error: any) {
+    console.error('获取评论帖子失败:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * 获取用户草稿帖子
+ * GET /api/v1/posts/drafts?userId=xxx
+ */
+router.get('/drafts', async (req, res) => {
+  try {
+    const { userId } = req.query;
+    if (!userId) {
+      return res.status(400).json({ success: false, error: '用户ID不能为空' });
+    }
+
+    const db = (req as any).db;
+    if (!db) {
+      return res.status(500).json({ success: false, error: '数据库连接失败' });
+    }
+
+    const query = `
+      SELECT * FROM posts
+      WHERE author_id = $1 AND status = 'draft'
+      ORDER BY updated_at DESC
+      LIMIT 50
+    `;
+
+    const result = await db.query(query, [parseInt(userId as string)]);
+    
+    const posts = result.rows.map((row: any) => ({
+      ...row,
+      images: row.images || [],
+      tags: row.tags || [],
+      isDraft: true,
+    }));
+
+    res.json({ success: true, posts });
+  } catch (error: any) {
+    console.error('获取草稿帖子失败:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// ========== 动态路由（必须放在静态路由之后）==========
+
 // 创建帖子（自动审核）
 router.post('/', async (req, res) => {
   const db = (req as any).db;
@@ -749,5 +984,6 @@ async function createNotification(db: Pool, userId: number, postId: number, type
     console.error('创建通知失败：', error);
   }
 }
+
 
 export default router;

@@ -314,6 +314,15 @@ export const createStyles = (theme: Theme) => {
       minWidth: 20,
       alignItems: 'center',
     },
+    draftTag: {
+      position: 'absolute',
+      top: Spacing.sm,
+      left: Spacing.sm,
+      backgroundColor: '#9CA3AF',
+      paddingHorizontal: Spacing.sm,
+      paddingVertical: 2,
+      borderRadius: BorderRadius.xs,
+    },
 
     // ========== Modal ==========
     modalOverlay: {

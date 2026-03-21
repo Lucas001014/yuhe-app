@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback, useRef } from 'react';
-import { View, ScrollView, TouchableOpacity, Alert, Modal, TextInput, Dimensions, PanResponder, Animated } from 'react-native';
+import { View, ScrollView, TouchableOpacity, Alert, Modal, TextInput, Dimensions, RefreshControl } from 'react-native';
 import { FontAwesome6 } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
 import { ThemedText } from '@/components/ThemedText';
@@ -34,33 +34,22 @@ interface UserStats {
   followers: number;
 }
 
-// 示例项目数据
-const MOCK_PROJECTS = [
-  {
-    id: 1,
-    title: '智能供应链管理系统',
-    cover: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=400&h=300&fit=crop',
-    progress: 75,
-    views: 1234,
-    likes: 89,
-  },
-  {
-    id: 2,
-    title: '跨境电商平台',
-    cover: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=400&h=300&fit=crop',
-    progress: 45,
-    views: 856,
-    likes: 56,
-  },
-  {
-    id: 3,
-    title: '农业物联网项目',
-    cover: 'https://images.unsplash.com/photo-1574943320219-553eb213f72d?w=400&h=300&fit=crop',
-    progress: 90,
-    views: 2341,
-    likes: 167,
-  },
-];
+interface Post {
+  id: number;
+  title: string;
+  content: string;
+  images: string[];
+  cover?: string;
+  view_count: number;
+  like_count: number;
+  comment_count: number;
+  author_username?: string;
+  author_avatar?: string;
+  created_at: string;
+  interactedAt?: string;
+  commentContent?: string;
+  isDraft?: boolean;
+}
 
 export default function ProfileScreen() {
   const { theme } = useTheme();
@@ -89,6 +78,12 @@ export default function ProfileScreen() {
   });
 
   const [activeTab, setActiveTab] = useState(0);
+  const [contentSubTab, setContentSubTab] = useState(0);
+  const contentSubTabs = ['已发布', '草稿箱', '点赞', '收藏', '转发', '评论'];
+  
+  const [contentPosts, setContentPosts] = useState<Post[]>([]);
+  const [contentLoading, setContentLoading] = useState(false);
+  
   const [showEditModal, setShowEditModal] = useState(false);
   const [editField, setEditField] = useState<'username' | 'bio'>('username');
   const [editValue, setEditValue] = useState('');
@@ -128,6 +123,16 @@ export default function ProfileScreen() {
           verified: data.user.is_merchant || false,
           isMerchant: data.user.is_merchant || false,
         });
+        
+        if (data.user.stats) {
+          setUserStats({
+            likes: data.user.stats.likesCount || 0,
+            mutualFollows: 0,
+            following: data.user.stats.followingCount || 0,
+            followers: data.user.stats.followersCount || 0,
+          });
+        }
+        
         await AsyncStorage.setItem('username', data.user.username || '用户');
         await AsyncStorage.setItem('avatar', data.user.avatar_url || '');
       }
@@ -136,10 +141,74 @@ export default function ProfileScreen() {
     }
   }, [API_BASE_URL]);
 
+  // 加载内容子分类数据
+  const loadContentPosts = useCallback(async (subTab: number) => {
+    const userId = await AsyncStorage.getItem('userId');
+    if (!userId) return;
+
+    setContentLoading(true);
+    try {
+      let endpoint = '';
+      switch (subTab) {
+        case 0: // 已发布
+          endpoint = `${API_BASE_URL}/api/v1/posts/my-posts?userId=${userId}`;
+          break;
+        case 1: // 草稿箱
+          endpoint = `${API_BASE_URL}/api/v1/posts/drafts?userId=${userId}`;
+          break;
+        case 2: // 点赞
+          endpoint = `${API_BASE_URL}/api/v1/posts/liked?userId=${userId}`;
+          break;
+        case 3: // 收藏
+          endpoint = `${API_BASE_URL}/api/v1/posts/collected?userId=${userId}`;
+          break;
+        case 4: // 转发
+          endpoint = `${API_BASE_URL}/api/v1/posts/forwarded?userId=${userId}`;
+          break;
+        case 5: // 评论
+          endpoint = `${API_BASE_URL}/api/v1/posts/commented?userId=${userId}`;
+          break;
+      }
+
+      const response = await fetch(endpoint);
+      const data = await response.json();
+
+      if (data.success) {
+        const posts = data.posts.map((p: any) => ({
+          id: p.id,
+          title: p.title || '无标题',
+          content: p.content || '',
+          images: p.images || p.image_urls || [],
+          cover: (p.images && p.images[0]) || (p.image_urls && p.image_urls[0]) || 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=400&h=300&fit=crop',
+          view_count: p.view_count || 0,
+          like_count: p.like_count || 0,
+          comment_count: p.comment_count || 0,
+          author_username: p.author_username || p.username,
+          author_avatar: p.author_avatar || p.avatar,
+          created_at: p.created_at,
+          interactedAt: p.interactedAt,
+          commentContent: p.commentContent,
+          isDraft: p.isDraft || p.status === 'draft',
+        }));
+        setContentPosts(posts);
+      } else {
+        setContentPosts([]);
+      }
+    } catch (error) {
+      console.error('加载内容数据失败:', error);
+      setContentPosts([]);
+    } finally {
+      setContentLoading(false);
+    }
+  }, [API_BASE_URL]);
+
   useFocusEffect(
     useCallback(() => {
       loadUserInfo();
-    }, [loadUserInfo])
+      if (activeTab === 0) {
+        loadContentPosts(contentSubTab);
+      }
+    }, [loadUserInfo, loadContentPosts, activeTab, contentSubTab])
   );
 
   // 更换头像
@@ -255,12 +324,19 @@ export default function ProfileScreen() {
 
   // 功能入口点击
   const handleFeaturePress = (feature: string) => {
-    Alert.alert('功能提示', `${feature}功能开发中`);
+    switch (feature) {
+      case '全部功能':
+        router.push('/settings');
+        break;
+      default:
+        Alert.alert('功能提示', `${feature}功能开发中`);
+    }
   };
 
-  // 内容子分类
-  const [contentSubTab, setContentSubTab] = useState(0);
-  const contentSubTabs = ['已发布', '草稿箱', '点赞', '收藏', '转发', '评论'];
+  // 跳转帖子详情
+  const handlePostPress = (post: Post) => {
+    router.push('/post-detail', { postId: post.id.toString() });
+  };
 
   // 标签栏数据
   const tabs = ['内容', '对接记录', '收藏资源', '浏览记录'];
@@ -274,12 +350,64 @@ export default function ProfileScreen() {
     { icon: 'grip', name: '全部功能', key: 'all' },
   ];
 
+  // 渲染内容帖子卡片
+  const renderContentPost = (post: Post) => (
+    <TouchableOpacity 
+      key={post.id} 
+      style={styles.projectCard} 
+      activeOpacity={0.85}
+      onPress={() => handlePostPress(post)}
+    >
+      <Image source={{ uri: post.cover }} style={styles.projectCover} contentFit="cover" />
+      <View style={styles.projectInfo}>
+        <ThemedText variant="body" color={theme.textPrimary} numberOfLines={2} style={{ fontWeight: '500' }}>
+          {post.title}
+        </ThemedText>
+        {/* 草稿标签 */}
+        {post.isDraft && (
+          <View style={styles.draftTag}>
+            <ThemedText variant="caption" color="#FFFFFF">草稿</ThemedText>
+          </View>
+        )}
+        {/* 评论内容预览 */}
+        {post.commentContent && (
+          <ThemedText variant="caption" color={theme.textMuted} numberOfLines={1} style={{ marginTop: 4 }}>
+            评论: {post.commentContent}
+          </ThemedText>
+        )}
+        <View style={styles.projectStats}>
+          <View style={styles.projectStatItem}>
+            <FontAwesome6 name="eye" size={11} color={theme.textMuted} />
+            <ThemedText variant="caption" color={theme.textMuted}>{post.view_count}</ThemedText>
+          </View>
+          <View style={styles.projectStatItem}>
+            <FontAwesome6 name="heart" size={11} color={theme.textMuted} />
+            <ThemedText variant="caption" color={theme.textMuted}>{post.like_count}</ThemedText>
+          </View>
+          <View style={styles.projectStatItem}>
+            <FontAwesome6 name="comment" size={11} color={theme.textMuted} />
+            <ThemedText variant="caption" color={theme.textMuted}>{post.comment_count}</ThemedText>
+          </View>
+        </View>
+      </View>
+    </TouchableOpacity>
+  );
+
   return (
     <Screen backgroundColor="#FFFFFF" statusBarStyle="dark">
       <ScrollView 
         style={styles.container} 
         showsVerticalScrollIndicator={false}
         bounces={true}
+        refreshControl={
+          <RefreshControl
+            refreshing={contentLoading}
+            onRefresh={() => {
+              loadUserInfo();
+              if (activeTab === 0) loadContentPosts(contentSubTab);
+            }}
+          />
+        }
       >
         {/* ========== 顶部用户信息区 ========== */}
         <View style={styles.headerSection}>
@@ -357,7 +485,7 @@ export default function ProfileScreen() {
             </TouchableOpacity>
 
             {/* 关注 */}
-            <TouchableOpacity style={styles.statItem} onPress={() => handleFeaturePress('关注')}>
+            <TouchableOpacity style={styles.statItem} onPress={() => router.push('/follow-list', { type: 'following' })}>
               <ThemedText variant="h3" color={theme.textPrimary} style={styles.statNumber}>
                 {userStats.following}
               </ThemedText>
@@ -365,7 +493,7 @@ export default function ProfileScreen() {
             </TouchableOpacity>
 
             {/* 粉丝 */}
-            <TouchableOpacity style={styles.statItem} onPress={() => handleFeaturePress('粉丝')}>
+            <TouchableOpacity style={styles.statItem} onPress={() => router.push('/follow-list', { type: 'followers' })}>
               <ThemedText variant="h3" color={theme.textPrimary} style={styles.statNumber}>
                 {userStats.followers}
               </ThemedText>
@@ -491,44 +619,22 @@ export default function ProfileScreen() {
           <View style={styles.contentList}>
             {activeTab === 0 ? (
               <>
-                {/* 项目卡片网格 */}
-                <View style={styles.projectGrid}>
-                  {MOCK_PROJECTS.map((project) => (
-                    <TouchableOpacity key={project.id} style={styles.projectCard} activeOpacity={0.85}>
-                      <Image source={{ uri: project.cover }} style={styles.projectCover} contentFit="cover" />
-                      <View style={styles.projectInfo}>
-                        <ThemedText variant="body" color={theme.textPrimary} numberOfLines={2} style={{ fontWeight: '500' }}>
-                          {project.title}
-                        </ThemedText>
-                        <View style={styles.projectStats}>
-                          <View style={styles.projectStatItem}>
-                            <FontAwesome6 name="eye" size={11} color={theme.textMuted} />
-                            <ThemedText variant="caption" color={theme.textMuted}>{project.views}</ThemedText>
-                          </View>
-                          <View style={styles.projectStatItem}>
-                            <FontAwesome6 name="heart" size={11} color={theme.textMuted} />
-                            <ThemedText variant="caption" color={theme.textMuted}>{project.likes}</ThemedText>
-                          </View>
-                        </View>
-                      </View>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-
-                {/* 草稿箱入口（仅在"已发布"子分类显示） */}
-                {contentSubTab === 0 && (
-                  <TouchableOpacity style={styles.draftBox} activeOpacity={0.7}>
-                    <View style={styles.draftIconBg}>
-                      <FontAwesome6 name="folder" size={16} color={theme.textMuted} />
-                    </View>
-                    <ThemedText variant="body" color={theme.textSecondary}>
-                      草稿箱
+                {/* 帖子卡片网格 */}
+                {contentPosts.length > 0 ? (
+                  <View style={styles.projectGrid}>
+                    {contentPosts.map((post) => renderContentPost(post))}
+                  </View>
+                ) : (
+                  <View style={styles.emptyContent}>
+                    <FontAwesome6 
+                      name={contentSubTab === 1 ? "file-pen" : contentSubTab === 2 ? "heart" : contentSubTab === 3 ? "bookmark" : contentSubTab === 4 ? "share-nodes" : contentSubTab === 5 ? "comment" : "inbox"} 
+                      size={40} 
+                      color={theme.textMuted} 
+                    />
+                    <ThemedText variant="body" color={theme.textMuted} style={{ marginTop: 12 }}>
+                      {contentLoading ? '加载中...' : `暂无${contentSubTabs[contentSubTab]}内容`}
                     </ThemedText>
-                    <View style={styles.draftBadge}>
-                      <ThemedText variant="caption" color="#FFFFFF">2</ThemedText>
-                    </View>
-                    <FontAwesome6 name="chevron-right" size={14} color={theme.textMuted} />
-                  </TouchableOpacity>
+                  </View>
                 )}
               </>
             ) : (
