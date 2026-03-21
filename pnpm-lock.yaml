@@ -206,9 +206,6 @@ importers:
       react-native-webview:
         specifier: 13.15.0
         version: 13.15.0(react-native@0.81.5(@babel/core@7.28.6)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
-      react-native-wechat-lib:
-        specifier: ^1.1.27
-        version: 1.1.27(react-native@0.81.5(@babel/core@7.28.6)(@types/react@19.1.17)(react@19.1.0))
       react-native-worklets:
         specifier: 0.5.1
         version: 0.5.1(@babel/core@7.28.6)(react-native@0.81.5(@babel/core@7.28.6)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
@@ -3893,10 +3890,6 @@ packages:
   events-universal@1.0.1:
     resolution: {integrity: sha512-LUd5euvbMLpwOF8m6ivPCbhQeSiYVNb8Vs0fQ8QjXo0JTkEHpz8pxdQf0gStltaPpw0Cca8b39KxvK9cfKRiAw==}
 
-  events@1.0.1:
-    resolution: {integrity: sha512-Ee2RsyA5p9FyGVnVvbb1j7VKg+ezi6IOcgis2crSNo1V7S/M0eUnMABobd/fRhm6L3p/jGhPJzDFQDRpYw3O+g==}
-    engines: {node: '>=0.4.x'}
-
   exec-async@2.2.0:
     resolution: {integrity: sha512-87OpwcEiMia/DeiKFzaQNBNFeN3XkkpYIh9FyOqq5mS2oKv3CBE67PXoEKcr6nodWdXNogTiQ0jE2NGuoffXPw==}
 
@@ -6302,11 +6295,6 @@ packages:
     peerDependencies:
       react: '*'
       react-native: '*'
-
-  react-native-wechat-lib@1.1.27:
-    resolution: {integrity: sha512-OstWvE0vaBvIGqAegaCIS/jvsVg5bH1IYk/EU8flmDRPl3mMlraG2C2AnvzHkrzXbJLJamQigA44CDoYj2p/4g==}
-    peerDependencies:
-      react-native: '>=0.40'
 
   react-native-worklets@0.5.1:
     resolution: {integrity: sha512-lJG6Uk9YuojjEX/tQrCbcbmpdLCSFxDK1rJlkDhgqkVi1KZzG7cdcBFQRqyNOOzR9Y0CXNuldmtWTGOyM0k0+w==}
@@ -12326,8 +12314,6 @@ snapshots:
     transitivePeerDependencies:
       - bare-abort-controller
 
-  events@1.0.1: {}
-
   exec-async@2.2.0: {}
 
   execa@5.1.1:
@@ -15409,11 +15395,6 @@ snapshots:
       escape-string-regexp: 4.0.0
       invariant: 2.2.4
       react: 19.1.0
-      react-native: 0.81.5(@babel/core@7.28.6)(@types/react@19.1.17)(react@19.1.0)
-
-  react-native-wechat-lib@1.1.27(react-native@0.81.5(@babel/core@7.28.6)(@types/react@19.1.17)(react@19.1.0)):
-    dependencies:
-      events: 1.0.1
       react-native: 0.81.5(@babel/core@7.28.6)(@types/react@19.1.17)(react@19.1.0)
 
   react-native-worklets@0.5.1(@babel/core@7.28.6)(react-native@0.77.1(@babel/core@7.28.6)(@babel/preset-env@7.29.0(@babel/core@7.28.6))(@types/react@18.3.28)(react@18.3.1))(react@18.3.1):

@@ -10,21 +10,29 @@
  * 注意：在 Expo 开发环境中，微信SDK不可用，所有方法会返回错误
  */
 
-// 静态导入微信SDK
-import * as WeChatModule from 'react-native-wechat-lib';
-
-// 安全获取微信模块，可能在某些环境下为 undefined
-const WeChat = WeChatModule || null;
-
 const WECHAT_APPID = process.env.EXPO_PUBLIC_WECHAT_APPID;
 
 // 微信SDK是否已初始化
 let isInitialized = false;
 
+// 微信模块引用（仅在原生构建后可用）
+let WeChat: any = null;
+
 /**
  * 检查微信SDK是否可用
+ * 在 Expo 开发环境中始终返回 false
  */
 export const isWeChatAvailable = (): boolean => {
+  // 尝试动态获取微信模块（仅在原生环境可用）
+  if (WeChat === null) {
+    try {
+      // @ts-ignore - 动态模块访问
+      WeChat = globalThis.__WECHAT_MODULE__ || null;
+    } catch {
+      WeChat = null;
+    }
+  }
+  
   return WeChat !== null && typeof WeChat.registerApp === 'function';
 };
 
