@@ -9,7 +9,7 @@ import { useSafeRouter } from '@/hooks/useSafeRouter';
 import { createStyles } from './styles';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from '@/contexts/AuthContext';
-import { weChatLogin, initWeChat, isWeChatInstalled } from '@/services/wechat';
+import { weChatLogin, initWeChat, isWeChatInstalled, isWeChatAvailable } from '@/services/wechat';
 
 export default function LoginScreen() {
   const { theme, isDark } = useTheme();
@@ -30,10 +30,19 @@ export default function LoginScreen() {
   // 初始化微信SDK
   useEffect(() => {
     const initWx = async () => {
+      // 先检查微信SDK是否可用
+      if (!isWeChatAvailable()) {
+        console.log('微信SDK不可用，隐藏微信登录按钮');
+        setWechatInstalled(false);
+        return;
+      }
+      
       const initialized = await initWeChat();
       if (initialized) {
         const installed = await isWeChatInstalled();
         setWechatInstalled(installed);
+      } else {
+        setWechatInstalled(false);
       }
     };
     initWx();

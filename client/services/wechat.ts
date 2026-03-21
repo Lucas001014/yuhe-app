@@ -6,9 +6,15 @@
  * 2. 将AppID配置到环境变量 EXPO_PUBLIC_WECHAT_APPID
  * 3. 使用 Development Build 构建应用（不能使用 Expo Go）
  * 4. iOS 需要配置 Universal Link
+ * 
+ * 注意：在 Expo 开发环境中，微信SDK不可用，所有方法会返回错误
  */
 
-import * as WeChat from 'react-native-wechat-lib';
+// 静态导入微信SDK
+import * as WeChatModule from 'react-native-wechat-lib';
+
+// 安全获取微信模块，可能在某些环境下为 undefined
+const WeChat = WeChatModule || null;
 
 const WECHAT_APPID = process.env.EXPO_PUBLIC_WECHAT_APPID;
 
@@ -16,10 +22,23 @@ const WECHAT_APPID = process.env.EXPO_PUBLIC_WECHAT_APPID;
 let isInitialized = false;
 
 /**
+ * 检查微信SDK是否可用
+ */
+export const isWeChatAvailable = (): boolean => {
+  return WeChat !== null && typeof WeChat.registerApp === 'function';
+};
+
+/**
  * 初始化微信SDK
  * 必须在使用其他微信功能前调用
  */
 export const initWeChat = async (): Promise<boolean> => {
+  // 检查SDK是否可用
+  if (!isWeChatAvailable()) {
+    console.warn('微信SDK不可用，请使用 EAS Build 构建应用');
+    return false;
+  }
+
   if (!WECHAT_APPID || WECHAT_APPID === 'wx_placeholder_appid') {
     console.warn('微信AppID未配置，请设置环境变量 EXPO_PUBLIC_WECHAT_APPID');
     return false;
@@ -40,6 +59,10 @@ export const initWeChat = async (): Promise<boolean> => {
  * 检查微信是否已安装
  */
 export const isWeChatInstalled = async (): Promise<boolean> => {
+  if (!isWeChatAvailable()) {
+    return false;
+  }
+
   try {
     return await WeChat.isWXAppInstalled();
   } catch (error) {
@@ -53,6 +76,11 @@ export const isWeChatInstalled = async (): Promise<boolean> => {
  * @returns 微信授权code，用于后端换取用户信息
  */
 export const weChatLogin = async (): Promise<{ success: boolean; code?: string; error?: string }> => {
+  // 检查SDK是否可用
+  if (!isWeChatAvailable()) {
+    return { success: false, error: '微信登录功能暂不可用，请使用手机号登录' };
+  }
+
   if (!isInitialized) {
     const initResult = await initWeChat();
     if (!initResult) {
@@ -90,6 +118,11 @@ export const shareToWeChatFriend = async (
   description: string,
   thumbImage?: string
 ): Promise<boolean> => {
+  if (!isWeChatAvailable()) {
+    console.warn('微信分享功能暂不可用');
+    return false;
+  }
+
   if (!isInitialized) {
     await initWeChat();
   }
@@ -118,6 +151,11 @@ export const shareToWeChatTimeline = async (
   description: string,
   thumbImage?: string
 ): Promise<boolean> => {
+  if (!isWeChatAvailable()) {
+    console.warn('微信分享功能暂不可用');
+    return false;
+  }
+
   if (!isInitialized) {
     await initWeChat();
   }
@@ -138,6 +176,7 @@ export const shareToWeChatTimeline = async (
 };
 
 export default {
+  isWeChatAvailable,
   initWeChat,
   isWeChatInstalled,
   weChatLogin,
