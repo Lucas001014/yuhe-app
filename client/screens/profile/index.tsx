@@ -258,8 +258,12 @@ export default function ProfileScreen() {
     Alert.alert('功能提示', `${feature}功能开发中`);
   };
 
+  // 内容子分类
+  const [contentSubTab, setContentSubTab] = useState(0);
+  const contentSubTabs = ['已发布', '草稿箱', '点赞', '收藏', '转发', '评论'];
+
   // 标签栏数据
-  const tabs = ['我的项目', '对接记录', '收藏资源', '喜欢内容'];
+  const tabs = ['内容', '对接记录', '收藏资源', '浏览记录'];
 
   // 功能入口数据
   const features = [
@@ -460,6 +464,29 @@ export default function ProfileScreen() {
             ))}
           </View>
 
+          {/* 内容子分类（仅在"内容"tab下显示） */}
+          {activeTab === 0 && (
+            <View style={styles.subTabsRow}>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                {contentSubTabs.map((subTab, index) => (
+                  <TouchableOpacity
+                    key={subTab}
+                    style={[styles.subTabItem, contentSubTab === index && styles.subTabItemActive]}
+                    onPress={() => setContentSubTab(index)}
+                  >
+                    <ThemedText
+                      variant="small"
+                      color={contentSubTab === index ? '#FFFFFF' : theme.textSecondary}
+                      style={{ fontWeight: contentSubTab === index ? '600' : '400' }}
+                    >
+                      {subTab}
+                    </ThemedText>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+          )}
+
           {/* 内容列表 */}
           <View style={styles.contentList}>
             {activeTab === 0 ? (
@@ -488,19 +515,21 @@ export default function ProfileScreen() {
                   ))}
                 </View>
 
-                {/* 草稿箱入口 */}
-                <TouchableOpacity style={styles.draftBox} activeOpacity={0.7}>
-                  <View style={styles.draftIconBg}>
-                    <FontAwesome6 name="folder" size={16} color={theme.textMuted} />
-                  </View>
-                  <ThemedText variant="body" color={theme.textSecondary}>
-                    草稿箱
-                  </ThemedText>
-                  <View style={styles.draftBadge}>
-                    <ThemedText variant="caption" color="#FFFFFF">2</ThemedText>
-                  </View>
-                  <FontAwesome6 name="chevron-right" size={14} color={theme.textMuted} />
-                </TouchableOpacity>
+                {/* 草稿箱入口（仅在"已发布"子分类显示） */}
+                {contentSubTab === 0 && (
+                  <TouchableOpacity style={styles.draftBox} activeOpacity={0.7}>
+                    <View style={styles.draftIconBg}>
+                      <FontAwesome6 name="folder" size={16} color={theme.textMuted} />
+                    </View>
+                    <ThemedText variant="body" color={theme.textSecondary}>
+                      草稿箱
+                    </ThemedText>
+                    <View style={styles.draftBadge}>
+                      <ThemedText variant="caption" color="#FFFFFF">2</ThemedText>
+                    </View>
+                    <FontAwesome6 name="chevron-right" size={14} color={theme.textMuted} />
+                  </TouchableOpacity>
+                )}
               </>
             ) : (
               <View style={styles.emptyContent}>

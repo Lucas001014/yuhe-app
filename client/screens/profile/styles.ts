@@ -231,6 +231,22 @@ export const createStyles = (theme: Theme) => {
       backgroundColor: SKY_BLUE,
       borderRadius: 1,
     },
+    // 子分类tab样式
+    subTabsRow: {
+      paddingHorizontal: Spacing.lg,
+      paddingVertical: Spacing.sm,
+      backgroundColor: '#FFFFFF',
+    },
+    subTabItem: {
+      paddingHorizontal: Spacing.lg,
+      paddingVertical: Spacing.sm,
+      backgroundColor: '#F3F4F6',
+      borderRadius: BorderRadius.xl,
+      marginRight: Spacing.sm,
+    },
+    subTabItemActive: {
+      backgroundColor: SKY_BLUE,
+    },
     contentList: {
       padding: Spacing.lg,
     },
