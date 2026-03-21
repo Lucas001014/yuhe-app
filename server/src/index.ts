@@ -17,6 +17,7 @@ import videoRouter from './routes/video';
 import messagesRouter from './routes/messages';
 import socialRouter from './routes/social';
 import consultationsRouter from './routes/consultations';
+import certificationRouter from './routes/certification';
 
 const app = express();
 const port = process.env.PORT || 9091;
@@ -85,6 +86,7 @@ app.use('/api/v1/video', videoRouter);
 app.use('/api/v1/messages', messagesRouter);
 app.use('/api/v1/social', socialRouter);
 app.use('/api/v1/consultations', consultationsRouter);
+app.use('/api/v1/certification', certificationRouter);
 
 // 404 处理
 app.use((req, res) => {

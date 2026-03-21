@@ -192,7 +192,7 @@ router.get('/me', async (req, res) => {
   try {
     // 获取用户基本信息
     const userResult = await (req as any).db.query(
-      'SELECT id, phone, username, avatar_url, background_image, bio, balance, tags, is_merchant, created_at FROM users WHERE id = $1',
+      'SELECT id, phone, username, avatar_url, background_image, bio, balance, tags, is_merchant, role, created_at FROM users WHERE id = $1',
       [userId]
     );
 

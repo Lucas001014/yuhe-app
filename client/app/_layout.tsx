@@ -41,6 +41,11 @@ export default function RootLayout() {
             <Stack.Screen name="wallet" options={{ title: "钱包" }} />
             <Stack.Screen name="wallet-transactions" options={{ title: "交易记录" }} />
             <Stack.Screen name="wallet-withdraw" options={{ title: "提现" }} />
+            <Stack.Screen name="certification" options={{ title: "认证中心" }} />
+            <Stack.Screen name="consultations" options={{ title: "咨询" }} />
+            <Stack.Screen name="create-post" options={{ title: "发布动态" }} />
+            <Stack.Screen name="my-collections" options={{ title: "我的收藏" }} />
+            <Stack.Screen name="my-likes" options={{ title: "我的点赞" }} />
             <Stack.Screen name="user-agreement" options={{ title: "用户协议" }} />
             <Stack.Screen name="privacy-policy" options={{ title: "隐私政策" }} />
             <Stack.Screen name="phone-binding" options={{ title: "绑定手机号" }} />

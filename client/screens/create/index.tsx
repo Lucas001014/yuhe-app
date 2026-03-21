@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { View, ScrollView, TouchableOpacity, TextInput, Alert, Modal, KeyboardAvoidingView, Platform, ActivityIndicator, StyleSheet, Animated } from 'react-native';
 import { FontAwesome6 } from '@expo/vector-icons';
 import { ThemedText } from '@/components/ThemedText';
@@ -11,6 +11,20 @@ import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
 import { Image } from 'expo-image';
 import { createFormDataFile } from '@/utils';
+
+// 权限检查结果类型
+interface PermissionCheckResult {
+  canPublish: boolean;
+  missingRequirements: string[];
+  requirements: string[];
+  certification: {
+    status: string;
+  };
+  merchant: {
+    hasPaidSettlement: boolean;
+    settlementFee: number;
+  };
+}
 
 // 附件类型
 type AttachmentType = 'photo' | 'video' | 'document';
@@ -33,6 +47,16 @@ interface ValidationErrors {
   productName: boolean;
   productPrice: boolean;
   attachments: boolean;
+}
+
+// 权限检查弹窗状态
+interface PermissionModalState {
+  visible: boolean;
+  missingRequirements: string[];
+  requirements: string[];
+  certificationStatus: string;
+  hasPaidSettlement: boolean;
+  settlementFee: number;
 }
 
 export default function CreateScreen() {
@@ -60,6 +84,14 @@ export default function CreateScreen() {
     productName: false,
     productPrice: false,
     attachments: false,
+  });
+  const [permissionModal, setPermissionModal] = useState<PermissionModalState>({
+    visible: false,
+    missingRequirements: [],
+    requirements: [],
+    certificationStatus: 'none',
+    hasPaidSettlement: false,
+    settlementFee: 1000,
   });
 
   const API_BASE_URL = process.env.EXPO_PUBLIC_BACKEND_BASE_URL;
@@ -297,6 +329,67 @@ export default function CreateScreen() {
     return isValid;
   };
 
+  // 检查发布权限
+  const checkPublishPermission = async (): Promise<PermissionCheckResult | null> => {
+    try {
+      const userId = await AsyncStorage.getItem('userId');
+      if (!userId) return null;
+
+      /**
+       * 服务端文件：server/src/routes/certification.ts
+       * 接口：GET /api/v1/certification/check-publish-permission
+       * Query 参数：userId: number, type: string
+       */
+      const response = await fetch(
+        `${API_BASE_URL}/api/v1/certification/check-publish-permission?userId=${userId}&type=${postType}`,
+        { method: 'GET' }
+      );
+
+      if (!response.ok) {
+        throw new Error('检查权限失败');
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('检查发布权限失败:', error);
+      return null;
+    }
+  };
+
+  // 显示权限不足弹窗
+  const showPermissionDenied = (result: PermissionCheckResult) => {
+    setPermissionModal({
+      visible: true,
+      missingRequirements: result.missingRequirements,
+      requirements: result.requirements,
+      certificationStatus: result.certification.status,
+      hasPaidSettlement: result.merchant.hasPaidSettlement,
+      settlementFee: result.merchant.settlementFee,
+    });
+  };
+
+  // 获取权限提示文本
+  const getPermissionHint = (missingRequirements: string[]): { title: string; message: string } => {
+    if (missingRequirements.includes('identity_cert') && missingRequirements.includes('settlement_fee')) {
+      return {
+        title: '需要完成认证和缴费',
+        message: `发布${getPostTypeLabel(postType)}内容需要：\n1. 完成身份认证\n2. 缴纳入驻费（¥1000）\n\n请前往认证中心完成相关操作`,
+      };
+    } else if (missingRequirements.includes('identity_cert')) {
+      return {
+        title: '需要完成身份认证',
+        message: `发布${getPostTypeLabel(postType)}内容需要先完成身份认证\n\n请前往认证中心完成认证`,
+      };
+    } else if (missingRequirements.includes('settlement_fee')) {
+      return {
+        title: '需要缴纳入驻费',
+        message: `发布${getPostTypeLabel(postType)}内容需要缴纳入驻费（¥1000）\n\n请前往认证中心完成缴费`,
+      };
+    }
+    return { title: '权限不足', message: '您暂无权限发布此类型内容' };
+  };
+
   // 发布帖子
   const handlePublish = async () => {
     // 验证表单
@@ -313,6 +406,24 @@ export default function CreateScreen() {
       Alert.alert('未登录', '请先登录后再发布帖子');
       router.replace('/login');
       return;
+    }
+
+    // 对于知识库、悬赏、产品类型，检查发布权限
+    if (postType !== 'normal') {
+      setLoading(true);
+      const permissionResult = await checkPublishPermission();
+      
+      if (!permissionResult) {
+        setLoading(false);
+        Alert.alert('错误', '检查权限失败，请稍后重试');
+        return;
+      }
+
+      if (!permissionResult.canPublish) {
+        setLoading(false);
+        showPermissionDenied(permissionResult);
+        return;
+      }
     }
 
     setLoading(true);
@@ -865,6 +976,85 @@ export default function CreateScreen() {
                   onPress={() => setShowProductModal(false)}
                 >
                   <ThemedText variant="bodyMedium" color={theme.buttonPrimaryText}>确定</ThemedText>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
+
+        {/* 权限检查弹窗 */}
+        <Modal
+          visible={permissionModal.visible}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setPermissionModal(prev => ({ ...prev, visible: false }))}
+        >
+          <View style={styles.modalContainer}>
+            <View style={[styles.modalContent, { maxWidth: 340 }]}>
+              <View style={styles.modalHeader}>
+                <FontAwesome6 name="shield-halved" size={32} color={theme.primary} />
+              </View>
+              
+              <ThemedText variant="h4" color={theme.textPrimary} style={{ textAlign: 'center', marginBottom: 12 }}>
+                {getPermissionHint(permissionModal.missingRequirements).title}
+              </ThemedText>
+              
+              <ThemedText variant="body" color={theme.textSecondary} style={{ textAlign: 'center', marginBottom: 24 }}>
+                {getPermissionHint(permissionModal.missingRequirements).message}
+              </ThemedText>
+
+              {/* 缺少项目列表 */}
+              <View style={{ width: '100%', marginBottom: 24 }}>
+                {permissionModal.missingRequirements.includes('identity_cert') && (
+                  <View style={styles.requirementItem}>
+                    <View style={[styles.requirementIcon, { backgroundColor: '#EF444420' }]}>
+                      <FontAwesome6 name="user-check" size={20} color="#EF4444" />
+                    </View>
+                    <View style={styles.requirementText}>
+                      <ThemedText variant="bodyMedium" color={theme.textPrimary}>身份认证</ThemedText>
+                      <ThemedText variant="caption" color={theme.textMuted}>
+                        {permissionModal.certificationStatus === 'pending' 
+                          ? '审核中' 
+                          : permissionModal.certificationStatus === 'rejected'
+                          ? '已拒绝，需重新申请'
+                          : '未认证'}
+                      </ThemedText>
+                    </View>
+                    <FontAwesome6 name="circle-xmark" size={20} color="#EF4444" />
+                  </View>
+                )}
+                
+                {permissionModal.missingRequirements.includes('settlement_fee') && (
+                  <View style={styles.requirementItem}>
+                    <View style={[styles.requirementIcon, { backgroundColor: '#EF444420' }]}>
+                      <FontAwesome6 name="wallet" size={20} color="#EF4444" />
+                    </View>
+                    <View style={styles.requirementText}>
+                      <ThemedText variant="bodyMedium" color={theme.textPrimary}>入驻费</ThemedText>
+                      <ThemedText variant="caption" color={theme.textMuted}>
+                        ¥{permissionModal.settlementFee}
+                      </ThemedText>
+                    </View>
+                    <FontAwesome6 name="circle-xmark" size={20} color="#EF4444" />
+                  </View>
+                )}
+              </View>
+              
+              <View style={styles.modalFooter}>
+                <TouchableOpacity
+                  style={[styles.modalButton, { backgroundColor: theme.backgroundTertiary }]}
+                  onPress={() => setPermissionModal(prev => ({ ...prev, visible: false }))}
+                >
+                  <ThemedText variant="bodyMedium" color={theme.textSecondary}>稍后再说</ThemedText>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.modalButton, { backgroundColor: theme.primary, flex: 1.5 }]}
+                  onPress={() => {
+                    setPermissionModal(prev => ({ ...prev, visible: false }));
+                    router.push('/certification');
+                  }}
+                >
+                  <ThemedText variant="bodyMedium" color={theme.buttonPrimaryText}>前往认证</ThemedText>
                 </TouchableOpacity>
               </View>
             </View>

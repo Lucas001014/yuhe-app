@@ -25,6 +25,7 @@ interface UserInfo {
   identity: string;
   verified: boolean;
   isMerchant: boolean;
+  role?: string;
 }
 
 interface UserStats {
@@ -68,6 +69,7 @@ export default function ProfileScreen() {
     identity: '创业者',
     verified: true,
     isMerchant: false,
+    role: 'user',
   });
 
   const [userStats, setUserStats] = useState<UserStats>({
@@ -122,6 +124,7 @@ export default function ProfileScreen() {
           identity: data.user.is_merchant ? '商家' : '创业者',
           verified: data.user.is_merchant || false,
           isMerchant: data.user.is_merchant || false,
+          role: data.user.role || 'user',
         });
         
         if (data.user.stats) {
@@ -328,6 +331,9 @@ export default function ProfileScreen() {
       case '全部功能':
         router.push('/settings');
         break;
+      case '管理后台':
+        router.push('/admin');
+        break;
       default:
         Alert.alert('功能提示', `${feature}功能开发中`);
     }
@@ -349,6 +355,11 @@ export default function ProfileScreen() {
     { icon: 'cubes', name: '我的资源库', key: 'resources' },
     { icon: 'grip', name: '全部功能', key: 'all' },
   ];
+
+  // 管理员入口（只有管理员可见）
+  const adminFeatures = userInfo.role === 'admin' 
+    ? [{ icon: 'shield-halved', name: '管理后台', key: 'admin' }] 
+    : [];
 
   // 渲染内容帖子卡片
   const renderContentPost = (post: Post) => (
@@ -545,6 +556,27 @@ export default function ProfileScreen() {
               </TouchableOpacity>
             ))}
           </View>
+
+          {/* 管理员入口 */}
+          {adminFeatures.length > 0 && (
+            <View style={[styles.featuresRow, { marginTop: 12 }]}>
+              {adminFeatures.map((feature) => (
+                <TouchableOpacity 
+                  key={feature.key} 
+                  style={[styles.featureItem, { backgroundColor: '#EF444410' }]}
+                  onPress={() => handleFeaturePress(feature.name)}
+                  activeOpacity={0.7}
+                >
+                  <View style={[styles.featureIconBg, { backgroundColor: '#EF444420' }]}>
+                    <FontAwesome6 name={feature.icon} size={20} color="#EF4444" />
+                  </View>
+                  <ThemedText variant="caption" color="#EF4444" style={styles.featureName}>
+                    {feature.name}
+                  </ThemedText>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
 
           {/* 活动横幅 */}
           <TouchableOpacity style={styles.activityBanner} activeOpacity={0.85}>

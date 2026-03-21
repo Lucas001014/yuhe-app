@@ -232,7 +232,7 @@ export default function SettingsScreen() {
             iconColor="#38BDF8"
             title="身份认证"
             value="查看认证状态"
-            onPress={() => router.push('/identity-verification')}
+            onPress={() => router.push('/certification')}
             theme={theme}
             styles={styles}
           />

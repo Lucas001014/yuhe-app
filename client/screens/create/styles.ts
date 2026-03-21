@@ -169,5 +169,24 @@ export const createStyles = (theme: Theme) => {
     confirmButton: {
       backgroundColor: theme.primary,
     },
+    requirementItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: Spacing.md,
+      backgroundColor: theme.backgroundTertiary,
+      borderRadius: BorderRadius.lg,
+      marginBottom: Spacing.sm,
+    },
+    requirementIcon: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    requirementText: {
+      flex: 1,
+      marginLeft: Spacing.md,
+    },
   });
 };
