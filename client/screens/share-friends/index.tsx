@@ -138,6 +138,28 @@ export default function ShareFriendsScreen() {
         }
       }
 
+      // 只有发送成功后才记录分享统计
+      if (successCount > 0) {
+        try {
+          /**
+           * 服务端文件：server/src/routes/social.ts
+           * 接口：POST /api/v1/social/share
+           * Body 参数：postId: number, userId: number, shareTo?: string
+           */
+          await fetch(`${API_BASE_URL}/api/v1/social/share`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              postId: parseInt(postId),
+              userId: parseInt(userId),
+              shareTo: 'yuhu'
+            }),
+          });
+        } catch (e) {
+          console.error('记录分享统计失败:', e);
+        }
+      }
+
       Alert.alert('成功', `已分享给 ${successCount} 位好友`);
       router.back();
     } catch (error) {

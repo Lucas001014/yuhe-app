@@ -2,6 +2,8 @@ import React, { useState, useMemo, useCallback } from 'react';
 import { View, ScrollView, TouchableOpacity, TextInput, Alert, KeyboardAvoidingView, Platform, FlatList, ActivityIndicator, Modal, Pressable } from 'react-native';
 import { FontAwesome6 } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
+import * as Sharing from 'expo-sharing';
+import * as Clipboard from 'expo-clipboard';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { Screen } from '@/components/Screen';
@@ -346,7 +348,7 @@ export default function PostDetailScreen() {
     }
   };
 
-  // 转发到微信
+  // 转发到微信（使用系统分享）
   const handleShareToWechat = async () => {
     if (!post) return;
     try {
@@ -356,26 +358,30 @@ export default function PostDetailScreen() {
         return;
       }
 
-      const response = await fetch(`${API_BASE_URL}/api/v1/social/share`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          postId: post.id,
-          userId: parseInt(userId),
-          shareTo: 'wechat'
-        }),
-      });
-
-      const data = await response.json();
-      if (data.success) {
-        Alert.alert('成功', '已转发到微信');
-        setPost({
-          ...post,
-          shareCount: post.shareCount + 1
-        });
-      }
+      // 构建分享内容
+      const shareContent = `【${post.title || '分享一个帖子'}】\n${post.content?.substring(0, 100)}${post.content && post.content.length > 100 ? '...' : ''}\n\n来自「遇合」App`;
+      
+      // 复制内容到剪贴板
+      await Clipboard.setStringAsync(shareContent);
+      
+      // 显示分享确认对话框
+      Alert.alert(
+        '分享到微信',
+        '内容已复制到剪贴板\n请打开微信粘贴分享给好友',
+        [
+          { text: '取消', style: 'cancel' },
+          { 
+            text: '已分享成功', 
+            onPress: async () => {
+              // 用户确认分享成功后，记录统计
+              await recordShare('wechat');
+            }
+          }
+        ]
+      );
     } catch (error) {
-      Alert.alert('错误', '转发失败');
+      console.error('分享失败:', error);
+      Alert.alert('错误', '分享失败');
     }
   };
 
@@ -389,30 +395,33 @@ export default function PostDetailScreen() {
         return;
       }
 
-      const response = await fetch(`${API_BASE_URL}/api/v1/social/share`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          postId: post.id,
-          userId: parseInt(userId),
-          shareTo: 'wework'
-        }),
-      });
-
-      const data = await response.json();
-      if (data.success) {
-        Alert.alert('成功', '已转发到企业微信');
-        setPost({
-          ...post,
-          shareCount: post.shareCount + 1
-        });
-      }
+      // 构建分享内容
+      const shareContent = `【${post.title || '分享一个帖子'}】\n${post.content?.substring(0, 100)}${post.content && post.content.length > 100 ? '...' : ''}\n\n来自「遇合」App`;
+      
+      // 复制内容到剪贴板
+      await Clipboard.setStringAsync(shareContent);
+      
+      Alert.alert(
+        '分享到企业微信',
+        '内容已复制到剪贴板\n请打开企业微信粘贴分享给好友',
+        [
+          { text: '取消', style: 'cancel' },
+          { 
+            text: '已分享成功', 
+            onPress: async () => {
+              // 用户确认分享成功后，记录统计
+              await recordShare('wework');
+            }
+          }
+        ]
+      );
     } catch (error) {
-      Alert.alert('错误', '转发失败');
+      console.error('分享失败:', error);
+      Alert.alert('错误', '分享失败');
     }
   };
 
-  // 分享给遇友
+  // 分享给遇友（跳转到好友选择页面，不立即记录统计）
   const handleShareToYuhu = async () => {
     if (!post) return;
     try {
@@ -421,6 +430,21 @@ export default function PostDetailScreen() {
         Alert.alert('提示', '请先登录');
         return;
       }
+
+      // 跳转到选择好友页面，分享统计在好友选择页面发送成功后记录
+      router.push('/share-friends', { postId: post.id.toString() });
+    } catch (error) {
+      console.error('分享失败:', error);
+      Alert.alert('错误', '分享失败');
+    }
+  };
+
+  // 记录分享统计（分享成功后调用）
+  const recordShare = async (shareTo: string) => {
+    if (!post) return;
+    try {
+      const userId = await AsyncStorage.getItem('userId');
+      if (!userId) return;
 
       /**
        * 服务端文件：server/src/routes/social.ts
@@ -433,21 +457,21 @@ export default function PostDetailScreen() {
         body: JSON.stringify({
           postId: post.id,
           userId: parseInt(userId),
-          shareTo: 'yuhu'
+          shareTo: shareTo
         }),
       });
 
       const data = await response.json();
       if (data.success) {
-        // 跳转到选择好友页面
-        router.push('/share-friends', { postId: post.id });
+        // 更新本地分享计数
         setPost({
           ...post,
           shareCount: post.shareCount + 1
         });
+        Alert.alert('成功', '分享成功');
       }
     } catch (error) {
-      Alert.alert('错误', '分享失败');
+      console.error('记录分享失败:', error);
     }
   };
 
