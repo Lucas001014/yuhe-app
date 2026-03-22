@@ -13,6 +13,7 @@ import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { createFormDataFile } from '@/utils';
 import { useAuth } from '@/contexts/AuthContext';
+import AvatarCropPreview from '@/components/AvatarCropPreview';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -90,6 +91,10 @@ export default function ProfileScreen() {
   const [editField, setEditField] = useState<'username' | 'bio'>('username');
   const [editValue, setEditValue] = useState('');
   const [loading, setLoading] = useState(false);
+  
+  // 头像裁剪预览状态
+  const [showCropPreview, setShowCropPreview] = useState(false);
+  const [selectedAvatarUri, setSelectedAvatarUri] = useState('');
 
   const API_BASE_URL = process.env.EXPO_PUBLIC_BACKEND_BASE_URL;
 
@@ -223,53 +228,76 @@ export default function ProfileScreen() {
         return;
       }
 
+      // 选择照片（禁用系统裁剪，使用自定义裁剪预览）
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ['images'],
-        allowsEditing: true,
-        aspect: [1, 1],
+        allowsEditing: false,
         quality: 0.8,
       });
 
       if (!result.canceled && result.assets && result.assets[0]) {
         const localUri = result.assets[0].uri;
-        setLoading(true);
+        // 显示裁剪预览
+        setSelectedAvatarUri(localUri);
+        setShowCropPreview(true);
+      }
+    } catch (error) {
+      console.error('选择照片失败:', error);
+      Alert.alert('错误', '选择照片失败');
+    }
+  };
 
-        const filename = localUri.split('/').pop() || 'avatar.jpg';
-        const match = /\.(\w+)$/.exec(filename);
-        const ext = match ? match[1] : 'jpg';
-        const mimeType = `image/${ext}`;
+  // 确认头像裁剪并上传
+  const handleConfirmAvatar = async (imageUri: string) => {
+    setShowCropPreview(false);
+    setLoading(true);
 
-        const formData = new FormData();
-        const file = await createFormDataFile(localUri, filename, mimeType);
-        formData.append('file', file as any);
+    try {
+      const filename = imageUri.split('/').pop() || 'avatar.jpg';
+      const match = /\.(\w+)$/.exec(filename);
+      const ext = match ? match[1] : 'jpg';
+      const mimeType = `image/${ext}`;
 
-        const uploadResponse = await fetch(`${API_BASE_URL}/api/v1/upload`, {
-          method: 'POST',
-          body: formData,
-        });
+      const formData = new FormData();
+      const file = await createFormDataFile(imageUri, filename, mimeType);
+      formData.append('file', file as any);
 
-        const uploadData = await uploadResponse.json();
-        if (!uploadData.success) throw new Error(uploadData.error || '上传失败');
+      /**
+       * 服务端文件：server/src/routes/upload.ts
+       * 接口：POST /api/v1/upload
+       * Body：FormData (file)
+       */
+      const uploadResponse = await fetch(`${API_BASE_URL}/api/v1/upload`, {
+        method: 'POST',
+        body: formData,
+      });
 
-        const avatarUrl = uploadData.url;
-        const userId = await AsyncStorage.getItem('userId');
-        
-        const updateResponse = await fetch(`${API_BASE_URL}/api/v1/auth/update-profile`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            userId: parseInt(userId!),
-            avatar_url: avatarUrl,
-          }),
-        });
+      const uploadData = await uploadResponse.json();
+      if (!uploadData.success) throw new Error(uploadData.error || '上传失败');
 
-        const updateData = await updateResponse.json();
-        if (updateData.success) {
-          setUserInfo({ ...userInfo, avatar: avatarUrl });
-          await AsyncStorage.setItem('avatar', avatarUrl);
-          updateUser({ avatar: avatarUrl });
-          Alert.alert('成功', '头像更换成功');
-        }
+      const avatarUrl = uploadData.url;
+      const userId = await AsyncStorage.getItem('userId');
+      
+      /**
+       * 服务端文件：server/src/routes/auth.ts
+       * 接口：POST /api/v1/auth/update-profile
+       * Body：userId: number, avatar_url?: string
+       */
+      const updateResponse = await fetch(`${API_BASE_URL}/api/v1/auth/update-profile`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: parseInt(userId!),
+          avatar_url: avatarUrl,
+        }),
+      });
+
+      const updateData = await updateResponse.json();
+      if (updateData.success) {
+        setUserInfo({ ...userInfo, avatar: avatarUrl });
+        await AsyncStorage.setItem('avatar', avatarUrl);
+        updateUser({ avatar: avatarUrl });
+        Alert.alert('成功', '头像更换成功');
       }
     } catch (error) {
       console.error('更换头像失败:', error);
@@ -732,6 +760,14 @@ export default function ProfileScreen() {
           </TouchableOpacity>
         </TouchableOpacity>
       </Modal>
+
+      {/* 头像裁剪预览 */}
+      <AvatarCropPreview
+        visible={showCropPreview}
+        imageUri={selectedAvatarUri}
+        onCancel={() => setShowCropPreview(false)}
+        onConfirm={handleConfirmAvatar}
+      />
     </Screen>
   );
 }
