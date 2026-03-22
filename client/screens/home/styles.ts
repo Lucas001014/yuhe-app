@@ -251,37 +251,83 @@ export const createStyles = (theme: Theme, width?: number) => StyleSheet.create(
   },
 });
 
-// 分享菜单样式
-export const createShareMenuStyles = (theme: Theme) => StyleSheet.create({
-  menuOverlay: {
+// 底部粉丝列表弹窗样式
+export const createShareSheetStyles = (theme: Theme) => StyleSheet.create({
+  overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
   },
-  menuContainer: {
+  sheetContainer: {
     backgroundColor: theme.backgroundDefault,
-    borderRadius: BorderRadius.lg,
-    paddingVertical: Spacing.sm,
-    minWidth: 200,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 5,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    maxHeight: '70%',
+    minHeight: '50%',
   },
-  menuItem: {
+  sheetHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.md,
+    justifyContent: 'space-between',
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.border,
+  },
+  sendButton: {
+    backgroundColor: theme.primary,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.full,
+    minWidth: 80,
+    alignItems: 'center',
+  },
+  sendButtonDisabled: {
+    backgroundColor: theme.backgroundTertiary,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: Spacing['2xl'],
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: Spacing['2xl'],
+  },
+  listContent: {
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.md,
   },
-  menuIconWrap: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
+  followerItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: Spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.borderLight,
+  },
+  followerAvatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    marginRight: Spacing.md,
+  },
+  followerInfo: {
+    flex: 1,
+  },
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: theme.border,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  checkboxSelected: {
+    backgroundColor: theme.primary,
+    borderColor: theme.primary,
   },
 });

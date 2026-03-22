@@ -1,14 +1,13 @@
-import React, { useState, useMemo, useCallback } from 'react';
-import { View, ScrollView, TouchableOpacity, RefreshControl, Dimensions, Alert, Modal, Pressable } from 'react-native';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import { View, ScrollView, TouchableOpacity, RefreshControl, Dimensions, Alert, Modal, FlatList, ActivityIndicator, Animated } from 'react-native';
 import { FontAwesome6 } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
-import * as Clipboard from 'expo-clipboard';
 import { ThemedText } from '@/components/ThemedText';
 import { Screen } from '@/components/Screen';
 import { useTheme } from '@/hooks/useTheme';
 import { useSafeRouter } from '@/hooks/useSafeRouter';
 import { Image } from 'expo-image';
-import { createStyles, createShareMenuStyles } from './styles';
+import { createStyles, createShareSheetStyles } from './styles';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -32,17 +31,30 @@ interface Post {
   isCollected: boolean;
 }
 
+interface Follower {
+  id: number;
+  username: string;
+  avatarUrl: string;
+  bio?: string;
+}
+
 export default function HomeScreen() {
   const { theme, isDark } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
-  const shareMenuStyles = useMemo(() => createShareMenuStyles(theme), [theme]);
+  const shareSheetStyles = useMemo(() => createShareSheetStyles(theme), [theme]);
   const router = useSafeRouter();
   const [activeTab, setActiveTab] = useState<'normal' | 'qa_paid' | 'qa_bounty' | 'product' | 'local'>('normal');
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  const [showShareMenu, setShowShareMenu] = useState(false);
+  
+  // 分享相关状态
+  const [showShareSheet, setShowShareSheet] = useState(false);
   const [sharingPost, setSharingPost] = useState<Post | null>(null);
+  const [followers, setFollowers] = useState<Follower[]>([]);
+  const [loadingFollowers, setLoadingFollowers] = useState(false);
+  const [selectedFollowerIds, setSelectedFollowerIds] = useState<number[]>([]);
+  const [sending, setSending] = useState(false);
 
   const API_BASE_URL = process.env.EXPO_PUBLIC_BACKEND_BASE_URL;
 
@@ -195,120 +207,166 @@ export default function HomeScreen() {
     }
   };
 
-  // 转发（显示分享选项弹窗）
+  // 加载粉丝列表
+  const loadFollowers = useCallback(async () => {
+    if (!currentUserId) return;
+    
+    try {
+      setLoadingFollowers(true);
+      /**
+       * 服务端文件：server/src/routes/social.ts
+       * 接口：GET /api/v1/social/followers/:userId
+       */
+      const response = await fetch(
+        `${API_BASE_URL}/api/v1/social/followers/${currentUserId}`
+      );
+      const data = await response.json();
+
+      if (data.success) {
+        setFollowers(
+          data.list.map((item: any) => ({
+            id: item.id,
+            username: item.username,
+            avatarUrl: item.avatar_url || 'https://i.pravatar.cc/150',
+            bio: item.bio,
+          }))
+        );
+      }
+    } catch (error) {
+      console.error('获取粉丝列表失败:', error);
+    } finally {
+      setLoadingFollowers(false);
+    }
+  }, [API_BASE_URL, currentUserId]);
+
+  // 点击分享按钮 -> 打开底部粉丝列表
   const handleShare = async (post: Post) => {
     if (!currentUserId) {
       Alert.alert('提示', '请先登录');
       return;
     }
     setSharingPost(post);
-    setShowShareMenu(true);
+    setSelectedFollowerIds([]);
+    setShowShareSheet(true);
+    loadFollowers();
   };
 
-  // 分享到微信
-  const handleShareToWechat = async () => {
-    if (!sharingPost) return;
-    setShowShareMenu(false);
+  // 切换选择粉丝
+  const toggleSelectFollower = (id: number) => {
+    setSelectedFollowerIds((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+    );
+  };
 
-    try {
-      // 构建分享内容
-      const shareContent = `【${sharingPost.title || '分享一个帖子'}】\n${sharingPost.content?.substring(0, 100)}${sharingPost.content && sharingPost.content.length > 100 ? '...' : ''}\n\n来自「遇合」App`;
-      
-      // 复制内容到剪贴板
-      await Clipboard.setStringAsync(shareContent);
-      
-      Alert.alert(
-        '分享到微信',
-        '内容已复制到剪贴板\n请打开微信粘贴分享给好友',
-        [
-          { text: '取消', style: 'cancel' },
-          { 
-            text: '已分享成功', 
-            onPress: async () => {
-              // 用户确认分享成功后，记录统计
-              await recordShare('wechat');
-            }
-          }
-        ]
-      );
-    } catch (error) {
-      console.error('分享失败:', error);
-      Alert.alert('错误', '分享失败');
+  // 发送分享给选中的粉丝
+  const handleSendShare = async () => {
+    if (selectedFollowerIds.length === 0) {
+      Alert.alert('提示', '请选择要分享的遇友');
+      return;
     }
-  };
 
-  // 分享到企业微信
-  const handleShareToWework = async () => {
-    if (!sharingPost) return;
-    setShowShareMenu(false);
-
-    try {
-      // 构建分享内容
-      const shareContent = `【${sharingPost.title || '分享一个帖子'}】\n${sharingPost.content?.substring(0, 100)}${sharingPost.content && sharingPost.content.length > 100 ? '...' : ''}\n\n来自「遇合」App`;
-      
-      // 复制内容到剪贴板
-      await Clipboard.setStringAsync(shareContent);
-      
-      Alert.alert(
-        '分享到企业微信',
-        '内容已复制到剪贴板\n请打开企业微信粘贴分享给好友',
-        [
-          { text: '取消', style: 'cancel' },
-          { 
-            text: '已分享成功', 
-            onPress: async () => {
-              // 用户确认分享成功后，记录统计
-              await recordShare('wework');
-            }
-          }
-        ]
-      );
-    } catch (error) {
-      console.error('分享失败:', error);
-      Alert.alert('错误', '分享失败');
-    }
-  };
-
-  // 分享给遇友
-  const handleShareToYuhu = () => {
-    if (!sharingPost) return;
-    setShowShareMenu(false);
-    // 跳转到选择好友页面，分享统计在好友选择页面发送成功后记录
-    router.push('/share-friends', { postId: sharingPost.id.toString() });
-  };
-
-  // 记录分享统计
-  const recordShare = async (shareTo: string) => {
     if (!sharingPost || !currentUserId) return;
 
     try {
-      /**
-       * 服务端文件：server/src/routes/social.ts
-       * 接口：POST /api/v1/social/share
-       * Body 参数：postId: number, userId: number, shareTo?: string
-       */
-      const response = await fetch(`${API_BASE_URL}/api/v1/social/share`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          postId: sharingPost.id,
-          userId: parseInt(currentUserId),
-          shareTo: shareTo
-        }),
-      });
+      setSending(true);
 
-      const data = await response.json();
-      if (data.success) {
-        // 更新帖子分享数
-        setPosts(posts.map(p =>
-          p.id === sharingPost.id
-            ? { ...p, share_count: p.share_count + 1 }
-            : p
-        ));
+      // 批量发送私信
+      let successCount = 0;
+      for (const followerId of selectedFollowerIds) {
+        try {
+          /**
+           * 服务端文件：server/src/routes/social.ts
+           * 接口：POST /api/v1/social/chats
+           * Body 参数：senderId: number, receiverId: number, content: string
+           */
+          const response = await fetch(`${API_BASE_URL}/api/v1/social/chats`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              senderId: parseInt(currentUserId),
+              receiverId: followerId,
+              content: `分享了一个帖子给你：${sharingPost.title || '点击查看'}`,
+            }),
+          });
+          const data = await response.json();
+          if (data.success) {
+            successCount++;
+          }
+        } catch (e) {
+          console.error('发送失败:', e);
+        }
       }
+
+      // 只有发送成功后才记录分享统计
+      if (successCount > 0) {
+        try {
+          /**
+           * 服务端文件：server/src/routes/social.ts
+           * 接口：POST /api/v1/social/share
+           * Body 参数：postId: number, userId: number, shareTo?: string
+           */
+          await fetch(`${API_BASE_URL}/api/v1/social/share`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              postId: sharingPost.id,
+              userId: parseInt(currentUserId),
+              shareTo: 'yuhu'
+            }),
+          });
+
+          // 更新帖子分享数
+          setPosts(posts.map(p =>
+            p.id === sharingPost.id
+              ? { ...p, share_count: p.share_count + 1 }
+              : p
+          ));
+        } catch (e) {
+          console.error('记录分享统计失败:', e);
+        }
+      }
+
+      setShowShareSheet(false);
+      Alert.alert('成功', `已分享给 ${successCount} 位遇友`);
     } catch (error) {
-      console.error('记录分享失败:', error);
+      console.error('分享失败:', error);
+      Alert.alert('错误', '分享失败');
+    } finally {
+      setSending(false);
     }
+  };
+
+  // 渲染粉丝项
+  const renderFollower = ({ item }: { item: Follower }) => {
+    const isSelected = selectedFollowerIds.includes(item.id);
+    return (
+      <TouchableOpacity
+        style={shareSheetStyles.followerItem}
+        onPress={() => toggleSelectFollower(item.id)}
+      >
+        <Image source={{ uri: item.avatarUrl }} style={shareSheetStyles.followerAvatar} />
+        <View style={shareSheetStyles.followerInfo}>
+          <ThemedText variant="bodyMedium" color={theme.textPrimary}>
+            {item.username}
+          </ThemedText>
+          {item.bio && (
+            <ThemedText variant="caption" color={theme.textMuted} numberOfLines={1}>
+              {item.bio}
+            </ThemedText>
+          )}
+        </View>
+        <View
+          style={[
+            shareSheetStyles.checkbox,
+            isSelected && shareSheetStyles.checkboxSelected,
+          ]}
+        >
+          {isSelected && (
+            <FontAwesome6 name="check" size={14} color={theme.buttonPrimaryText} />
+          )}
+        </View>
+      </TouchableOpacity>
+    );
   };
 
   // 渲染帖子卡片
@@ -470,49 +528,75 @@ export default function HomeScreen() {
         )}
       </ScrollView>
 
-      {/* 分享选项弹窗 */}
+      {/* 底部粉丝列表弹窗 */}
       <Modal
-        visible={showShareMenu}
+        visible={showShareSheet}
         transparent
-        animationType="fade"
-        onRequestClose={() => setShowShareMenu(false)}
+        animationType="slide"
+        onRequestClose={() => setShowShareSheet(false)}
       >
-        <Pressable style={shareMenuStyles.menuOverlay} onPress={() => setShowShareMenu(false)}>
-          <View style={shareMenuStyles.menuContainer}>
-            {/* 分享给遇友 */}
-            <TouchableOpacity
-              style={shareMenuStyles.menuItem}
-              onPress={handleShareToYuhu}
-            >
-              <View style={[shareMenuStyles.menuIconWrap, { backgroundColor: 'rgba(56, 189, 248, 0.1)' }]}>
-                <FontAwesome6 name="user-group" size={18} color="#38BDF8" />
-              </View>
-              <ThemedText variant="body" color={theme.textPrimary}>分享给遇友</ThemedText>
-            </TouchableOpacity>
+        <TouchableOpacity 
+          style={shareSheetStyles.overlay} 
+          activeOpacity={1}
+          onPress={() => setShowShareSheet(false)}
+        >
+          <TouchableOpacity 
+            style={shareSheetStyles.sheetContainer}
+            activeOpacity={1}
+            onPress={() => {}}
+          >
+            {/* 标题栏 */}
+            <View style={shareSheetStyles.sheetHeader}>
+              <TouchableOpacity onPress={() => setShowShareSheet(false)}>
+                <FontAwesome6 name="xmark" size={20} color={theme.textSecondary} />
+              </TouchableOpacity>
+              <ThemedText variant="bodyMedium" color={theme.textPrimary}>
+                分享给遇友
+              </ThemedText>
+              <TouchableOpacity
+                style={[
+                  shareSheetStyles.sendButton, 
+                  selectedFollowerIds.length === 0 && shareSheetStyles.sendButtonDisabled
+                ]}
+                onPress={handleSendShare}
+                disabled={selectedFollowerIds.length === 0 || sending}
+              >
+                {sending ? (
+                  <ActivityIndicator size="small" color={theme.buttonPrimaryText} />
+                ) : (
+                  <ThemedText
+                    variant="smallMedium"
+                    color={selectedFollowerIds.length > 0 ? theme.buttonPrimaryText : theme.textMuted}
+                  >
+                    发送({selectedFollowerIds.length})
+                  </ThemedText>
+                )}
+              </TouchableOpacity>
+            </View>
 
-            {/* 微信 */}
-            <TouchableOpacity
-              style={shareMenuStyles.menuItem}
-              onPress={handleShareToWechat}
-            >
-              <View style={[shareMenuStyles.menuIconWrap, { backgroundColor: 'rgba(7, 193, 96, 0.1)' }]}>
-                <FontAwesome6 name="weixin" size={18} color="#07C160" brand />
+            {/* 粉丝列表 */}
+            {loadingFollowers ? (
+              <View style={shareSheetStyles.loadingContainer}>
+                <ActivityIndicator size="large" color={theme.primary} />
               </View>
-              <ThemedText variant="body" color={theme.textPrimary}>微信</ThemedText>
-            </TouchableOpacity>
-
-            {/* 企业微信 */}
-            <TouchableOpacity
-              style={shareMenuStyles.menuItem}
-              onPress={handleShareToWework}
-            >
-              <View style={[shareMenuStyles.menuIconWrap, { backgroundColor: 'rgba(43, 126, 255, 0.1)' }]}>
-                <FontAwesome6 name="weixin" size={18} color="#2B7EFF" brand />
+            ) : followers.length === 0 ? (
+              <View style={shareSheetStyles.emptyContainer}>
+                <FontAwesome6 name="users" size={48} color={theme.textMuted} />
+                <ThemedText variant="body" color={theme.textMuted} style={{ marginTop: 12 }}>
+                  暂无粉丝，快去让更多人关注你吧
+                </ThemedText>
               </View>
-              <ThemedText variant="body" color={theme.textPrimary}>企业微信</ThemedText>
-            </TouchableOpacity>
-          </View>
-        </Pressable>
+            ) : (
+              <FlatList
+                data={followers}
+                renderItem={renderFollower}
+                keyExtractor={(item) => item.id.toString()}
+                contentContainerStyle={shareSheetStyles.listContent}
+                showsVerticalScrollIndicator={false}
+              />
+            )}
+          </TouchableOpacity>
+        </TouchableOpacity>
       </Modal>
     </Screen>
   );
