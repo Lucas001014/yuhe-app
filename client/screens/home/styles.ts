@@ -1,5 +1,5 @@
 import { StyleSheet } from 'react-native';
-import { Theme } from '@/constants/theme';
+import { Theme, Spacing, BorderRadius } from '@/constants/theme';
 import { Dimensions } from 'react-native';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -248,5 +248,40 @@ export const createStyles = (theme: Theme, width?: number) => StyleSheet.create(
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 18,
+  },
+});
+
+// 分享菜单样式
+export const createShareMenuStyles = (theme: Theme) => StyleSheet.create({
+  menuOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  menuContainer: {
+    backgroundColor: theme.backgroundDefault,
+    borderRadius: BorderRadius.lg,
+    paddingVertical: Spacing.sm,
+    minWidth: 200,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.md,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
+  },
+  menuIconWrap: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

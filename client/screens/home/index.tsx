@@ -1,13 +1,14 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { View, ScrollView, TouchableOpacity, RefreshControl, Dimensions, Alert } from 'react-native';
+import { View, ScrollView, TouchableOpacity, RefreshControl, Dimensions, Alert, Modal, Pressable } from 'react-native';
 import { FontAwesome6 } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
+import * as Clipboard from 'expo-clipboard';
 import { ThemedText } from '@/components/ThemedText';
 import { Screen } from '@/components/Screen';
 import { useTheme } from '@/hooks/useTheme';
 import { useSafeRouter } from '@/hooks/useSafeRouter';
 import { Image } from 'expo-image';
-import { createStyles } from './styles';
+import { createStyles, createShareMenuStyles } from './styles';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -34,11 +35,14 @@ interface Post {
 export default function HomeScreen() {
   const { theme, isDark } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
+  const shareMenuStyles = useMemo(() => createShareMenuStyles(theme), [theme]);
   const router = useSafeRouter();
   const [activeTab, setActiveTab] = useState<'normal' | 'qa_paid' | 'qa_bounty' | 'product' | 'local'>('normal');
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [showShareMenu, setShowShareMenu] = useState(false);
+  const [sharingPost, setSharingPost] = useState<Post | null>(null);
 
   const API_BASE_URL = process.env.EXPO_PUBLIC_BACKEND_BASE_URL;
 
@@ -191,12 +195,91 @@ export default function HomeScreen() {
     }
   };
 
-  // 转发
+  // 转发（显示分享选项弹窗）
   const handleShare = async (post: Post) => {
     if (!currentUserId) {
       Alert.alert('提示', '请先登录');
       return;
     }
+    setSharingPost(post);
+    setShowShareMenu(true);
+  };
+
+  // 分享到微信
+  const handleShareToWechat = async () => {
+    if (!sharingPost) return;
+    setShowShareMenu(false);
+
+    try {
+      // 构建分享内容
+      const shareContent = `【${sharingPost.title || '分享一个帖子'}】\n${sharingPost.content?.substring(0, 100)}${sharingPost.content && sharingPost.content.length > 100 ? '...' : ''}\n\n来自「遇合」App`;
+      
+      // 复制内容到剪贴板
+      await Clipboard.setStringAsync(shareContent);
+      
+      Alert.alert(
+        '分享到微信',
+        '内容已复制到剪贴板\n请打开微信粘贴分享给好友',
+        [
+          { text: '取消', style: 'cancel' },
+          { 
+            text: '已分享成功', 
+            onPress: async () => {
+              // 用户确认分享成功后，记录统计
+              await recordShare('wechat');
+            }
+          }
+        ]
+      );
+    } catch (error) {
+      console.error('分享失败:', error);
+      Alert.alert('错误', '分享失败');
+    }
+  };
+
+  // 分享到企业微信
+  const handleShareToWework = async () => {
+    if (!sharingPost) return;
+    setShowShareMenu(false);
+
+    try {
+      // 构建分享内容
+      const shareContent = `【${sharingPost.title || '分享一个帖子'}】\n${sharingPost.content?.substring(0, 100)}${sharingPost.content && sharingPost.content.length > 100 ? '...' : ''}\n\n来自「遇合」App`;
+      
+      // 复制内容到剪贴板
+      await Clipboard.setStringAsync(shareContent);
+      
+      Alert.alert(
+        '分享到企业微信',
+        '内容已复制到剪贴板\n请打开企业微信粘贴分享给好友',
+        [
+          { text: '取消', style: 'cancel' },
+          { 
+            text: '已分享成功', 
+            onPress: async () => {
+              // 用户确认分享成功后，记录统计
+              await recordShare('wework');
+            }
+          }
+        ]
+      );
+    } catch (error) {
+      console.error('分享失败:', error);
+      Alert.alert('错误', '分享失败');
+    }
+  };
+
+  // 分享给遇友
+  const handleShareToYuhu = () => {
+    if (!sharingPost) return;
+    setShowShareMenu(false);
+    // 跳转到选择好友页面，分享统计在好友选择页面发送成功后记录
+    router.push('/share-friends', { postId: sharingPost.id.toString() });
+  };
+
+  // 记录分享统计
+  const recordShare = async (shareTo: string) => {
+    if (!sharingPost || !currentUserId) return;
 
     try {
       /**
@@ -208,23 +291,23 @@ export default function HomeScreen() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          postId: post.id,
+          postId: sharingPost.id,
           userId: parseInt(currentUserId),
-          shareTo: 'timeline'
+          shareTo: shareTo
         }),
       });
 
       const data = await response.json();
       if (data.success) {
-        Alert.alert('成功', '转发成功');
+        // 更新帖子分享数
         setPosts(posts.map(p =>
-          p.id === post.id
+          p.id === sharingPost.id
             ? { ...p, share_count: p.share_count + 1 }
             : p
         ));
       }
     } catch (error) {
-      console.error('转发失败:', error);
+      console.error('记录分享失败:', error);
     }
   };
 
@@ -386,6 +469,51 @@ export default function HomeScreen() {
           </View>
         )}
       </ScrollView>
+
+      {/* 分享选项弹窗 */}
+      <Modal
+        visible={showShareMenu}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowShareMenu(false)}
+      >
+        <Pressable style={shareMenuStyles.menuOverlay} onPress={() => setShowShareMenu(false)}>
+          <View style={shareMenuStyles.menuContainer}>
+            {/* 分享给遇友 */}
+            <TouchableOpacity
+              style={shareMenuStyles.menuItem}
+              onPress={handleShareToYuhu}
+            >
+              <View style={[shareMenuStyles.menuIconWrap, { backgroundColor: 'rgba(56, 189, 248, 0.1)' }]}>
+                <FontAwesome6 name="user-group" size={18} color="#38BDF8" />
+              </View>
+              <ThemedText variant="body" color={theme.textPrimary}>分享给遇友</ThemedText>
+            </TouchableOpacity>
+
+            {/* 微信 */}
+            <TouchableOpacity
+              style={shareMenuStyles.menuItem}
+              onPress={handleShareToWechat}
+            >
+              <View style={[shareMenuStyles.menuIconWrap, { backgroundColor: 'rgba(7, 193, 96, 0.1)' }]}>
+                <FontAwesome6 name="weixin" size={18} color="#07C160" brand />
+              </View>
+              <ThemedText variant="body" color={theme.textPrimary}>微信</ThemedText>
+            </TouchableOpacity>
+
+            {/* 企业微信 */}
+            <TouchableOpacity
+              style={shareMenuStyles.menuItem}
+              onPress={handleShareToWework}
+            >
+              <View style={[shareMenuStyles.menuIconWrap, { backgroundColor: 'rgba(43, 126, 255, 0.1)' }]}>
+                <FontAwesome6 name="weixin" size={18} color="#2B7EFF" brand />
+              </View>
+              <ThemedText variant="body" color={theme.textPrimary}>企业微信</ThemedText>
+            </TouchableOpacity>
+          </View>
+        </Pressable>
+      </Modal>
     </Screen>
   );
 }
