@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { View, FlatList, TouchableOpacity, RefreshControl, Alert } from 'react-native';
+import { View, FlatList, TouchableOpacity, RefreshControl, Alert, ScrollView } from 'react-native';
 import { FontAwesome6 } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
 import { ThemedText } from '@/components/ThemedText';
@@ -33,6 +33,17 @@ interface Chat {
   unreadCount: number;
 }
 
+// 通知筛选类型
+type NotificationFilter = 'all' | 'comment' | 'share' | 'like' | 'follow' | 'collect';
+const FILTER_OPTIONS: { key: NotificationFilter; label: string }[] = [
+  { key: 'all', label: '全部' },
+  { key: 'comment', label: '评论' },
+  { key: 'share', label: '转发' },
+  { key: 'like', label: '点赞' },
+  { key: 'follow', label: '关注' },
+  { key: 'collect', label: '收藏' },
+];
+
 export default function MessagesScreen() {
   const { theme, isDark } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
@@ -47,9 +58,18 @@ export default function MessagesScreen() {
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [currentTab, setCurrentTab] = useState<'notifications' | 'chats'>('notifications');
+  const [notificationFilter, setNotificationFilter] = useState<NotificationFilter>('all');
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   const API_BASE_URL = process.env.EXPO_PUBLIC_BACKEND_BASE_URL;
+
+  // 根据筛选条件过滤通知
+  const filteredNotifications = useMemo(() => {
+    if (notificationFilter === 'all') {
+      return notifications;
+    }
+    return notifications.filter(n => n.type === notificationFilter);
+  }, [notifications, notificationFilter]);
 
   // 加载数据
   const loadData = useCallback(async () => {
@@ -315,10 +335,33 @@ export default function MessagesScreen() {
         </TouchableOpacity>
       </View>
 
+      {/* 通知筛选Tab - 仅在通知Tab下显示 */}
+      {currentTab === 'notifications' && (
+        <View style={styles.filterContainer}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterScrollContent}>
+            {FILTER_OPTIONS.map((filter) => (
+              <TouchableOpacity
+                key={filter.key}
+                style={[styles.filterItem, notificationFilter === filter.key && styles.filterItemActive]}
+                onPress={() => setNotificationFilter(filter.key)}
+              >
+                <ThemedText
+                  variant="small"
+                  color={notificationFilter === filter.key ? theme.buttonPrimaryText : theme.textSecondary}
+                  style={{ fontWeight: notificationFilter === filter.key ? '600' : '400' }}
+                >
+                  {filter.label}
+                </ThemedText>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+      )}
+
       {/* 列表 */}
       {currentTab === 'notifications' ? (
         <FlatList
-          data={notifications}
+          data={filteredNotifications}
           renderItem={renderNotification}
           keyExtractor={(item) => item.id.toString()}
           contentContainerStyle={styles.messagesList}
@@ -327,7 +370,7 @@ export default function MessagesScreen() {
             <View style={styles.emptyContainer}>
               <FontAwesome6 name="bell-slash" size={48} color={theme.textMuted} />
               <ThemedText variant="body" color={theme.textMuted} style={styles.emptyText}>
-                暂无通知
+                {notificationFilter === 'all' ? '暂无通知' : `暂无${FILTER_OPTIONS.find(f => f.key === notificationFilter)?.label || ''}通知`}
               </ThemedText>
             </View>
           }

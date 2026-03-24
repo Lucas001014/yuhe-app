@@ -26,6 +26,27 @@ export const createStyles = (theme: Theme) => {
       borderBottomWidth: 2,
       borderBottomColor: theme.primary,
     },
+    // 通知筛选样式
+    filterContainer: {
+      backgroundColor: theme.backgroundDefault,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.borderLight,
+    },
+    filterScrollContent: {
+      paddingHorizontal: Spacing.lg,
+      paddingVertical: Spacing.sm,
+      gap: Spacing.sm,
+    },
+    filterItem: {
+      paddingHorizontal: Spacing.lg,
+      paddingVertical: Spacing.sm,
+      borderRadius: BorderRadius.full,
+      backgroundColor: theme.backgroundTertiary,
+      marginRight: Spacing.sm,
+    },
+    filterItemActive: {
+      backgroundColor: theme.primary,
+    },
     scrollContent: {
       flexGrow: 1,
     },
