@@ -6,7 +6,7 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { Screen } from '@/components/Screen';
 import { useTheme } from '@/hooks/useTheme';
-import { useSafeRouter } from '@/hooks/useSafeRouter';
+import { useSafeRouter, useSafeSearchParams } from '@/hooks/useSafeRouter';
 import { createStyles } from './styles';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Image } from 'expo-image';
@@ -23,12 +23,19 @@ export default function FollowListScreen() {
   const { theme, isDark } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const router = useSafeRouter();
+  const params = useSafeSearchParams<{ type?: string }>();
 
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState<'followers' | 'following'>('followers');
+  // 从路由参数获取初始Tab，默认为 'followers'
+  const [activeTab, setActiveTab] = useState<'followers' | 'following'>(
+    params.type === 'following' ? 'following' : 'followers'
+  );
 
   const API_BASE_URL = process.env.EXPO_PUBLIC_BACKEND_BASE_URL;
+
+  // 固定标题，根据初始进入状态决定
+  const pageTitle = params.type === 'following' ? '我的关注' : '我的粉丝';
 
   // 加载用户列表
   const loadUsers = async () => {
@@ -93,7 +100,7 @@ export default function FollowListScreen() {
           <FontAwesome6 name="arrow-left" size={20} color={theme.textPrimary} />
         </TouchableOpacity>
         <ThemedText variant="h3" color={theme.textPrimary}>
-          {activeTab === 'followers' ? '我的粉丝' : '我的关注'}
+          {pageTitle}
         </ThemedText>
         <View style={{ width: 20 }} />
       </View>
@@ -106,7 +113,7 @@ export default function FollowListScreen() {
         >
           <ThemedText
             variant="bodyMedium"
-            color={activeTab === 'followers' ? theme.buttonPrimaryText : theme.textSecondary}
+            color={theme.textPrimary}
           >
             粉丝
           </ThemedText>
@@ -117,7 +124,7 @@ export default function FollowListScreen() {
         >
           <ThemedText
             variant="bodyMedium"
-            color={activeTab === 'following' ? theme.buttonPrimaryText : theme.textSecondary}
+            color={theme.textPrimary}
           >
             关注
           </ThemedText>
