@@ -462,6 +462,12 @@ export default function ProfileScreen() {
           <ThemedText variant="small" color={theme.textPrimary} numberOfLines={2} style={{ fontWeight: '500' }}>
             {post.title}
           </ThemedText>
+          {/* 显示内容预览 */}
+          {post.content && (
+            <ThemedText variant="caption" color={theme.textMuted} numberOfLines={2} style={{ marginTop: 4 }}>
+              {post.content}
+            </ThemedText>
+          )}
           {post.isDraft && (
             <View style={styles.draftTag}>
               <ThemedText variant="caption" color="#FFFFFF">草稿</ThemedText>
@@ -484,6 +490,10 @@ export default function ProfileScreen() {
             <View style={styles.masonryStatItem}>
               <FontAwesome6 name="comment" size={10} color={theme.textMuted} />
               <ThemedText variant="caption" color={theme.textMuted}>{post.comment_count}</ThemedText>
+            </View>
+            <View style={styles.masonryStatItem}>
+              <FontAwesome6 name="share-nodes" size={10} color={theme.textMuted} />
+              <ThemedText variant="caption" color={theme.textMuted}>{post.share_count || 0}</ThemedText>
             </View>
           </View>
         </View>
