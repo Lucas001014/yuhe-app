@@ -248,38 +248,52 @@ export const createStyles = (theme: Theme) => {
       backgroundColor: SKY_BLUE,
     },
     contentList: {
-      padding: Spacing.lg,
+      paddingHorizontal: Spacing.lg,
+      paddingVertical: Spacing.md,
     },
-    projectGrid: {
+    // 瀑布流布局样式
+    masonryContainer: {
       flexDirection: 'row',
-      flexWrap: 'wrap',
-      gap: Spacing.md,
+      gap: Spacing.sm,
     },
-    projectCard: {
-      width: (SCREEN_WIDTH - Spacing.lg * 2 - Spacing.md) / 2,
+    masonryColumn: {
+      flex: 1,
+      gap: Spacing.sm,
+    },
+    masonryCard: {
       backgroundColor: '#FFFFFF',
       borderRadius: BorderRadius.lg,
       overflow: 'hidden',
       borderWidth: 1,
       borderColor: '#F3F4F6',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.05,
+      shadowRadius: 8,
+      elevation: 2,
     },
-    projectCover: {
+    masonryImage: {
       width: '100%',
-      height: 100,
       backgroundColor: '#F3F4F6',
     },
-    projectInfo: {
+    masonryTextOnly: {
+      padding: Spacing.md,
+      backgroundColor: '#F9FAFB',
+      minHeight: 80,
+      justifyContent: 'center',
+    },
+    masonryFooter: {
       padding: Spacing.sm,
     },
-    projectStats: {
+    masonryStats: {
       flexDirection: 'row',
-      gap: Spacing.md,
+      gap: Spacing.sm,
       marginTop: Spacing.xs,
     },
-    projectStatItem: {
+    masonryStatItem: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 4,
+      gap: 3,
     },
     emptyContent: {
       alignItems: 'center',

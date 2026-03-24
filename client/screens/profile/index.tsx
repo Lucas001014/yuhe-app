@@ -17,6 +17,37 @@ import AvatarCropPreview from '@/components/AvatarCropPreview';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
+// 瀑布流布局常量
+const PADDING = 16;
+const GAP = 8;
+const COLUMNS = 2;
+const COLUMN_WIDTH = (SCREEN_WIDTH - PADDING * 2 - GAP * (COLUMNS - 1)) / COLUMNS;
+
+// 生成随机宽高比 (0.5~2.0)
+const generateAspectRatio = (): number => {
+  return 0.5 + Math.random() * 1.5;
+};
+
+// 贪心分配算法
+const distributeItems = (items: Post[], columnWidth: number) => {
+  const FOOTER_HEIGHT = 100;
+  const TEXT_ONLY_HEIGHT = 60;
+  const columnArrays: Post[][] = Array.from({ length: 2 }, () => []);
+  const columnHeights: number[] = [0, 0];
+
+  items.forEach((item) => {
+    const hasImage = item.images && item.images.length > 0;
+    const imgHeight = hasImage ? columnWidth / item.aspectRatio : 0;
+    const totalItemHeight = imgHeight + FOOTER_HEIGHT + (hasImage ? 0 : TEXT_ONLY_HEIGHT);
+
+    const shortestIndex = columnHeights[0] <= columnHeights[1] ? 0 : 1;
+    columnArrays[shortestIndex].push(item);
+    columnHeights[shortestIndex] += totalItemHeight;
+  });
+
+  return columnArrays;
+};
+
 interface UserInfo {
   id: number;
   username: string;
@@ -42,15 +73,20 @@ interface Post {
   content: string;
   images: string[];
   cover?: string;
+  aspectRatio: number;
+  author_id?: number;
+  author_username?: string;
+  author_avatar?: string;
+  tags?: string[];
   view_count: number;
   like_count: number;
   comment_count: number;
-  author_username?: string;
-  author_avatar?: string;
+  share_count?: number;
   created_at: string;
   interactedAt?: string;
   commentContent?: string;
   isDraft?: boolean;
+  isLiked?: boolean;
 }
 
 export default function ProfileScreen() {
@@ -197,6 +233,11 @@ export default function ProfileScreen() {
           interactedAt: p.interactedAt,
           commentContent: p.commentContent,
           isDraft: p.isDraft || p.status === 'draft',
+          aspectRatio: p.aspect_ratio || generateAspectRatio(),
+          author_id: p.author_id,
+          tags: p.tags || [],
+          share_count: p.share_count || 0,
+          isLiked: p.isLiked || false,
         }));
         setContentPosts(posts);
       } else {
@@ -389,48 +430,66 @@ export default function ProfileScreen() {
     ? [{ icon: 'shield-halved', name: '管理后台', key: 'admin' }] 
     : [];
 
-  // 渲染内容帖子卡片
-  const renderContentPost = (post: Post) => (
-    <TouchableOpacity 
-      key={post.id} 
-      style={styles.projectCard} 
-      activeOpacity={0.85}
-      onPress={() => handlePostPress(post)}
-    >
-      <Image source={{ uri: post.cover }} style={styles.projectCover} contentFit="cover" />
-      <View style={styles.projectInfo}>
-        <ThemedText variant="body" color={theme.textPrimary} numberOfLines={2} style={{ fontWeight: '500' }}>
-          {post.title}
-        </ThemedText>
-        {/* 草稿标签 */}
-        {post.isDraft && (
-          <View style={styles.draftTag}>
-            <ThemedText variant="caption" color="#FFFFFF">草稿</ThemedText>
+  // 渲染瀑布流卡片
+  const renderMasonryCard = (post: Post, columnWidth: number) => {
+    const hasImage = post.images && post.images.length > 0;
+    const imgHeight = hasImage ? columnWidth / (post.aspectRatio || 1) : 0;
+    
+    return (
+      <TouchableOpacity 
+        key={post.id} 
+        style={[
+          styles.masonryCard, 
+          { width: columnWidth }
+        ]} 
+        activeOpacity={0.85}
+        onPress={() => handlePostPress(post)}
+      >
+        {hasImage ? (
+          <Image 
+            source={{ uri: post.cover }} 
+            style={[styles.masonryImage, { height: imgHeight }]} 
+            contentFit="cover" 
+          />
+        ) : (
+          <View style={styles.masonryTextOnly}>
+            <ThemedText variant="body" color={theme.textPrimary} numberOfLines={4} style={{ fontWeight: '500' }}>
+              {post.title}
+            </ThemedText>
           </View>
         )}
-        {/* 评论内容预览 */}
-        {post.commentContent && (
-          <ThemedText variant="caption" color={theme.textMuted} numberOfLines={1} style={{ marginTop: 4 }}>
-            评论: {post.commentContent}
+        <View style={styles.masonryFooter}>
+          <ThemedText variant="small" color={theme.textPrimary} numberOfLines={2} style={{ fontWeight: '500' }}>
+            {post.title}
           </ThemedText>
-        )}
-        <View style={styles.projectStats}>
-          <View style={styles.projectStatItem}>
-            <FontAwesome6 name="eye" size={11} color={theme.textMuted} />
-            <ThemedText variant="caption" color={theme.textMuted}>{post.view_count}</ThemedText>
-          </View>
-          <View style={styles.projectStatItem}>
-            <FontAwesome6 name="heart" size={11} color={theme.textMuted} />
-            <ThemedText variant="caption" color={theme.textMuted}>{post.like_count}</ThemedText>
-          </View>
-          <View style={styles.projectStatItem}>
-            <FontAwesome6 name="comment" size={11} color={theme.textMuted} />
-            <ThemedText variant="caption" color={theme.textMuted}>{post.comment_count}</ThemedText>
+          {post.isDraft && (
+            <View style={styles.draftTag}>
+              <ThemedText variant="caption" color="#FFFFFF">草稿</ThemedText>
+            </View>
+          )}
+          {post.commentContent && (
+            <ThemedText variant="caption" color={theme.textMuted} numberOfLines={1} style={{ marginTop: 2 }}>
+              评论: {post.commentContent}
+            </ThemedText>
+          )}
+          <View style={styles.masonryStats}>
+            <View style={styles.masonryStatItem}>
+              <FontAwesome6 name="eye" size={10} color={theme.textMuted} />
+              <ThemedText variant="caption" color={theme.textMuted}>{post.view_count}</ThemedText>
+            </View>
+            <View style={styles.masonryStatItem}>
+              <FontAwesome6 name="heart" size={10} color={theme.textMuted} />
+              <ThemedText variant="caption" color={theme.textMuted}>{post.like_count}</ThemedText>
+            </View>
+            <View style={styles.masonryStatItem}>
+              <FontAwesome6 name="comment" size={10} color={theme.textMuted} />
+              <ThemedText variant="caption" color={theme.textMuted}>{post.comment_count}</ThemedText>
+            </View>
           </View>
         </View>
-      </View>
-    </TouchableOpacity>
-  );
+      </TouchableOpacity>
+    );
+  };
 
   return (
     <Screen backgroundColor="#FFFFFF" statusBarStyle="dark">
@@ -679,10 +738,14 @@ export default function ProfileScreen() {
           <View style={styles.contentList}>
             {activeTab === 0 ? (
               <>
-                {/* 帖子卡片网格 */}
+                {/* 瀑布流布局 */}
                 {contentPosts.length > 0 ? (
-                  <View style={styles.projectGrid}>
-                    {contentPosts.map((post) => renderContentPost(post))}
+                  <View style={styles.masonryContainer}>
+                    {distributeItems(contentPosts, COLUMN_WIDTH).map((column, colIndex) => (
+                      <View key={colIndex} style={styles.masonryColumn}>
+                        {column.map((post) => renderMasonryCard(post, COLUMN_WIDTH))}
+                      </View>
+                    ))}
                   </View>
                 ) : (
                   <View style={styles.emptyContent}>
