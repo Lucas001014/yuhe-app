@@ -45,39 +45,39 @@ jobs:
           # 启动构建并等待完成（使用 preview profile）
           eas build --platform android --profile preview --non-interactive --wait
           
-          # 获取最新构建的ID和下载URL
+          # 获取最新构建的ID
           BUILD_INFO=$(eas build:list --platform android --limit 1 --json)
           BUILD_ID=$(echo "$BUILD_INFO" | python3 -c "import sys,json; data=json.load(sys.stdin); print(data[0]['id'] if data else '')")
-          BUILD_URL=$(echo "$BUILD_INFO" | python3 -c "import sys,json; data=json.load(sys.stdin); print(data[0].get('artifacts', {}).get('buildUrl', '') if data else '')")
           
           echo "Build ID: $BUILD_ID"
-          echo "Build URL: $BUILD_URL"
           echo "build_id=$BUILD_ID" >> $GITHUB_OUTPUT
           
-          # 下载APK (使用 curl 从构建URL下载)
-          echo "Downloading APK..."
-          if [ -n "$BUILD_URL" ]; then
-            curl -L -o yuhe.apk "$BUILD_URL"
-          else
-            # 备用方案：使用 eas build:download
-            eas build:download "$BUILD_ID" --output yuhe.apk
-          fi
+          # 使用 eas build:download 下载 APK（更可靠）
+          echo "Downloading APK using eas build:download..."
+          eas build:download "$BUILD_ID" --output yuhe.apk
           
           # 验证APK文件
           echo "Verifying APK..."
           ls -la yuhe.apk
-          file yuhe.apk || true
+          APK_SIZE=$(stat -c%s yuhe.apk 2>/dev/null || stat -f%z yuhe.apk 2>/dev/null || echo "0")
+          echo "APK size: $APK_SIZE bytes"
           
-          # 检查APK是否有效（应该是一个ZIP文件）
-          if command -v unzip &> /dev/null; then
-            unzip -t yuhe.apk 2>&1 | head -20 || echo "APK验证失败"
+          if [ "$APK_SIZE" -lt 10000000 ]; then
+            echo "警告: APK 文件太小 ($APK_SIZE bytes)，可能下载失败"
+            echo "尝试备用下载方式..."
+            # 从构建详情获取下载链接
+            BUILD_URL=$(echo "$BUILD_INFO" | python3 -c "import sys,json; data=json.load(sys.stdin); print(data[0].get('artifacts', {}).get('buildUrl', '') if data else '')")
+            echo "Build URL: $BUILD_URL"
+            if [ -n "$BUILD_URL" ]; then
+              curl -L -o yuhe.apk "$BUILD_URL"
+              ls -la yuhe.apk
+            fi
           fi
           
           # 获取版本信息
           VERSION=$(grep -oP '"version":\s*"\K[^"]+' app.config.ts | head -1 || echo "1.0.0")
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "App version: $VERSION"
-          echo "APK size: $(du -h yuhe.apk | cut -f1)"
           pwd
 
       - name: Create GitHub Release
