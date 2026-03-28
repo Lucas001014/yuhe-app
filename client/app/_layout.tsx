@@ -49,6 +49,7 @@ export default function RootLayout() {
             <Stack.Screen name="user-agreement" options={{ title: "用户协议" }} />
             <Stack.Screen name="privacy-policy" options={{ title: "隐私政策" }} />
             <Stack.Screen name="phone-binding" options={{ title: "绑定手机号" }} />
+            <Stack.Screen name="set-password" options={{ title: "设置密码" }} />
             <Stack.Screen name="share-friends" options={{ title: "分享给遇友" }} />
           </Stack>
           <Toast />

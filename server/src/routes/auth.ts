@@ -131,6 +131,61 @@ router.post('/send-code', async (req, res) => {
 });
 
 /**
+ * 验证验证码
+ * POST /api/v1/auth/verify-code
+ * Body: { phone: string, code: string }
+ */
+router.post('/verify-code', async (req, res) => {
+  const { phone, code } = req.body;
+
+  if (!phone || !code) {
+    return res.status(400).json({ error: '手机号和验证码不能为空' });
+  }
+
+  // 验证手机号格式
+  const phoneRegex = /^1[3-9]\d{9}$/;
+  if (!phoneRegex.test(phone)) {
+    return res.status(400).json({ error: '手机号格式不正确' });
+  }
+
+  // 验证验证码
+  const storedCode = verificationCodes.get(phone);
+  if (!storedCode) {
+    return res.status(400).json({ error: '验证码不存在或已过期，请重新获取' });
+  }
+
+  if (storedCode.code !== code) {
+    return res.status(400).json({ error: '验证码不正确' });
+  }
+
+  if (Date.now() > storedCode.expiresAt) {
+    verificationCodes.delete(phone);
+    return res.status(400).json({ error: '验证码已过期，请重新获取' });
+  }
+
+  // 检查用户是否已存在
+  try {
+    const existingUser = await (req as any).db.query(
+      'SELECT id FROM users WHERE phone = $1',
+      [phone]
+    );
+
+    if (existingUser.rows.length > 0) {
+      return res.status(400).json({ error: '该手机号已注册，请直接登录' });
+    }
+  } catch (error) {
+    console.error('检查用户失败:', error);
+    return res.status(500).json({ error: '服务器错误' });
+  }
+
+  // 验证通过，返回成功（不删除验证码，注册时还会用到）
+  res.json({
+    success: true,
+    message: '验证码验证通过'
+  });
+});
+
+/**
  * 验证密码强度
  * 要求：不低于8位，至少包含数字和字母两种组合
  */

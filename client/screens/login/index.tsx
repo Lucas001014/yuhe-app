@@ -2,41 +2,12 @@ import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { View, TextInput, TouchableOpacity, Alert, KeyboardAvoidingView, Platform, ActivityIndicator, ScrollView } from 'react-native';
 import { FontAwesome6 } from '@expo/vector-icons';
 import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
 import { Screen } from '@/components/Screen';
 import { useTheme } from '@/hooks/useTheme';
 import { useSafeRouter } from '@/hooks/useSafeRouter';
 import { createStyles } from './styles';
 import { useAuth } from '@/contexts/AuthContext';
 import { weChatLogin, initWeChat, isWeChatInstalled, isWeChatAvailable } from '@/services/wechat';
-
-/**
- * 验证密码强度
- * 要求：不低于8位，至少包含数字和字母两种组合
- */
-function validatePassword(password: string): { valid: boolean; message: string; strength: 'weak' | 'medium' | 'strong' } {
-  if (password.length === 0) {
-    return { valid: false, message: '', strength: 'weak' };
-  }
-  
-  if (password.length < 8) {
-    return { valid: false, message: '密码长度不能低于8位', strength: 'weak' };
-  }
-  
-  const hasLetter = /[a-zA-Z]/.test(password);
-  const hasNumber = /[0-9]/.test(password);
-  const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(password);
-  
-  if (!hasLetter || !hasNumber) {
-    return { valid: false, message: '密码至少需要包含数字和字母', strength: 'medium' };
-  }
-  
-  if (hasSpecial && password.length >= 10) {
-    return { valid: true, message: '密码强度：强', strength: 'strong' };
-  }
-  
-  return { valid: true, message: '密码强度符合要求', strength: 'medium' };
-}
 
 export default function LoginScreen() {
   const { theme, isDark } = useTheme();
@@ -49,14 +20,12 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
+  const [verifyLoading, setVerifyLoading] = useState(false);
   const [wechatLoading, setWechatLoading] = useState(false);
   const [wechatInstalled, setWechatInstalled] = useState(true);
   const [countdown, setCountdown] = useState(0);
 
   const API_BASE_URL = process.env.EXPO_PUBLIC_BACKEND_BASE_URL;
-
-  // 密码强度验证
-  const passwordValidation = useMemo(() => validatePassword(password), [password]);
 
   // 初始化微信SDK
   useEffect(() => {
@@ -120,13 +89,69 @@ export default function LoginScreen() {
       if (data.success) {
         setCountdown(60);
         Alert.alert('成功', '验证码已发送');
+        // 开发环境显示验证码
+        if (data.devCode) {
+          console.log('验证码:', data.devCode);
+        }
       } else {
         Alert.alert('失败', data.error || '发送失败');
       }
     } catch (error) {
-      Alert.alert('错误', '网络请求失败');
+      console.error('发送验证码失败:', error);
+      Alert.alert('错误', '网络请求失败，请检查网络连接');
     }
   }, [phone, countdown, API_BASE_URL]);
+
+  // 验证验证码并跳转到设置密码页面
+  const handleVerifyCode = useCallback(async () => {
+    if (!phone) {
+      Alert.alert('提示', '请输入手机号');
+      return;
+    }
+
+    if (!/^1[3-9]\d{9}$/.test(phone)) {
+      Alert.alert('提示', '请输入正确的手机号');
+      return;
+    }
+
+    if (!code) {
+      Alert.alert('提示', '请输入验证码');
+      return;
+    }
+
+    if (code.length !== 6) {
+      Alert.alert('提示', '请输入6位验证码');
+      return;
+    }
+
+    setVerifyLoading(true);
+    try {
+      /**
+       * 服务端文件：server/src/routes/auth.ts
+       * 接口：POST /api/v1/auth/verify-code
+       * Body 参数：phone: string, code: string
+       */
+      const response = await fetch(`${API_BASE_URL}/api/v1/auth/verify-code`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone, code }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // 验证通过，跳转到设置密码页面
+        router.push('/set-password', { phone, code });
+      } else {
+        Alert.alert('验证失败', data.error || '验证码错误');
+      }
+    } catch (error) {
+      console.error('验证验证码失败:', error);
+      Alert.alert('错误', '网络请求失败');
+    } finally {
+      setVerifyLoading(false);
+    }
+  }, [phone, code, API_BASE_URL, router]);
 
   // 登录
   const handleLogin = useCallback(async () => {
@@ -172,52 +197,6 @@ export default function LoginScreen() {
       setLoading(false);
     }
   }, [phone, password, API_BASE_URL, login, router]);
-
-  // 注册
-  const handleRegister = useCallback(async () => {
-    if (!phone || !code || !password) {
-      Alert.alert('提示', '请填写完整信息');
-      return;
-    }
-
-    if (!/^1[3-9]\d{9}$/.test(phone)) {
-      Alert.alert('提示', '请输入正确的手机号');
-      return;
-    }
-
-    if (!passwordValidation.valid) {
-      Alert.alert('提示', passwordValidation.message);
-      return;
-    }
-
-    setLoading(true);
-    try {
-      /**
-       * 服务端文件：server/src/routes/auth.ts
-       * 接口：POST /api/v1/auth/register
-       * Body 参数：phone: string, code: string, password: string
-       */
-      const response = await fetch(`${API_BASE_URL}/api/v1/auth/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone, code, password }),
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        Alert.alert('成功', '注册成功，请登录');
-        setIsLogin(true);
-        setCode('');
-      } else {
-        Alert.alert('失败', data.error || '注册失败');
-      }
-    } catch (error) {
-      Alert.alert('错误', '网络请求失败');
-    } finally {
-      setLoading(false);
-    }
-  }, [phone, code, password, passwordValidation, API_BASE_URL]);
 
   // 社交登录处理
   const handleSocialLogin = useCallback(async () => {
@@ -282,16 +261,6 @@ export default function LoginScreen() {
     setPassword('');
   }, [isLogin]);
 
-  // 密码强度颜色
-  const getStrengthColor = useCallback(() => {
-    if (password.length === 0) return 'transparent';
-    switch (passwordValidation.strength) {
-      case 'strong': return '#10B981';
-      case 'medium': return '#F59E0B';
-      default: return '#EF4444';
-    }
-  }, [password.length, passwordValidation.strength]);
-
   return (
     <Screen backgroundColor={theme.backgroundRoot} statusBarStyle={isDark ? 'light' : 'dark'}>
       <KeyboardAvoidingView
@@ -333,6 +302,7 @@ export default function LoginScreen() {
               />
             </View>
 
+            {/* 注册模式：显示验证码输入框 */}
             {!isLogin && (
               <View style={styles.codeContainer}>
                 <TextInput
@@ -349,48 +319,45 @@ export default function LoginScreen() {
                   onPress={handleSendCode}
                   disabled={countdown > 0}
                 >
-                  <ThemedText variant="bodyMedium" color={theme.primary}>
-                    {countdown > 0 ? `${countdown}s` : '获取验证码'}
-                  </ThemedText>
+                  {countdown > 0 ? (
+                    <ThemedText variant="bodyMedium" color={theme.textMuted}>
+                      {countdown}s
+                    </ThemedText>
+                  ) : (
+                    <ThemedText variant="bodyMedium" color={theme.primary}>
+                      获取验证码
+                    </ThemedText>
+                  )}
                 </TouchableOpacity>
               </View>
             )}
 
-            <View style={styles.inputWrapper}>
-              <TextInput
-                style={styles.input}
-                placeholder="密码"
-                placeholderTextColor={theme.textMuted}
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-                autoCapitalize="none"
-              />
-            </View>
-
-            {/* 密码强度提示 - 仅注册时显示 */}
-            {!isLogin && password.length > 0 && (
-              <View style={styles.passwordHint}>
-                <View style={[styles.strengthBar, { backgroundColor: getStrengthColor() }]} />
-                <ThemedText variant="caption" color={theme.textSecondary}>
-                  {passwordValidation.message}
-                </ThemedText>
-                <ThemedText variant="caption" color={theme.textMuted} style={styles.passwordRule}>
-                  密码不低于8位，需包含数字+字母
-                </ThemedText>
+            {/* 登录模式：显示密码输入框 */}
+            {isLogin && (
+              <View style={styles.inputWrapper}>
+                <TextInput
+                  style={styles.input}
+                  placeholder="密码"
+                  placeholderTextColor={theme.textMuted}
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry
+                  autoCapitalize="none"
+                />
               </View>
             )}
 
+            {/* 提交按钮 */}
             <TouchableOpacity
-              style={[styles.submitButton, loading && styles.disabledButton]}
-              onPress={isLogin ? handleLogin : handleRegister}
-              disabled={loading}
+              style={[styles.submitButton, (loading || verifyLoading) && styles.disabledButton]}
+              onPress={isLogin ? handleLogin : handleVerifyCode}
+              disabled={loading || verifyLoading}
             >
-              {loading ? (
+              {loading || verifyLoading ? (
                 <ActivityIndicator color={theme.buttonPrimaryText} />
               ) : (
                 <ThemedText variant="bodyMedium" color={theme.buttonPrimaryText} style={{ fontWeight: '600' }}>
-                  {isLogin ? '登录' : '注册'}
+                  {isLogin ? '登录' : '下一步'}
                 </ThemedText>
               )}
             </TouchableOpacity>
