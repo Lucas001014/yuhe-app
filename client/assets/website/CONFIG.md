@@ -1,64 +1,101 @@
 # 遇合官网配置说明
 
-## 下载功能配置
+## ⚡ 快速配置下载链接
 
-### 1. 配置 GitHub 仓库地址
-
-打开 `index.html` 文件，找到以下代码并修改：
+打开 `index.html` 文件，找到以下配置并修改：
 
 ```javascript
-const GITHUB_REPO = 'YOUR_USERNAME/yuhe'; // 替换为实际的 GitHub 用户名/仓库名
+// 第一步：修改 APK 下载链接
+const APK_DOWNLOAD_URL = 'https://github.com/YOUR_USERNAME/yuhe/releases/latest/download/yuhe.apk';
 ```
 
-例如，如果你的 GitHub 用户名是 `yuhe-app`，仓库地址是 `https://github.com/yuhe-app/yuhe`，则修改为：
+### 如何获取下载链接？
 
+#### 方式1：使用 GitHub Releases（推荐）
+
+1. 在 GitHub 仓库创建 Release 并上传 APK
+2. 获取直接下载链接格式：
+   ```
+   https://github.com/用户名/仓库名/releases/download/标签名/文件名.apk
+   ```
+3. 使用 `latest` 可以自动获取最新版本：
+   ```
+   https://github.com/用户名/仓库名/releases/latest/download/yuhe.apk
+   ```
+
+#### 方式2：使用 CDN 或对象存储
+
+如果有自己的服务器或 CDN：
 ```javascript
-const GITHUB_REPO = 'yuhe-app/yuhe';
+const APK_DOWNLOAD_URL = 'https://your-cdn.com/yuhe.apk';
 ```
 
-### 2. GitHub Actions 自动构建
+---
 
-项目已配置 GitHub Actions 自动构建流程，每次推送到 `main` 分支时：
+## 🚀 部署更新
 
-1. 自动触发 EAS Build 构建 APK
-2. 构建完成后自动创建 GitHub Release
-3. APK 文件会自动上传到 Release 中
+### 如果使用 Vercel
 
-### 3. 下载流程
+1. 将修改后的网站文件推送到 GitHub 仓库
+2. Vercel 会自动部署更新
+3. 或者手动触发重新部署
 
-用户点击"下载应用"按钮后：
+### 如果使用 GitHub Pages
 
-1. 官网通过 GitHub API 获取最新 Release 信息
-2. 自动显示最新版本号和文件大小
-3. 点击下载按钮直接下载 APK
+1. 提交并推送更改
+2. 等待 1-2 分钟自动部署
 
-### 4. 手动发布 Release
+### 如果使用 Netlify
 
-如果需要手动发布，可以：
+1. 拖拽上传新文件，或
+2. Git 推送自动部署
 
-1. 在本地构建 APK：`cd client && eas build --platform android --profile preview`
+---
+
+## 📋 完整流程
+
+### 自动构建 + 自动发布（推荐）
+
+项目已配置 GitHub Actions 自动构建流程：
+
+1. **推送代码** → 触发 GitHub Actions
+2. **自动构建** → EAS Build 构建 APK
+3. **自动发布** → 创建 GitHub Release 并上传 APK
+4. **用户下载** → 点击官网下载按钮直接获取
+
+### 手动发布
+
+1. 本地构建 APK：
+   ```bash
+   cd client && eas build --platform android --profile preview
+   ```
 2. 下载构建好的 APK
-3. 在 GitHub 仓库页面创建新的 Release
+3. 在 GitHub 仓库创建 Release
 4. 上传 APK 文件
+5. 更新官网下载链接
 
-## 环境变量配置
+---
 
-### GitHub Secrets（在仓库设置中配置）
+## ⚠️ 常见问题
 
-| 变量名 | 说明 |
-|--------|------|
-| `EXPO_TOKEN` | Expo 账号的访问令牌（从 https://expo.dev/accounts/[username]/settings/access-tokens 获取）|
+### Q: 点击下载后没有反应？
 
-## 常见问题
+A: 检查下载链接是否正确配置。确保 `APK_DOWNLOAD_URL` 指向有效的 APK 文件。
 
-### Q: 下载按钮点击后跳转到 GitHub 页面？
+### Q: 提示"应用即将上线"？
 
-A: 这是因为还没有配置正确的 GitHub 仓库地址，或者还没有发布任何 Release。请先配置 `GITHUB_REPO` 变量，并确保至少有一个 Release。
+A: 这说明线上版本是旧代码。请将修改后的网站文件重新部署。
 
-### Q: 如何更新下载链接？
+### Q: 如何测试下载链接是否有效？
 
-A: 下载链接是动态获取的，每次构建都会自动更新。无需手动修改。
+A: 在浏览器中直接访问下载链接，如果开始下载则配置正确。
 
-### Q: iOS 版本什么时候上线？
+---
 
-A: iOS 版本需要上架 App Store，请关注官网公告。上架后需要更新 `iosDownload` 的链接为 App Store 地址。
+## 🔗 iOS 配置
+
+当 iOS 版本上架 App Store 后：
+
+```javascript
+const IOS_DOWNLOAD_URL = 'https://apps.apple.com/app/yuhe/id123456789';
+```
