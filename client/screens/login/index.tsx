@@ -71,19 +71,26 @@ export default function LoginScreen() {
 
     if (countdown > 0) return;
 
+    // 调试日志：显示实际请求的 URL
+    const requestUrl = `${API_BASE_URL}/api/v1/auth/send-code`;
+    console.log('发送验证码请求 URL:', requestUrl);
+    console.log('API_BASE_URL:', API_BASE_URL);
+
     try {
       /**
        * 服务端文件：server/src/routes/auth.ts
        * 接口：POST /api/v1/auth/send-code
        * Body 参数：phone: string
        */
-      const response = await fetch(`${API_BASE_URL}/api/v1/auth/send-code`, {
+      const response = await fetch(requestUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phone }),
       });
 
+      console.log('响应状态:', response.status);
       const data = await response.json();
+      console.log('响应数据:', data);
 
       if (data.success) {
         setCountdown(60);
