@@ -8,6 +8,7 @@ import { useSafeRouter } from '@/hooks/useSafeRouter';
 import { createStyles } from './styles';
 import { useAuth } from '@/contexts/AuthContext';
 import { weChatLogin, initWeChat, isWeChatInstalled, isWeChatAvailable } from '@/services/wechat';
+import { API_BASE_URL } from '@/config/api';
 
 export default function LoginScreen() {
   const { theme, isDark } = useTheme();
@@ -24,8 +25,6 @@ export default function LoginScreen() {
   const [wechatLoading, setWechatLoading] = useState(false);
   const [wechatInstalled, setWechatInstalled] = useState(true);
   const [countdown, setCountdown] = useState(0);
-
-  const API_BASE_URL = process.env.EXPO_PUBLIC_BACKEND_BASE_URL;
 
   // 初始化微信SDK
   useEffect(() => {

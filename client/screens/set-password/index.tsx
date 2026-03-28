@@ -6,6 +6,7 @@ import { useTheme } from '@/hooks/useTheme';
 import { useSafeRouter, useSafeSearchParams } from '@/hooks/useSafeRouter';
 import { createStyles } from './styles';
 import { useAuth } from '@/contexts/AuthContext';
+import { API_BASE_URL } from '@/config/api';
 
 export default function SetPasswordScreen() {
   const { theme, isDark } = useTheme();
@@ -18,7 +19,6 @@ export default function SetPasswordScreen() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const API_BASE_URL = process.env.EXPO_PUBLIC_BACKEND_BASE_URL;
   const phone = params?.phone || '';
   const code = params?.code || '';
 
