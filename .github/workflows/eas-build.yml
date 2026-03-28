@@ -19,6 +19,8 @@ jobs:
   build:
     name: Build App
     runs-on: ubuntu-latest
+    env:
+      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -41,9 +43,9 @@ jobs:
       - name: Build on EAS (Android)
         if: github.event.inputs.platform == 'android' || github.event.inputs.platform == '' || github.event.inputs.platform == 'all'
         working-directory: ./client
-        run: eas build --platform android --profile preview --non-interactive
+        run: eas build --platform android --profile preview --non-interactive --no-wait
 
       - name: Build on EAS (iOS)
         if: github.event.inputs.platform == 'ios' || github.event.inputs.platform == 'all'
         working-directory: ./client
-        run: eas build --platform ios --profile preview --non-interactive
+        run: eas build --platform ios --profile preview --non-interactive --no-wait

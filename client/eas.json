@@ -5,19 +5,16 @@
   "build": {
     "development": {
       "developmentClient": true,
-      "distribution": "internal",
-      "workingDirectory": "./client"
+      "distribution": "internal"
     },
     "preview": {
       "distribution": "internal",
-      "workingDirectory": "./client",
       "ios": {
         "simulator": false
       },
       "pnpm": "9.0.0"
     },
     "production": {
-      "workingDirectory": "./client",
       "ios": {
         "autoIncrement": true
       },
