@@ -36,8 +36,8 @@ jobs:
         run: |
           echo "Building Android APK..."
           
-          # 启动构建并等待完成（使用 --wait 参数）
-          eas build --platform android --profile preview --non-interactive --wait
+          # 启动构建并等待完成（使用 production profile）
+          eas build --platform android --profile production --non-interactive --wait
           
           # 获取最新构建的ID
           BUILD_INFO=$(eas build:list --platform android --limit 1 --json)
