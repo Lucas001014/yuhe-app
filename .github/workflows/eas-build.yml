@@ -42,8 +42,8 @@ jobs:
           echo "Building Android APK..."
           export EAS_BUILD_NO_EXPO_GO_WARNING=true
           
-          # 启动构建并等待完成（使用 production profile）
-          eas build --platform android --profile production --non-interactive --wait
+          # 启动构建并等待完成（使用 preview profile）
+          eas build --platform android --profile preview --non-interactive --wait
           
           # 获取最新构建的ID和下载URL
           BUILD_INFO=$(eas build:list --platform android --limit 1 --json)
@@ -60,16 +60,24 @@ jobs:
             curl -L -o yuhe.apk "$BUILD_URL"
           else
             # 备用方案：使用 eas build:download
-            eas build:download "$BUILD_ID" --output yuhe.apk || curl -L -o yuhe.apk "https://expo.dev/accounts/wangfuqian/projects/yuhe/builds/$BUILD_ID"
+            eas build:download "$BUILD_ID" --output yuhe.apk
+          fi
+          
+          # 验证APK文件
+          echo "Verifying APK..."
+          ls -la yuhe.apk
+          file yuhe.apk || true
+          
+          # 检查APK是否有效（应该是一个ZIP文件）
+          if command -v unzip &> /dev/null; then
+            unzip -t yuhe.apk 2>&1 | head -20 || echo "APK验证失败"
           fi
           
           # 获取版本信息
           VERSION=$(grep -oP '"version":\s*"\K[^"]+' app.config.ts | head -1 || echo "1.0.0")
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "App version: $VERSION"
-          
-          # 显示APK信息
-          ls -la yuhe.apk
+          echo "APK size: $(du -h yuhe.apk | cut -f1)"
           pwd
 
       - name: Create GitHub Release
