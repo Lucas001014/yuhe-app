@@ -34,7 +34,8 @@ export default ({ config }: ConfigContext): ExpoConfig => {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#FFFFFF"
       },
-      "package": "com.yuhe.app"
+      "package": "com.yuhe.app",
+      "versionCode": 1
     },
     "web": {
       "bundler": "metro",

@@ -42,8 +42,8 @@ jobs:
           echo "Building Android APK..."
           export EAS_BUILD_NO_EXPO_GO_WARNING=true
           
-          # 启动构建并等待完成（使用 preview profile）
-          eas build --platform android --profile preview --non-interactive --wait
+          # 启动构建并等待完成（使用 production profile）
+          eas build --platform android --profile production --non-interactive --wait
           
           # 获取最新构建的ID和下载URL
           BUILD_INFO=$(eas build:list --platform android --limit 1 --json)
