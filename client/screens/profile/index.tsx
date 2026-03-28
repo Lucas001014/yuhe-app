@@ -37,7 +37,9 @@ const distributeItems = (items: Post[], columnWidth: number) => {
 
   items.forEach((item) => {
     const hasImage = item.images && item.images.length > 0;
-    const imgHeight = hasImage ? columnWidth / item.aspectRatio : 0;
+    // 确保 aspectRatio 有效，避免除以 0 或 NaN
+    const aspectRatio = item.aspectRatio && item.aspectRatio > 0 ? item.aspectRatio : 1;
+    const imgHeight = hasImage ? columnWidth / aspectRatio : 0;
     const totalItemHeight = imgHeight + FOOTER_HEIGHT + (hasImage ? 0 : TEXT_ONLY_HEIGHT);
 
     const shortestIndex = columnHeights[0] <= columnHeights[1] ? 0 : 1;
@@ -433,7 +435,9 @@ export default function ProfileScreen() {
   // 渲染瀑布流卡片
   const renderMasonryCard = (post: Post, columnWidth: number) => {
     const hasImage = post.images && post.images.length > 0;
-    const imgHeight = hasImage ? columnWidth / (post.aspectRatio || 1) : 0;
+    // 确保 aspectRatio 有效，避免除以 0 或 NaN
+    const aspectRatio = post.aspectRatio && post.aspectRatio > 0 ? post.aspectRatio : 1;
+    const imgHeight = hasImage ? columnWidth / aspectRatio : 0;
     
     return (
       <TouchableOpacity 

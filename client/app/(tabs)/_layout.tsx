@@ -20,18 +20,21 @@ export default function TabLayout() {
           backgroundColor: '#FFFFFF',
           borderTopColor: '#F3F4F6',
           borderTopWidth: 1,
-          height: Platform.OS === 'web' ? 60 : 50 + insets.bottom,
-          paddingBottom: Platform.OS === 'web' ? 0 : insets.bottom,
-          paddingTop: Platform.OS === 'web' ? 0 : Spacing.sm,
+          // 移动端：增加高度确保文字不被截断
+          height: Platform.OS === 'web' ? 60 : 65 + insets.bottom,
+          paddingBottom: Platform.OS === 'web' ? 8 : insets.bottom,
+          paddingTop: Platform.OS === 'web' ? 8 : 8,
         },
         tabBarActiveTintColor: SKY_BLUE,
         tabBarInactiveTintColor: '#9CA3AF',
         tabBarItemStyle: {
-          height: Platform.OS === 'web' ? 60 : undefined,
+          height: Platform.OS === 'web' ? 60 : 50,
+          paddingVertical: 4,
         },
         tabBarLabelStyle: {
-          fontSize: 10,
+          fontSize: 11,
           fontWeight: '500',
+          marginTop: 2,
         },
       }}
     >
@@ -113,17 +116,17 @@ const Spacing = {
 
 const styles = StyleSheet.create({
   centerButton: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     backgroundColor: SKY_BLUE,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: Platform.OS === 'web' ? 0 : -28,
+    marginTop: Platform.OS === 'web' ? 0 : -20,
     shadowColor: SKY_BLUE,
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.35,
+    shadowOpacity: 0.3,
     shadowRadius: 8,
-    elevation: 8,
+    elevation: 6,
   },
 });
