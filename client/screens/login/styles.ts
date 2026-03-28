@@ -4,13 +4,16 @@ import { Theme } from '@/constants/theme';
 export const createStyles = (theme: Theme) => StyleSheet.create({
   container: {
     flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
     justifyContent: 'center',
     paddingHorizontal: 32,
     paddingVertical: 40,
   },
   header: {
     alignItems: 'center',
-    marginBottom: 64,
+    marginBottom: 48,
   },
   logoContainer: {
     marginBottom: 16,
@@ -20,16 +23,19 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
     fontWeight: '300',
   },
   title: {
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: '700',
-    marginBottom: 12,
+    marginBottom: 8,
   },
   subtitle: {
-    fontSize: 18,
+    fontSize: 16,
     textAlign: 'center',
   },
   form: {
-    gap: 20,
+    gap: 16,
+  },
+  inputWrapper: {
+    position: 'relative',
   },
   input: {
     height: 52,
@@ -43,7 +49,7 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
   },
   codeContainer: {
     flexDirection: 'row',
-    gap: 16,
+    gap: 12,
   },
   codeInput: {
     flex: 1,
@@ -55,13 +61,28 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
     color: theme.textPrimary,
   },
   codeButton: {
-    paddingHorizontal: 24,
+    paddingHorizontal: 20,
     height: 52,
     backgroundColor: `${theme.primary}15`,
     borderRadius: 14,
     justifyContent: 'center',
     alignItems: 'center',
-    minWidth: 130,
+    minWidth: 120,
+  },
+  codeButtonDisabled: {
+    opacity: 0.6,
+  },
+  passwordHint: {
+    paddingHorizontal: 4,
+    gap: 4,
+  },
+  strengthBar: {
+    height: 3,
+    borderRadius: 2,
+    marginBottom: 4,
+  },
+  passwordRule: {
+    marginTop: 2,
   },
   submitButton: {
     height: 52,
@@ -69,7 +90,7 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
     borderRadius: 14,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 20,
+    marginTop: 12,
   },
   disabledButton: {
     opacity: 0.6,
@@ -77,6 +98,7 @@ export const createStyles = (theme: Theme) => StyleSheet.create({
   switchButton: {
     alignItems: 'center',
     marginTop: 16,
+    paddingVertical: 8,
   },
   socialLoginContainer: {
     marginTop: 32,

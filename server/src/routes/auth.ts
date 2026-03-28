@@ -131,6 +131,25 @@ router.post('/send-code', async (req, res) => {
 });
 
 /**
+ * 验证密码强度
+ * 要求：不低于8位，至少包含数字和字母两种组合
+ */
+function validatePassword(password: string): { valid: boolean; message: string } {
+  if (password.length < 8) {
+    return { valid: false, message: '密码长度不能低于8位' };
+  }
+  
+  const hasLetter = /[a-zA-Z]/.test(password);
+  const hasNumber = /[0-9]/.test(password);
+  
+  if (!hasLetter || !hasNumber) {
+    return { valid: false, message: '密码至少需要包含数字和字母两种组合' };
+  }
+  
+  return { valid: true, message: '' };
+}
+
+/**
  * 用户注册/登录
  * POST /api/v1/auth/register
  * Body: { phone: string, code: string, password: string, username?: string }
@@ -149,10 +168,16 @@ router.post('/register', async (req, res) => {
     return res.status(400).json({ error: '手机号格式不正确' });
   }
 
+  // 验证密码强度
+  const passwordValidation = validatePassword(password);
+  if (!passwordValidation.valid) {
+    return res.status(400).json({ error: passwordValidation.message });
+  }
+
   // 验证验证码
   const storedCode = verificationCodes.get(phone);
   if (!storedCode) {
-    return res.status(400).json({ error: '验证码不存在或已过期' });
+    return res.status(400).json({ error: '验证码不存在或已过期，请重新获取' });
   }
 
   if (storedCode.code !== code) {
@@ -161,7 +186,7 @@ router.post('/register', async (req, res) => {
 
   if (Date.now() > storedCode.expiresAt) {
     verificationCodes.delete(phone);
-    return res.status(400).json({ error: '验证码已过期' });
+    return res.status(400).json({ error: '验证码已过期，请重新获取' });
   }
 
   // 清除已使用的验证码
@@ -175,7 +200,7 @@ router.post('/register', async (req, res) => {
     );
 
     if (existingUser.rows.length > 0) {
-      return res.status(400).json({ error: '该手机号已注册' });
+      return res.status(400).json({ error: '该手机号已注册，请直接登录' });
     }
 
     // 密码加密
