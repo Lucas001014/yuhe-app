@@ -44,7 +44,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     "splash": {
       "image": "./assets/images/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#1677FF"
+      "backgroundColor": "#FFFFFF"
     },
     "plugins": [
       process.env.EXPO_PUBLIC_BACKEND_BASE_URL ? [
