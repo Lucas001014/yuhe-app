@@ -14,7 +14,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     "icon": "./assets/images/icon.png",
     "scheme": "yuhe",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "ios": {
       "bundleIdentifier": "com.yuhe.app",
       "buildNumber": "1",
@@ -32,7 +32,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#1677FF"
+        "backgroundColor": "#FFFFFF"
       },
       "package": "com.yuhe.app"
     },

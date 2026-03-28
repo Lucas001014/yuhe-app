@@ -8,7 +8,6 @@ import { useSafeRouter } from '@/hooks/useSafeRouter';
 import { useAuthGuard } from '@/hooks/useAuthGuard';
 import { createStyles } from './styles';
 import { TabView, SceneMap, TabBar } from 'react-native-tab-view';
-import Carousel from 'react-native-reanimated-carousel';
 import { Image } from 'expo-image';
 
 const initialLayout = { width: Dimensions.get('window').width };
