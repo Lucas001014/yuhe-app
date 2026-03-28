@@ -1,8 +1,34 @@
 import express from 'express';
 import bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
+import Dypnsapi20170525, { SendSmsVerifyCodeRequest } from '@alicloud/dypnsapi20170525';
+import * as OpenApi from '@alicloud/openapi-client';
+
+// 处理 ES Module 和 CommonJS 兼容性
+const DypnsapiClient = (Dypnsapi20170525 as any).default || Dypnsapi20170525;
 
 const router = express.Router();
+
+// 阿里云配置
+const ALIYUN_ACCESS_KEY_ID = process.env.ALIYUN_ACCESS_KEY_ID || '';
+const ALIYUN_ACCESS_KEY_SECRET = process.env.ALIYUN_ACCESS_KEY_SECRET || '';
+const ALIYUN_SMS_SIGN_NAME = process.env.ALIYUN_SMS_SIGN_NAME || '速通互联验证码';
+const ALIYUN_SMS_TEMPLATE_CODE = process.env.ALIYUN_SMS_TEMPLATE_CODE || '100001';
+
+// 初始化阿里云客户端
+let dypnsClient: any = null;
+
+function getDypnsClient(): any {
+  if (!dypnsClient) {
+    const config = new OpenApi.Config({
+      accessKeyId: ALIYUN_ACCESS_KEY_ID,
+      accessKeySecret: ALIYUN_ACCESS_KEY_SECRET,
+      endpoint: 'dypnsapi.aliyuncs.com',
+    });
+    dypnsClient = new DypnsapiClient(config);
+  }
+  return dypnsClient;
+}
 
 // 简单的内存存储验证码（生产环境应使用 Redis）
 const verificationCodes = new Map<string, { code: string; expiresAt: number }>();
@@ -17,7 +43,7 @@ function generateCode(): string {
  * POST /api/v1/auth/send-code
  * Body: { phone: string }
  */
-router.post('/send-code', (req, res) => {
+router.post('/send-code', async (req, res) => {
   const { phone } = req.body;
 
   if (!phone) {
@@ -30,18 +56,75 @@ router.post('/send-code', (req, res) => {
     return res.status(400).json({ error: '手机号格式不正确' });
   }
 
-  // 生成验证码
+  // 生成验证码用于本地存储验证
   const code = generateCode();
   const expiresAt = Date.now() + 5 * 60 * 1000; // 5分钟后过期
 
-  verificationCodes.set(phone, { code, expiresAt });
+  try {
+    // 调用阿里云号码认证服务发送短信验证码
+    const client = getDypnsClient();
+    
+    // 阿里云号码认证服务的短信验证码API会自动生成验证码
+    // templateParam 中的 ##code## 会被阿里云自动替换为实际生成的验证码
+    const request = new SendSmsVerifyCodeRequest({
+      phoneNumber: `86${phone}`, // 中国大陆手机号需要加86前缀
+      signName: ALIYUN_SMS_SIGN_NAME,
+      templateCode: ALIYUN_SMS_TEMPLATE_CODE,
+      templateParam: '{"code":"##code##"}', // 阿里云会自动替换为实际验证码
+      codeLength: 6, // 6位验证码
+      validTime: 300, // 5分钟有效期
+      returnVerifyCode: true, // 返回验证码用于后端验证
+    });
 
-  console.log(`[验证码] 手机号: ${phone}, 验证码: ${code}`);
+    const response = await client.sendSmsVerifyCode(request);
+    
+    console.log(`[短信发送] 手机号: ${phone}, 响应:`, JSON.stringify(response.body));
 
-  res.json({
-    success: true,
-    message: '验证码已发送（开发环境查看控制台）'
-  });
+    if (response.body?.code !== 'OK') {
+      console.error('[短信发送失败]', response.body);
+      
+      // 如果阿里云发送失败，保存本地生成的验证码用于开发调试
+      verificationCodes.set(phone, { code, expiresAt });
+      
+      // 开发环境返回验证码方便调试
+      if (process.env.NODE_ENV === 'development') {
+        return res.json({
+          success: true,
+          message: '验证码已发送（开发环境查看控制台）',
+          devCode: code,
+          aliyunError: response.body?.message
+        });
+      }
+      
+      return res.status(400).json({ 
+        error: response.body?.message || '短信发送失败，请稍后重试'
+      });
+    }
+
+    // 如果阿里云返回了验证码，使用阿里云的验证码
+    const actualCode = response.body?.model?.verifyCode || code;
+    verificationCodes.set(phone, { code: actualCode, expiresAt });
+    
+    console.log(`[短信发送成功] 手机号: ${phone}, 验证码: ${actualCode}`);
+
+    res.json({
+      success: true,
+      message: '验证码已发送',
+      bizId: response.body?.model?.bizId
+    });
+  } catch (error: any) {
+    console.error('[短信发送异常]', error);
+    
+    // 开发环境：即使发送失败也保存验证码，方便调试
+    verificationCodes.set(phone, { code, expiresAt });
+    console.log(`[开发模式] 验证码: ${code}`);
+    
+    res.json({
+      success: true,
+      message: '验证码已发送（开发环境查看控制台）',
+      ...(process.env.NODE_ENV === 'development' && { devCode: code })
+    });
+  }
 });
 
 /**
