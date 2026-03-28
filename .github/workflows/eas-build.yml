@@ -40,38 +40,41 @@ jobs:
         working-directory: ./client
         run: |
           echo "Building Android APK..."
-          export EAS_BUILD_NO_EXPO_GO_WARNING=true
           
-          # 启动构建并等待完成（使用 preview profile）
+          # 启动构建并等待完成
           eas build --platform android --profile preview --non-interactive --wait
           
-          # 获取最新构建的ID
+          # 获取最新构建信息
+          echo "Getting build info..."
           BUILD_INFO=$(eas build:list --platform android --limit 1 --json)
-          BUILD_ID=$(echo "$BUILD_INFO" | python3 -c "import sys,json; data=json.load(sys.stdin); print(data[0]['id'] if data else '')")
+          echo "Build info: $BUILD_INFO"
+          
+          # 提取构建 ID 和下载 URL
+          BUILD_ID=$(echo "$BUILD_INFO" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d[0]['id'] if d else '')")
+          BUILD_URL=$(echo "$BUILD_INFO" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d[0].get('artifacts', {}).get('buildUrl', '') if d else '')")
           
           echo "Build ID: $BUILD_ID"
+          echo "Build URL: $BUILD_URL"
           echo "build_id=$BUILD_ID" >> $GITHUB_OUTPUT
           
-          # 使用 eas build:download 下载 APK（更可靠）
-          echo "Downloading APK using eas build:download..."
-          eas build:download "$BUILD_ID" --output yuhe.apk
+          # 下载 APK - 直接使用 curl 从 buildUrl 下载
+          echo "Downloading APK from build URL..."
+          if [ -n "$BUILD_URL" ]; then
+            curl -L -o yuhe.apk "$BUILD_URL"
+          else
+            echo "No build URL, trying eas build:download..."
+            eas build:download "$BUILD_ID" --output yuhe.apk
+          fi
           
-          # 验证APK文件
+          # 验证 APK 文件
           echo "Verifying APK..."
           ls -la yuhe.apk
-          APK_SIZE=$(stat -c%s yuhe.apk 2>/dev/null || stat -f%z yuhe.apk 2>/dev/null || echo "0")
-          echo "APK size: $APK_SIZE bytes"
+          APK_SIZE=$(stat -c%s yuhe.apk 2>/dev/null || echo "0")
+          echo "APK size: $APK_SIZE bytes ($(($APK_SIZE / 1024 / 1024)) MB)"
           
           if [ "$APK_SIZE" -lt 10000000 ]; then
-            echo "警告: APK 文件太小 ($APK_SIZE bytes)，可能下载失败"
-            echo "尝试备用下载方式..."
-            # 从构建详情获取下载链接
-            BUILD_URL=$(echo "$BUILD_INFO" | python3 -c "import sys,json; data=json.load(sys.stdin); print(data[0].get('artifacts', {}).get('buildUrl', '') if data else '')")
-            echo "Build URL: $BUILD_URL"
-            if [ -n "$BUILD_URL" ]; then
-              curl -L -o yuhe.apk "$BUILD_URL"
-              ls -la yuhe.apk
-            fi
+            echo "错误: APK 文件太小，下载可能失败"
+            exit 1
           fi
           
           # 获取版本信息
