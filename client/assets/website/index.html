@@ -530,7 +530,7 @@
         <div class="download-modal-content">
             <div class="download-modal-icon">🚀</div>
             <h3 class="download-modal-title">下载遇合 App</h3>
-            <p class="download-modal-text">点击下方按钮直接下载安装包</p>
+            <p class="download-modal-text">点击下方按钮跳转到下载页面获取最新安装包</p>
             <div class="download-modal-buttons">
                 <a href="#" class="download-btn download-btn-android" id="androidDownload" download>
                     📱 Android 版本下载
@@ -539,7 +539,7 @@
                     🍎 iOS 版本（即将上线）
                 </a>
             </div>
-            <p class="download-note">Android 用户下载后直接安装即可<br>iOS 版本即将上架 App Store</p>
+            <p class="download-note">Android 用户：打开页面后点击"Install"按钮下载安装<br>iOS 版本即将上架 App Store</p>
             <button class="download-modal-btn" onclick="hideDownloadModal()" style="margin-top: 20px;">关闭</button>
         </div>
     </div>
@@ -548,11 +548,11 @@
         // ==========================================
         // 下载链接配置
         // ==========================================
-        // 使用 GitHub Releases 的 latest 自动获取最新版本
-        const APK_DOWNLOAD_URL = 'https://github.com/Lucas001014/yuhe-app/releases/latest/download/yuhe.apk';
+        // 方式1: Expo 官方下载页面（推荐，可获取最新构建）
+        const APK_DOWNLOAD_URL = 'https://expo.dev/accounts/wangfuqian/projects/yuhe/builds';
         
-        // 方式2: 如果有其他CDN链接，可以直接使用
-        // const APK_DOWNLOAD_URL = 'https://your-cdn.com/yuhe.apk';
+        // 方式2: 如果 GitHub Releases 已创建，可以使用以下链接
+        // const APK_DOWNLOAD_URL = 'https://github.com/Lucas001014/yuhe-app/releases/latest/download/yuhe.apk';
         
         // iOS App Store 链接（上架后更新）
         const IOS_DOWNLOAD_URL = '#'; // 例如: 'https://apps.apple.com/app/yuhe/id123456789'
@@ -575,11 +575,13 @@
         
         // 直接下载 APK
         function downloadAndroid() {
-            window.location.href = APK_DOWNLOAD_URL;
+            window.open(APK_DOWNLOAD_URL, '_blank');
         }
         
-        // 设置下载按钮
+        // 设置下载按钮 - Android 点击打开 Expo 下载页面
         document.getElementById('androidDownload').href = APK_DOWNLOAD_URL;
+        document.getElementById('androidDownload').target = '_blank';
+        document.getElementById('androidDownload').textContent = '📱 前往下载页面';
         document.getElementById('iosDownload').href = IOS_DOWNLOAD_URL;
     </script>
 </body>
