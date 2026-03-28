@@ -5,6 +5,9 @@ on:
     branches: [main]
   workflow_dispatch:
 
+permissions:
+  contents: write  # 允许创建 Release 和上传文件
+
 jobs:
   build-and-release:
     name: Build APK & Create Release
@@ -87,8 +90,7 @@ jobs:
             ---
             
             **安装说明**：Android 用户下载 APK 后，可能需要在设置中允许"安装未知来源应用"。
-          files: |
-            client/yuhe.apk
+          files: ./client/yuhe.apk
           draft: false
           prerelease: false
         env:
