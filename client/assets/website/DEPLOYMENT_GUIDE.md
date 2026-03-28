@@ -271,6 +271,32 @@ https://YOUR_DOMAIN/support.html
 
 ## 💡 优化建议
 
+### 0. 配置下载功能（重要）
+
+官网下载功能通过 GitHub API 自动获取最新 Release 版本。
+
+**配置步骤**：
+
+1. 打开 `index.html` 文件
+2. 找到以下代码：
+```javascript
+const GITHUB_REPO = 'YOUR_USERNAME/yuhe';
+```
+3. 替换为你的 GitHub 用户名和仓库名，例如：
+```javascript
+const GITHUB_REPO = 'yuhe-app/yuhe';
+```
+
+**工作原理**：
+- 用户点击"下载应用"按钮时，官网会调用 GitHub API 获取最新 Release
+- 自动显示最新版本号和文件大小
+- 点击下载按钮直接下载 APK
+
+**自动构建**：
+- 项目已配置 GitHub Actions 自动构建
+- 每次推送到 `main` 分支时自动构建 APK 并发布 Release
+- 详见 `.github/workflows/eas-build.yml`
+
 ### 1. 添加 Google Analytics（可选）
 
 在 `index.html` 的 `<head>` 中添加：

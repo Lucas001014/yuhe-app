@@ -21,6 +21,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+    outputs:
+      build_id: ${{ steps.build.outputs.build_id }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -41,11 +43,138 @@ jobs:
         run: npm install
 
       - name: Build on EAS (Android)
+        id: build
         if: github.event.inputs.platform == 'android' || github.event.inputs.platform == '' || github.event.inputs.platform == 'all'
         working-directory: ./client
-        run: eas build --platform android --profile preview --non-interactive --no-wait
+        run: |
+          echo "Starting Android build..."
+          BUILD_OUTPUT=$(eas build --platform android --profile preview --non-interactive --no-wait --json 2>&1 || true)
+          echo "Build output: $BUILD_OUTPUT"
+          BUILD_ID=$(echo "$BUILD_OUTPUT" | grep -oP '"buildId":\s*"\K[^"]+' | head -1 || echo "")
+          if [ -z "$BUILD_ID" ]; then
+            # 如果没有从JSON获取到，尝试从URL中提取
+            BUILD_ID=$(echo "$BUILD_OUTPUT" | grep -oP 'builds/\K[^/]+' | head -1 || echo "")
+          fi
+          echo "Build ID: $BUILD_ID"
+          echo "build_id=$BUILD_ID" >> $GITHUB_OUTPUT
 
       - name: Build on EAS (iOS)
         if: github.event.inputs.platform == 'ios' || github.event.inputs.platform == 'all'
         working-directory: ./client
         run: eas build --platform ios --profile preview --non-interactive --no-wait
+
+  # 等待构建完成并下载APK
+  download-and-release:
+    name: Download APK & Create Release
+    runs-on: ubuntu-latest
+    needs: build
+    if: needs.build.outputs.build_id != ''
+    env:
+      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Wait for build and download APK
+        id: download
+        working-directory: ./client
+        run: |
+          BUILD_ID="${{ needs.build.outputs.build_id }}"
+          echo "Waiting for build $BUILD_ID to complete..."
+          
+          # 等待构建完成（最多等待30分钟）
+          MAX_WAIT=1800
+          WAITED=0
+          while [ $WAITED -lt $MAX_WAIT ]; do
+            STATUS=$(eas build:view $BUILD_ID --json 2>/dev/null | grep -oP '"status":\s*"\K[^"]+' || echo "")
+            echo "Build status: $STATUS"
+            
+            if [ "$STATUS" = "FINISHED" ]; then
+              echo "Build completed successfully!"
+              break
+            elif [ "$STATUS" = "FAILED" ] || [ "$STATUS" = "ERRORED" ]; then
+              echo "Build failed with status: $STATUS"
+              exit 1
+            fi
+            
+            sleep 60
+            WAITED=$((WAITED + 60))
+          done
+          
+          if [ $WAITED -ge $MAX_WAIT ]; then
+            echo "Build timed out after 30 minutes"
+            exit 1
+          fi
+          
+          # 下载APK
+          echo "Downloading APK..."
+          eas build:download $BUILD_ID --output ./yuhe.apk
+          
+          # 获取版本信息
+          VERSION=$(grep -oP '"version":\s*"\K[^"]+' app.config.ts | head -1 || echo "1.0.0")
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "App version: $VERSION"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ steps.download.outputs.version }}-${{ github.run_number }}
+          name: 遇合 v${{ steps.download.outputs.version }}
+          body: |
+            ## 遇合 App v${{ steps.download.outputs.version }}
+            
+            ### 下载方式
+            - **Android**: 下载下方的 `yuhe.apk` 文件直接安装
+            - **iOS**: 即将上架 App Store
+            
+            ### 更新内容
+            - 修复已知问题
+            - 优化用户体验
+            
+            ---
+            
+            **安装说明**：Android 用户下载 APK 后，可能需要在设置中允许"安装未知来源应用"。
+          files: |
+            client/yuhe.apk
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update download config
+        run: |
+          # 创建下载配置文件
+          cat > download-config.json << EOF
+          {
+            "version": "${{ steps.download.outputs.version }}",
+            "releaseDate": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")",
+            "android": {
+              "downloadUrl": "https://github.com/${{ github.repository }}/releases/download/v${{ steps.download.outputs.version }}-${{ github.run_number }}/yuhe.apk",
+              "fileSize": "$(ls -lh client/yuhe.apk | awk '{print $5}')"
+            },
+            "ios": {
+              "available": false,
+              "downloadUrl": null
+            }
+          }
+          EOF
+          
+          echo "Download config created:"
+          cat download-config.json
+
+      - name: Upload download config
+        uses: actions/upload-artifact@v4
+        with:
+          name: download-config
+          path: download-config.json
