@@ -4,9 +4,6 @@
   "main": "expo-router/entry",
   "private": true,
   "scripts": {
-    "check-deps": "npx depcheck",
-    "postinstall": "npm run install-missing",
-    "install-missing": "node ./scripts/install-missing-deps.js",
     "lint": "expo lint",
     "start": "expo start --web --clear",
     "test": "jest --watchAll"
