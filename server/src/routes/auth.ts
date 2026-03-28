@@ -9,9 +9,9 @@ const DypnsapiClient = (Dypnsapi20170525 as any).default || Dypnsapi20170525;
 
 const router = express.Router();
 
-// 阿里云配置
-const ALIYUN_ACCESS_KEY_ID = process.env.ALIYUN_ACCESS_KEY_ID || '';
-const ALIYUN_ACCESS_KEY_SECRET = process.env.ALIYUN_ACCESS_KEY_SECRET || '';
+// 阿里云配置 - 必须通过环境变量配置
+const ALIYUN_ACCESS_KEY_ID = process.env.ALIYUN_ACCESS_KEY_ID;
+const ALIYUN_ACCESS_KEY_SECRET = process.env.ALIYUN_ACCESS_KEY_SECRET;
 const ALIYUN_SMS_SIGN_NAME = process.env.ALIYUN_SMS_SIGN_NAME || '速通互联验证码';
 const ALIYUN_SMS_TEMPLATE_CODE = process.env.ALIYUN_SMS_TEMPLATE_CODE || '100001';
 
@@ -19,6 +19,9 @@ const ALIYUN_SMS_TEMPLATE_CODE = process.env.ALIYUN_SMS_TEMPLATE_CODE || '100001
 let dypnsClient: any = null;
 
 function getDypnsClient(): any {
+  if (!ALIYUN_ACCESS_KEY_ID || !ALIYUN_ACCESS_KEY_SECRET) {
+    throw new Error('阿里云短信服务未配置，请设置环境变量 ALIYUN_ACCESS_KEY_ID 和 ALIYUN_ACCESS_KEY_SECRET');
+  }
   if (!dypnsClient) {
     const config = new OpenApi.Config({
       accessKeyId: ALIYUN_ACCESS_KEY_ID,
