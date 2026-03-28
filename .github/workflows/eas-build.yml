@@ -42,15 +42,23 @@ jobs:
           # 启动构建并等待完成（使用 preview profile）
           eas build --platform android --profile preview --non-interactive --wait
           
-          # 获取最新构建的ID
+          # 获取最新构建的ID和下载URL
           BUILD_INFO=$(eas build:list --platform android --limit 1 --json)
           BUILD_ID=$(echo "$BUILD_INFO" | python3 -c "import sys,json; data=json.load(sys.stdin); print(data[0]['id'] if data else '')")
+          BUILD_URL=$(echo "$BUILD_INFO" | python3 -c "import sys,json; data=json.load(sys.stdin); print(data[0].get('artifacts', {}).get('buildUrl', '') if data else '')")
+          
           echo "Build ID: $BUILD_ID"
+          echo "Build URL: $BUILD_URL"
           echo "build_id=$BUILD_ID" >> $GITHUB_OUTPUT
           
-          # 下载APK
+          # 下载APK (使用 curl 从构建URL下载)
           echo "Downloading APK..."
-          eas build:download $BUILD_ID --output ./yuhe.apk
+          if [ -n "$BUILD_URL" ]; then
+            curl -L -o yuhe.apk "$BUILD_URL"
+          else
+            # 备用方案：使用 eas build:download
+            eas build:download "$BUILD_ID" --output yuhe.apk || curl -L -o yuhe.apk "https://expo.dev/accounts/wangfuqian/projects/yuhe/builds/$BUILD_ID"
+          fi
           
           # 获取版本信息
           VERSION=$(grep -oP '"version":\s*"\K[^"]+' app.config.ts | head -1 || echo "1.0.0")
@@ -58,7 +66,7 @@ jobs:
           echo "App version: $VERSION"
           
           # 显示APK信息
-          ls -lh ./yuhe.apk
+          ls -lh yuhe.apk
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
