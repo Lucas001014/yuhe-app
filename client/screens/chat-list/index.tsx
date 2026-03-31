@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '@/config/api';
 import React, { useState, useMemo, useCallback } from 'react';
 import { View, FlatList, TouchableOpacity, StyleSheet, RefreshControl, TextInput } from 'react-native';
 import { FontAwesome6 } from '@expo/vector-icons';
@@ -34,7 +35,6 @@ export default function ChatListScreen() {
   const [filterType, setFilterType] = useState<'all' | 'unread'>('all');
   const [searchQuery, setSearchQuery] = useState('');
 
-  const API_BASE_URL = process.env.EXPO_PUBLIC_BACKEND_BASE_URL;
 
   // 模拟聊天会话数据
   const mockMessages: ChatMessage[] = [

@@ -8,6 +8,7 @@ import { ThemedView } from '@/components/ThemedView';
 import { FontAwesome6 } from '@expo/vector-icons';
 import { createStyles } from './styles';
 import { Spacing } from '@/constants/theme';
+import { API_BASE_URL } from '@/config/api';
 
 interface Transaction {
   type: 'income' | 'withdraw';
@@ -40,7 +41,7 @@ export default function TransactionsScreen() {
        * Query 参数：userId: number, page: number, size: number
        */
       const response = await fetch(
-        `${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/wallet/transactions?userId=${userId}&page=1&size=50`
+        `${API_BASE_URL}/api/v1/wallet/transactions?userId=${userId}&page=1&size=50`
       );
       const result = await response.json();
 

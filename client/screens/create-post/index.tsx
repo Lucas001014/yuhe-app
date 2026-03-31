@@ -11,6 +11,7 @@ import { useSafeRouter } from '@/hooks/useSafeRouter';
 import { createStyles } from './styles';
 import { createFormDataFile } from '@/utils';
 import { Image } from 'expo-image';
+import { API_BASE_URL } from '@/config/api';
 
 // 附件类型
 type AttachmentType = 'photo' | 'video' | 'document';
@@ -46,8 +47,6 @@ export default function CreatePostScreen() {
     title: false,
     content: false,
   });
-
-  const API_BASE_URL = process.env.EXPO_PUBLIC_BACKEND_BASE_URL;
 
   // 清除验证错误
   const clearValidationError = (field: keyof ValidationErrors) => {

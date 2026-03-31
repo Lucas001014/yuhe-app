@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '@/config/api';
 import React, { useState, useMemo, useCallback } from 'react';
 import { 
   View, 
@@ -75,7 +76,6 @@ export default function UserProfileScreen() {
   // 菜单显示状态
   const [showMenu, setShowMenu] = useState(false);
   
-  const API_BASE_URL = process.env.EXPO_PUBLIC_BACKEND_BASE_URL;
 
   // 模拟用户数据
   const [userInfo] = useState({

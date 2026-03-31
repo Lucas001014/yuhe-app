@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '@/config/api';
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { View, ScrollView, TouchableOpacity, TextInput, Alert, Modal, RefreshControl, ActivityIndicator, FlatList, Image } from 'react-native';
 import { FontAwesome6 } from '@expo/vector-icons';
@@ -72,7 +73,6 @@ export default function AdminScreen() {
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
 
-  const API_BASE_URL = process.env.EXPO_PUBLIC_BACKEND_BASE_URL;
 
   // 获取统计数据
   const fetchStats = useCallback(async () => {

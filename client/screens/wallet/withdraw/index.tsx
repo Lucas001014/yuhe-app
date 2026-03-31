@@ -7,6 +7,7 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { createStyles } from './styles';
 import { Spacing } from '@/constants/theme';
+import { API_BASE_URL } from '@/config/api';
 
 export default function WithdrawScreen() {
   const { theme } = useTheme();
@@ -49,7 +50,7 @@ export default function WithdrawScreen() {
        * Body 参数：userId: number, amount: number, bankName: string, bankNo: string, bankUser: string
        */
       const response = await fetch(
-        `${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/withdraw/apply`,
+        `${API_BASE_URL}/api/v1/withdraw/apply`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

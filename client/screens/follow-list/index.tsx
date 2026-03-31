@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '@/config/api';
 import React, { useState, useMemo, useCallback } from 'react';
 import { View, ScrollView, TouchableOpacity, Alert, RefreshControl } from 'react-native';
 import { FontAwesome6 } from '@expo/vector-icons';
@@ -32,7 +33,6 @@ export default function FollowListScreen() {
     params.type === 'following' ? 'following' : 'followers'
   );
 
-  const API_BASE_URL = process.env.EXPO_PUBLIC_BACKEND_BASE_URL;
 
   // 固定标题，根据初始进入状态决定
   const pageTitle = params.type === 'following' ? '我的关注' : '我的粉丝';

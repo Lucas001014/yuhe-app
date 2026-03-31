@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '@/config/api';
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { View, ScrollView, TouchableOpacity, RefreshControl, Dimensions, Alert, Modal, FlatList, ActivityIndicator, Animated } from 'react-native';
 import { FontAwesome6 } from '@expo/vector-icons';
@@ -56,7 +57,6 @@ export default function HomeScreen() {
   const [selectedFollowerIds, setSelectedFollowerIds] = useState<number[]>([]);
   const [sending, setSending] = useState(false);
 
-  const API_BASE_URL = process.env.EXPO_PUBLIC_BACKEND_BASE_URL;
 
   // 生成随机宽高比 (0.5~2.0)
   const generateAspectRatio = (): number => {

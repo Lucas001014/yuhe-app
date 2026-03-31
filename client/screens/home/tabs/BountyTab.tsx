@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { API_BASE_URL } from '@/config/api';
 import { View, ScrollView, TouchableOpacity, Alert, Modal, TextInput, Dimensions } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import { FontAwesome6 } from '@expo/vector-icons';
@@ -75,7 +76,7 @@ export function BountyTab() {
   const [commentText, setCommentText] = useState('');
   const [comments, setComments] = useState<Comment[]>([]);
 
-  const API_BASE_URL = process.env.EXPO_PUBLIC_BACKEND_BASE_URL;
+  const API_BASE_URL = API_BASE_URL;
 
   // 加载帖子列表（仅悬赏）
   useEffect(() => {

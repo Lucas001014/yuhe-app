@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '@/config/api';
 import React, { useState, useMemo } from 'react';
 import { View, TextInput, TouchableOpacity, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
@@ -20,7 +21,6 @@ export default function PhoneBindingScreen() {
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const API_BASE_URL = process.env.EXPO_PUBLIC_BACKEND_BASE_URL;
 
   // 发送验证码
   const handleSendCode = async () => {

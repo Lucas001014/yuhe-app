@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '@/config/api';
 import React, { useState, useMemo, useEffect } from 'react';
 import { View, ScrollView, TouchableOpacity, TextInput, Alert, Modal, KeyboardAvoidingView, Platform, ActivityIndicator, StyleSheet, Animated } from 'react-native';
 import { FontAwesome6 } from '@expo/vector-icons';
@@ -94,7 +95,6 @@ export default function CreateScreen() {
     settlementFee: 1000,
   });
 
-  const API_BASE_URL = process.env.EXPO_PUBLIC_BACKEND_BASE_URL;
 
   // 清除验证错误
   const clearValidationError = (field: keyof ValidationErrors) => {

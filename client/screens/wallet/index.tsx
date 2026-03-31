@@ -7,6 +7,7 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { FontAwesome6 } from '@expo/vector-icons';
 import { createStyles } from './styles';
+import { API_BASE_URL } from '@/config/api';
 
 export default function WalletScreen() {
   const { theme } = useTheme();
@@ -34,7 +35,7 @@ export default function WalletScreen() {
        * Query 参数：userId: number
        */
       const response = await fetch(
-        `${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/wallet/info?userId=${userId}`
+        `${API_BASE_URL}/api/v1/wallet/info?userId=${userId}`
       );
       const result = await response.json();
 

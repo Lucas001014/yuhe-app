@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '@/config/api';
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { View, ScrollView, TouchableOpacity, TextInput, Alert, KeyboardAvoidingView, Platform, ActivityIndicator, StyleSheet } from 'react-native';
 import { FontAwesome6 } from '@expo/vector-icons';
@@ -56,7 +57,6 @@ export default function CertificationScreen() {
   const [businessLicense, setBusinessLicense] = useState('');
   const [certType, setCertType] = useState<'individual' | 'enterprise'>('individual');
 
-  const API_BASE_URL = process.env.EXPO_PUBLIC_BACKEND_BASE_URL;
 
   // 获取认证状态
   const fetchCertificationStatus = useCallback(async () => {

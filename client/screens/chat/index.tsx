@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '@/config/api';
 import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { View, TouchableOpacity, TextInput, FlatList, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
 import { FontAwesome6 } from '@expo/vector-icons';
@@ -41,7 +42,6 @@ export default function ChatScreen() {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const flatListRef = useRef<FlatList>(null);
 
-  const API_BASE_URL = process.env.EXPO_PUBLIC_BACKEND_BASE_URL;
 
   // 获取对方用户信息
   const otherUserId = params.userId;

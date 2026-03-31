@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '@/config/api';
 import React, { useState, useCallback, useMemo } from 'react';
 import { View, ScrollView, RefreshControl, TouchableOpacity } from 'react-native';
 import { FontAwesome6 } from '@expo/vector-icons';
@@ -35,7 +36,6 @@ export default function MyFavoritesScreen() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const API_BASE_URL = process.env.EXPO_PUBLIC_BACKEND_BASE_URL;
 
   // 加载收藏列表
   const loadPosts = useCallback(async () => {

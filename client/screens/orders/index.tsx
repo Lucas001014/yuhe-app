@@ -8,6 +8,7 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { FontAwesome6 } from '@expo/vector-icons';
 import { createStyles } from './styles';
+import { API_BASE_URL } from '@/config/api';
 
 interface Order {
   id: number;
@@ -48,7 +49,7 @@ export default function OrdersScreen() {
        * Query 参数：userId: number, page: number, size: number
        */
       const response = await fetch(
-        `${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/order/my?userId=${userId}&page=${pageNum}&size=20`
+        `${API_BASE_URL}/api/v1/order/my?userId=${userId}&page=${pageNum}&size=20`
       );
       const result = await response.json();
 
@@ -169,7 +170,7 @@ export default function OrdersScreen() {
                                * Body 参数：orderId: number
                                */
                               const response = await fetch(
-                                `${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/order/confirm`,
+                                `${API_BASE_URL}/api/v1/order/confirm`,
                                 {
                                   method: 'POST',
                                   headers: { 'Content-Type': 'application/json' },

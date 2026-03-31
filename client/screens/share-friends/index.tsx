@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '@/config/api';
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import {
   View,
@@ -34,7 +35,6 @@ export default function ShareFriendsScreen() {
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [sending, setSending] = useState(false);
 
-  const API_BASE_URL = process.env.EXPO_PUBLIC_BACKEND_BASE_URL;
 
   // 获取关注列表作为好友列表
   const loadFriends = useCallback(async () => {

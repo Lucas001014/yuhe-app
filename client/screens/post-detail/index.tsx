@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '@/config/api';
 import React, { useState, useMemo, useCallback } from 'react';
 import { View, ScrollView, TouchableOpacity, TextInput, Alert, KeyboardAvoidingView, Platform, FlatList, ActivityIndicator, Modal, Pressable } from 'react-native';
 import { FontAwesome6 } from '@expo/vector-icons';
@@ -63,7 +64,6 @@ export default function PostDetailScreen() {
   const [submitting, setSubmitting] = useState(false);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
 
-  const API_BASE_URL = process.env.EXPO_PUBLIC_BACKEND_BASE_URL;
 
   // 加载帖子详情和评论
   const loadData = useCallback(async () => {

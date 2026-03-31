@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '@/config/api';
 import React, { useState, useMemo, useCallback } from 'react';
 import { View, FlatList, TouchableOpacity, RefreshControl, Alert, ScrollView } from 'react-native';
 import { FontAwesome6 } from '@expo/vector-icons';
@@ -61,7 +62,6 @@ export default function MessagesScreen() {
   const [notificationFilter, setNotificationFilter] = useState<NotificationFilter>('all');
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
-  const API_BASE_URL = process.env.EXPO_PUBLIC_BACKEND_BASE_URL;
 
   // 根据筛选条件过滤通知
   const filteredNotifications = useMemo(() => {

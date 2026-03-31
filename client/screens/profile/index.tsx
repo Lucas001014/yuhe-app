@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '@/config/api';
 import React, { useState, useMemo, useCallback, useRef } from 'react';
 import { View, ScrollView, TouchableOpacity, Alert, Modal, TextInput, Dimensions, RefreshControl } from 'react-native';
 import { FontAwesome6 } from '@expo/vector-icons';
@@ -134,7 +135,6 @@ export default function ProfileScreen() {
   const [showCropPreview, setShowCropPreview] = useState(false);
   const [selectedAvatarUri, setSelectedAvatarUri] = useState('');
 
-  const API_BASE_URL = process.env.EXPO_PUBLIC_BACKEND_BASE_URL;
 
   // 加载用户信息
   const loadUserInfo = useCallback(async () => {
