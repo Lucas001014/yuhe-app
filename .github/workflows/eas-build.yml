@@ -49,22 +49,15 @@ jobs:
           BUILD_INFO=$(eas build:list --platform android --limit 1 --json)
           echo "Build info: $BUILD_INFO"
           
-          # 提取构建 ID 和下载 URL
+          # 提取构建 ID
           BUILD_ID=$(echo "$BUILD_INFO" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d[0]['id'] if d else '')")
-          BUILD_URL=$(echo "$BUILD_INFO" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d[0].get('artifacts', {}).get('buildUrl', '') if d else '')")
           
           echo "Build ID: $BUILD_ID"
-          echo "Build URL: $BUILD_URL"
           echo "build_id=$BUILD_ID" >> $GITHUB_OUTPUT
           
-          # 下载 APK - 直接使用 curl 从 buildUrl 下载
-          echo "Downloading APK from build URL..."
-          if [ -n "$BUILD_URL" ]; then
-            curl -L -o yuhe.apk "$BUILD_URL"
-          else
-            echo "No build URL, trying eas build:download..."
-            eas build:download "$BUILD_ID" --output yuhe.apk
-          fi
+          # 使用 eas build:download 下载 APK（更可靠）
+          echo "Downloading APK using eas build:download..."
+          eas build:download "$BUILD_ID" --output yuhe.apk
           
           # 验证 APK 文件
           echo "Verifying APK..."
@@ -81,7 +74,12 @@ jobs:
           VERSION=$(grep -oP '"version":\s*"\K[^"]+' app.config.ts | head -1 || echo "1.0.0")
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "App version: $VERSION"
+          
+          # 移动APK到根目录以便Release步骤使用
+          cp yuhe.apk ../yuhe.apk
+          echo "APK copied to root directory"
           pwd
+          ls -la ../yuhe.apk
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
@@ -102,7 +100,7 @@ jobs:
             ---
             
             **安装说明**：Android 用户下载 APK 后，可能需要在设置中允许"安装未知来源应用"。
-          files: client/yuhe.apk
+          files: yuhe.apk
           draft: false
           prerelease: false
         env:
