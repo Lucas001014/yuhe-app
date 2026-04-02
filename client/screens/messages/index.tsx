@@ -298,7 +298,7 @@ export default function MessagesScreen() {
     <Screen backgroundColor={theme.backgroundRoot} statusBarStyle={isDark ? 'light' : 'dark'}>
       {/* 标题栏 */}
       <View style={styles.header}>
-        <ThemedText variant="h4" color={theme.textPrimary}>消息</ThemedText>
+        <ThemedText variant="h3" color={theme.textPrimary}>消息</ThemedText>
         {unreadCount > 0 && (
           <TouchableOpacity onPress={handleMarkAllRead}>
             <ThemedText variant="small" color={theme.primary}>全部已读</ThemedText>
@@ -306,22 +306,24 @@ export default function MessagesScreen() {
         )}
       </View>
 
-      {/* Tab切换 */}
+      {/* Tab切换 - 分段控件样式 */}
       <View style={styles.tabContainer}>
         <TouchableOpacity
           style={[styles.tabItem, currentTab === 'notifications' && styles.tabItemActive]}
           onPress={() => setCurrentTab('notifications')}
         >
-          <ThemedText variant="bodyMedium" color={currentTab === 'notifications' ? theme.primary : theme.textMuted}>
+          <ThemedText 
+            variant="bodyMedium" 
+            color={currentTab === 'notifications' ? theme.textPrimary : theme.textMuted}
+            style={{ fontWeight: currentTab === 'notifications' ? '600' : '400' }}
+          >
             通知
           </ThemedText>
-          {unreadCount > 0 && (
-            <View style={{ position: 'absolute', top: 8, right: 20 }}>
-              <View style={styles.countBadge}>
-                <ThemedText variant="caption" color={theme.buttonPrimaryText} style={{ fontSize: 10 }}>
-                  {unreadCount > 99 ? '99+' : unreadCount}
-                </ThemedText>
-              </View>
+          {unreadCount > 0 && currentTab !== 'notifications' && (
+            <View style={styles.countBadge}>
+              <ThemedText variant="caption" color={theme.buttonPrimaryText} style={{ fontSize: 10 }}>
+                {unreadCount > 99 ? '99+' : unreadCount}
+              </ThemedText>
             </View>
           )}
         </TouchableOpacity>
@@ -329,7 +331,11 @@ export default function MessagesScreen() {
           style={[styles.tabItem, currentTab === 'chats' && styles.tabItemActive]}
           onPress={() => setCurrentTab('chats')}
         >
-          <ThemedText variant="bodyMedium" color={currentTab === 'chats' ? theme.primary : theme.textMuted}>
+          <ThemedText 
+            variant="bodyMedium" 
+            color={currentTab === 'chats' ? theme.textPrimary : theme.textMuted}
+            style={{ fontWeight: currentTab === 'chats' ? '600' : '400' }}
+          >
             私信
           </ThemedText>
         </TouchableOpacity>

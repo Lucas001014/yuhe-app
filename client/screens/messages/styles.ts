@@ -4,48 +4,61 @@ import { Spacing, BorderRadius, Theme } from '@/constants/theme';
 export const createStyles = (theme: Theme) => {
   return StyleSheet.create({
     header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
       paddingHorizontal: Spacing.lg,
-      paddingVertical: Spacing.md,
+      paddingTop: Spacing.md,
+      paddingBottom: Spacing.sm,
       backgroundColor: theme.backgroundDefault,
-      borderBottomWidth: 1,
-      borderBottomColor: theme.borderLight,
     },
+    // 一级Tab - 分段控件样式
     tabContainer: {
       flexDirection: 'row',
-      backgroundColor: theme.backgroundDefault,
-      borderBottomWidth: 1,
-      borderBottomColor: theme.borderLight,
+      marginHorizontal: Spacing.lg,
+      marginVertical: Spacing.sm,
+      backgroundColor: theme.backgroundTertiary,
+      borderRadius: BorderRadius.lg,
+      padding: 4,
     },
     tabItem: {
       flex: 1,
-      paddingVertical: 14,
+      paddingVertical: 10,
+      paddingHorizontal: Spacing.lg,
       alignItems: 'center',
+      justifyContent: 'center',
+      borderRadius: BorderRadius.md,
       position: 'relative',
     },
     tabItemActive: {
-      borderBottomWidth: 2,
-      borderBottomColor: theme.primary,
-    },
-    // 通知筛选样式
-    filterContainer: {
       backgroundColor: theme.backgroundDefault,
-      borderBottomWidth: 1,
-      borderBottomColor: theme.borderLight,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.1,
+      shadowRadius: 2,
+      elevation: 2,
+    },
+    // 通知筛选样式 - 更紧凑
+    filterContainer: {
+      backgroundColor: theme.backgroundRoot,
+      paddingVertical: Spacing.xs,
     },
     filterScrollContent: {
       paddingHorizontal: Spacing.lg,
-      paddingVertical: Spacing.sm,
-      gap: Spacing.sm,
+      gap: Spacing.xs,
     },
     filterItem: {
-      paddingHorizontal: Spacing.lg,
-      paddingVertical: Spacing.sm,
+      paddingHorizontal: Spacing.md,
+      paddingVertical: Spacing.xs,
       borderRadius: BorderRadius.full,
-      backgroundColor: theme.backgroundTertiary,
-      marginRight: Spacing.sm,
+      backgroundColor: theme.backgroundDefault,
+      marginRight: Spacing.xs,
+      borderWidth: 1,
+      borderColor: theme.borderLight,
     },
     filterItemActive: {
       backgroundColor: theme.primary,
+      borderColor: theme.primary,
     },
     scrollContent: {
       flexGrow: 1,
